@@ -1,5 +1,7 @@
 {
-    "dependencies": {},
+    "dependencies": {
+      "elasticsearch":"last"
+},
     "anonymizedData": true,
     "name": "icbus",
     "id": "555c8121a77bb41f5c8850a8"
