@@ -2,7 +2,7 @@
 
 // User routes use users controller
 var users = require('../controllers/users'),
-    config = require('meanio').loadConfig();
+  config = require('meanio').loadConfig();
 
 var jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
@@ -36,36 +36,56 @@ module.exports = function(MeanUser, app, auth, database, passport) {
   app.route('/api/login')
     .post(passport.authenticate('local', {
       failureFlash: false
-    }), function(req, res) {      
+    }), function(req, res) {
       var payload = req.user;
       payload.redirect = req.body.redirect;
-      var escaped = JSON.stringify(payload);      
+      var escaped = JSON.stringify(payload);
       escaped = encodeURI(escaped);
       // We are sending the payload inside the token
-      var token = jwt.sign(escaped, config.secret, { expiresInMinutes: 60*5 });      
-      // Lookup user circles and code here
-      /*
-       
-       TODO
+      var token = jwt.sign(escaped, config.secret, {
+        expiresInMinutes: 60 * 5
+      });
 
-      */
-      res.json({ token: token });
+      var request = require('request');
+
+      request('http://127.0.0.1:3000/api/circles/stubs/signature', function(error, response, body) {
+          if (!error && body) {
+            if (req.user && req.user._id) {
+              //no prtection yet, poc
+              
+              var signature  = JSON.parse(body);
+
+              users.updateSignature(req.user, signature, function(err) {
+                console.log(err);
+              });
+            }
+          }
+        })
+        // Lookup user circles and code here
+        /*
+         
+         TODO
+
+        */
+      res.json({
+        token: token
+      });
     });
 
   // AngularJS route to get config of social buttons
   app.route('/api/get-config')
-    .get(function (req, res) {
+    .get(function(req, res) {
       // To avoid displaying unneccesary social logins
       var clientIdProperty = 'clientID';
       var defaultPrefix = 'DEFAULT_';
-      var socialNetworks = ['facebook','linkedin','twitter','github','google']; //ugly hardcoding :(
+      var socialNetworks = ['facebook', 'linkedin', 'twitter', 'github', 'google']; //ugly hardcoding :(
       var configuredApps = {};
-      for (var network in socialNetworks){
+      for (var network in socialNetworks) {
         var netObject = config[socialNetworks[network]];
-        if ( netObject.hasOwnProperty(clientIdProperty) ) {
-              if (netObject[clientIdProperty].indexOf(defaultPrefix) === -1 ){
-                configuredApps[socialNetworks[network]] = true ;
-              }
+        if (netObject.hasOwnProperty(clientIdProperty)) {
+          if (netObject[clientIdProperty].indexOf(defaultPrefix) === -1) {
+            configuredApps[socialNetworks[network]] = true;
+          }
         }
       }
       res.send(configuredApps);

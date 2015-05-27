@@ -48,8 +48,7 @@ var UserSchema = new Schema({
     required: true,
     get: escapeProperty
   },
-  circles : {},
-  codes : {},
+  signature : {},
   email: {
     type: String,
     required: true,
