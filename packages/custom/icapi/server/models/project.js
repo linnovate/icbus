@@ -31,6 +31,9 @@ var ProjectSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
+  circles : {
+
+  },
   color: {
     type: String,
     required: true
