@@ -49,6 +49,7 @@ var UserSchema = new Schema({
     get: escapeProperty
   },
   circles : {},
+  codes : {},
   email: {
     type: String,
     required: true,
