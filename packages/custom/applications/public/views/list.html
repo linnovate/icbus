@@ -1,0 +1,15 @@
+<section ng-init="vm.find()">
+    <ul class="applications unstyled">
+        <li data-ng-repeat="application in vm.applications">
+            <img ng-src="{{application.iconPath}}" alt="{{ app.name }}" />
+            <a data-ng-href="/applications/{{application._id}}">{{application.name}}</a>
+            <a class="btn" href="/applications/{{application._id}}/edit">
+              <i class="glyphicon glyphicon-edit"></i>
+            </a>
+            <a class="btn" data-ng-click="vm.remove(application);">
+                  <i class="glyphicon glyphicon-trash"></i>
+            </a>
+        </li>
+    </ul>
+    <h1 data-ng-hide="!vm.applications || vm.applications.length">No applications yet. <br> Why don't you <a href="/applications/new">Create One</a>?</h1>
+</section>

@@ -1,0 +1,14 @@
+<section data-ng-init="vm.findOne()">
+    <span>{{vm.application.created | date:'medium'}}</span> /
+    <h2>{{vm.application.name}}</h2>
+    <div>
+        <a class="btn" href="/applications/{{vm.application._id}}/edit">
+            <i class="glyphicon glyphicon-edit"></i>
+        </a>
+        <a class="btn" data-ng-click="vm.remove(vm.application);">
+            <i class="glyphicon glyphicon-trash"></i>
+        </a>
+    </div>
+    <img data-ng-src="{{vm.application.iconPath}}" />
+    <div>{{vm.application.token}}</div>
+</section>

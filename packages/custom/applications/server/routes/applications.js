@@ -1,27 +1,17 @@
 'use strict';
 
-/* jshint -W098 */
-// The Package is past automatically as first parameter
-module.exports = function(Applications, app, auth, database) {
+ var applications = require('../controllers/applications');
 
-  app.get('/api/applications/example/anyone', function(req, res, next) {
-    res.send('Anyone can access this');
-  });
+ module.exports = function(Articles, app, auth) {
 
-  app.get('/api/applications/example/auth', auth.requiresLogin, function(req, res, next) {
-    res.send('Only authenticated users can access this');
-  });
+ app.route('/api/applications')
+ .get(applications.all)
+ .post(auth.requiresLogin, applications.create);
+ app.route('/api/applications/:applicationId')
+ .get(auth.isMongoId, applications.show)
+ .put(auth.isMongoId, auth.requiresLogin, applications.update)
+ .delete(auth.isMongoId, auth.requiresLogin, applications.destroy);
 
-  app.get('/api/applications/example/admin', auth.requiresAdmin, function(req, res, next) {
-    res.send('Only users with Admin role can access this');
-  });
-
-  app.get('/api/applications/example/render', function(req, res, next) {
-    Applications.render('index', {
-      package: 'applications'
-    }, function(err, html) {
-      //Rendering a view from the Package server/views
-      res.send(html);
-    });
-  });
-};
+ // Finish with setting up the applicationId param
+ app.param('applicationId', applications.application);
+ };

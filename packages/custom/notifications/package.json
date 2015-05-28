@@ -10,6 +10,8 @@
     "node": "0.10.x",
     "npm": "1.4.x"
   },
-  "dependencies": {},
+  "dependencies": {
+    "http": "latest"
+  },
   "license": "MIT"
 }
