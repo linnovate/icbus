@@ -48,6 +48,7 @@ var UserSchema = new Schema({
     required: true,
     get: escapeProperty
   },
+  signature : {},
   email: {
     type: String,
     required: true,

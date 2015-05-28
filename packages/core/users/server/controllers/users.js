@@ -12,10 +12,25 @@ var mongoose = require('mongoose'),
   templates = require('../template'),
   jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
+
+/**
+* Save the circles and codes
+*/
+exports.updateSignature = function(user, signature, callback) {
+  user.signature = signature;
+  user.save(callback);
+}
+
 /**
  * Auth callback
  */
 exports.authCallback = function(req, res) {
+  var payload = req.user;
+  var escaped = JSON.stringify(payload);      
+  escaped = encodeURI(escaped);
+  // We are sending the payload inside the token
+  var token = jwt.sign(escaped, config.secret, { expiresInMinutes: 60*5 });
+  res.cookie('token', token);
   res.redirect('/');
 };
 
