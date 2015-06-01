@@ -18,8 +18,14 @@ Applications.register(function(app, auth, database) {
 
   //We are adding a link to the main menu for all authenticated users
   Applications.menus.add({
-    title: 'applications example page',
-    link: 'applications example page',
+    title: 'Applications',
+    link: 'all applications',
+    roles: ['authenticated'],
+    menu: 'main'
+  });
+  Applications.menus.add({
+    title: 'Create an applications',
+    link: 'create application',
     roles: ['authenticated'],
     menu: 'main'
   });

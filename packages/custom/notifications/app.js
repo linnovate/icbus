@@ -17,12 +17,12 @@ Notifications.register(function(app, auth, database) {
   Notifications.routes(app, auth, database);
 
   //We are adding a link to the main menu for all authenticated users
-  Notifications.menus.add({
-    title: 'notifications example page',
-    link: 'notifications example page',
-    roles: ['authenticated'],
-    menu: 'main'
-  });
+  //Notifications.menus.add({
+  //  title: 'notifications example page',
+  //  link: 'notifications example page',
+  //  roles: ['authenticated'],
+  //  menu: 'main'
+  //});
   
   Notifications.aggregateAsset('css', 'notifications.css');
 
