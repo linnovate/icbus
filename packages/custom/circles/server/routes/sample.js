@@ -30,57 +30,77 @@ module.exports = function(Circles, app, auth, database) {
 
 
         var data = {
-                    
+
         };
-        
+
         circles.forEach(function(circle) {
 
           data[circle._id] = circle.toObject();
           data[circle._id].containers = circle.circles;
-          
-
-        });        
 
 
-        
-          //want an array of all things that contain the circle
-          //loop through all the circles
-          //each circle knows who its parent is. therefore we can just take each one out of the next in a chain
-
-          //loop from circles and add all circles to containers
-          //count number of moves.
-          //when no moves we are done
-          //container cannever contain itself
-
-          var found = true;
+        });
 
 
-          while(found) {
-            found = false;
-            console.log('loop');
 
-            circles.forEach(function(circle) {
+        //want an array of all things that contain the circle
+        //loop through all the circles
+        //each circle knows who its parent is. therefore we can just take each one out of the next in a chain
 
+        //loop from circles and add all circles to containers
+        //count number of moves.
+        //when no moves we are done
+        //container cannever contain itself
 
-              var containers = data[circle._id].containers;
+        var found = true;
 
-console.log(1)
-              //going through each of the containers parents
-              containers.forEach(function(container) {
-                console.log(2)
-                console.log(JSON.stringify(data[container]));
+        //yes not efficient - getting there..
+        while (found) {
+          found = false;
+          console.log('loop');
 
-                data[container].circles.forEach(function(circ) {
-                  console.log(3)
-                  if (containers.indexOf(circ) == -1 && circ != circle._id) {
-                    data[circle._id].containers.push(circ);
-                    found = true;
-                  }
-                });
+          circles.forEach(function(circle) {
+
+            var containers = data[circle._id].containers;
+
+            //going through each of the containers parents
+            containers.forEach(function(container) {
+              data[container].circles.forEach(function(circ) {
+                if (containers.indexOf(circ) == -1 && circ != circle._id) {
+                  data[circle._id].containers.push(circ);
+                  found = true;
+                }
               });
             });
+          });
+        }
+
+        //now in the sample we are preparing the d3 representation
+        var flare = {
+          "name": "flare",
+          "children": []
+        }
+/*
+{
+            "name": "analytics",
+            "children": [{
+              "name": "cluster",
+              "children": [{
+                "name": "AgglomerativeCluster",
+                "size": 2
+              }, {
+                "name": "CommunityStructure",
+                "size": 2
+              }, {
+                "name": "HierarchicalCluster",
+                "size": 2
+              }]
+            }]
           }
-        
+*/
+        circles.forEach(function(circle) {
+          
+        });
 
         res.json(data);
       });
@@ -99,7 +119,7 @@ function popup(circles, base, found) {
         found.push(base);
         if (circles[base._id]) {
           popup(circles, circles[base._id].circles, found);
-        } 
+        }
 
       }
     });
