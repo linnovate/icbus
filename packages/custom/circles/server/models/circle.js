@@ -9,10 +9,10 @@ var CircleSchema = new Schema({
   category: String,
   name:  String,
   id: String,
-  circle: {
+  circles: [{
     type: Schema.ObjectId,
     ref: 'Circle'
-  },
+  }],
 });
 
 mongoose.model('Circle', CircleSchema);
