@@ -5,7 +5,7 @@
  */
 var Module = require('meanio').Module;
 
-var Notifications = new Module('notifications');
+var Notifications = new Module('hi');
 
 /*
  * All MEAN packages require registration
