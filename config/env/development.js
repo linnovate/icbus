@@ -6,11 +6,17 @@ module.exports = {
   logging: {
     format: 'tiny'
   },
+  letschat:{
+    host: 'http://localhost',
+    port: '5000',
+    token: 'NTU0OWRjNTkwODAzMjE0NTVlZmQ0MWY5OjUyZTRlMTdmODhhNGIwNTA4Zjg0NGY0MWJkMmEwYjY2ZjJlMGQ4NzFkYjA4YTQwZQ=='
+  },
   //  aggregate: 'whatever that is not false, because boolean false value turns aggregation off', //false
   aggregate: false,
   mongoose: {
     debug: false
   },
+  hostname: 'http://localhost:3000',
   app: {
     name: 'MEAN - FullStack JS - Development'
   },

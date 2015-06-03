@@ -19,8 +19,6 @@ exports.checkApp = function(req, res, next) {
         req.params.app = app;
         req.body.app = app;
         req.query.app = app;
-        console.log('=======================----------------app----------------------===============');
-        console.dir(req.body.app);
         next();
 
     });

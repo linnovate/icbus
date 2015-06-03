@@ -5,7 +5,8 @@
  */
 var mongoose = require('mongoose'),
     Application = mongoose.model('Application'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    async = require('async');
 /**
  * Find application by id
  */
@@ -21,8 +22,7 @@ exports.application = function(req, res, next, id) {
 /**
  * Create an application
  */
-exports.create = function(req, res) {
-    console.dir(req.body)
+exports.create = function(req, res, next) {
     var application = new Application(req.body);
 
     application.save(function(err) {
@@ -31,8 +31,8 @@ exports.create = function(req, res) {
                 error: 'Cannot save the application'
             });
         }
-        res.json(application);
-
+        req.application = application;
+        next(req, res);
     });
 };
 
