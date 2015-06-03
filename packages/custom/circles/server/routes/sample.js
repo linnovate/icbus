@@ -37,10 +37,12 @@ module.exports = function(Circles, app, auth, database) {
 
           data[circle._id] = circle.toObject();
           data[circle._id].containers = circle.circles;
+          data[circle._id].parents = [];
+          data[circle._id].decendants = [];
+          data[circle._id].children = [];
 
 
         });
-
 
 
         //want an array of all things that contain the circle
@@ -53,8 +55,8 @@ module.exports = function(Circles, app, auth, database) {
         //container cannever contain itself
 
         var found = true;
-
         //yes not efficient - getting there..
+        var level = 0;
         while (found) {
           found = false;
           console.log('loop');
@@ -65,6 +67,15 @@ module.exports = function(Circles, app, auth, database) {
 
             //going through each of the containers parents
             containers.forEach(function(container) {
+
+              if (data[container].decendants.indexOf(circle._id) == -1) {
+                data[container].decendants.push(circle._id);
+                if (level === 0) {
+                  data[circle._id].parents.push(container);
+                  data[container].children.push(circle._id);
+                }
+              }
+
               data[container].circles.forEach(function(circ) {
                 if (containers.indexOf(circ) == -1 && circ != circle._id) {
                   data[circle._id].containers.push(circ);
@@ -73,74 +84,70 @@ module.exports = function(Circles, app, auth, database) {
               });
             });
           });
+          level++;
         }
 
         //now in the sample we are preparing the d3 representation
+
+
         var flare = {
           "name": "flare",
           "children": []
         }
-/*
-{
-            "name": "analytics",
-            "children": [{
-              "name": "cluster",
-              "children": [{
-                "name": "AgglomerativeCluster",
-                "size": 2
-              }, {
-                "name": "CommunityStructure",
-                "size": 2
-              }, {
-                "name": "HierarchicalCluster",
-                "size": 2
-              }]
-            }]
-          }
-*/
-        circles.forEach(function(circle) {
-          
-        });
+        for (var index in data) {
+          console.log(index);
+        }
+        /*
+        {
+                    "name": "analytics",
+                    "children": [{
+                      "name": "cluster",
+                      "children": [{
+                        "name": "AgglomerativeCluster",
+                        "size": 2
+                      }, {
+                        "name": "CommunityStructure",
+                        "size": 2
+                      }, {
+                        "name": "HierarchicalCluster",
+                        "size": 2
+                      }]
+                    }]
+                  }
+        */
 
-        res.json(data);
+
+        res.json([flare, data]);
       });
     });
 
 
 };
 
+// function tree(child) {
+//   if (child.circles.length == 0) return ({child.name,size:1,_id:child._id});
 
-function popup(circles, base, found) {
+//   return (n * factorial(n - 1));
+// }
 
-    base.forEach(function(base) {
 
-      if (found.indexOf(base) == -1) {
-        tree(base).push(circles);
-        found.push(base);
-        if (circles[base._id]) {
-          popup(circles, circles[base._id].circles, found);
-        }
+/*
+          
+          if (!data.containers[circle._id]) {
+            data.containers[circle._id] = [];
+          } 
 
-      }
-    });
-  }
-  /*
-            
-            if (!data.containers[circle._id]) {
-              data.containers[circle._id] = [];
-            } 
+          if (!circle.circle) {
+            data.circles[circle._id] = circle.toObject();
+          } else {
 
-            if (!circle.circle) {
-              data.circles[circle._id] = circle.toObject();
-            } else {
+ //we need to also check containers incase its ot in flat circles.
+            //order matters
+            console.log(data.circles[circle.circle]);
+            console.log(circle._id);
+            data.circles[circle.circle][circle._id] = circle;
 
-   //we need to also check containers incase its ot in flat circles.
-              //order matters
-              console.log(data.circles[circle.circle]);
-              console.log(circle._id);
-              data.circles[circle.circle][circle._id] = circle;
-
-              data.containers[circle._id].push(circle.circle);
-              //need to work on the container here
-            }
-  */
+            data.containers[circle._id].push(circle.circle);
+            //need to work on the container here
+          }
+*/
