@@ -8,7 +8,7 @@ module.exports = function(Circles, app, auth, database) {
 
 
 
-  app.route('/api/circles/stubs/permissions/sample')
+  app.route('/api/circles/stubs/permissions/sample/:id?')
     .post(function(req, res, next) {
 
       var circle = new Circle(req.body);
@@ -22,132 +22,134 @@ module.exports = function(Circles, app, auth, database) {
         res.json(circle);
       });
     })
-    .get(function(req, res, next) {
+    .put(function(req, res, next) {
 
-      Circle.find({}).sort({
-        circle: 1
-      }).exec(function(err, circles) {
+      if (!req.params.id) {
+        return res.send(404, 'No ID specified');
+      }
 
+      validateCircles(req.params.id, req.body.circles, function(err, status) {
 
-        var data = {
+        if (err) {
+          return res.send(400, status);
+        }
 
-        };
-
-        circles.forEach(function(circle) {
-
-          data[circle._id] = circle.toObject();
-          data[circle._id].containers = circle.circles;
-          data[circle._id].parents = [];
-          data[circle._id].decendants = [];
-          data[circle._id].children = [];
-
-
-        });
-
-
-        //want an array of all things that contain the circle
-        //loop through all the circles
-        //each circle knows who its parent is. therefore we can just take each one out of the next in a chain
-
-        //loop from circles and add all circles to containers
-        //count number of moves.
-        //when no moves we are done
-        //container cannever contain itself
-
-        var found = true;
-        //yes not efficient - getting there..
-        var level = 0;
-        while (found) {
-          found = false;
-          console.log('loop');
-
-          circles.forEach(function(circle) {
-
-            var containers = data[circle._id].containers;
-
-            //going through each of the containers parents
-            containers.forEach(function(container) {
-
-              if (data[container].decendants.indexOf(circle._id) == -1) {
-                data[container].decendants.push(circle._id);
-                if (level === 0) {
-                  data[circle._id].parents.push(container);
-                  data[container].children.push(circle._id);
-                }
+        Circle.findOne({
+          _id: req.params.id
+        }).exec(function(err, circle) {
+          if (!err && circle) {
+            Circle.findOneAndUpdate({
+              _id: circle._id
+            }, {
+              $set: req.body
+            }, {
+              multi: false,
+              upsert: false
+            }, function(err, circle) {
+              if (err) {
+                return res.send(500, err.message);
               }
 
-              data[container].circles.forEach(function(circ) {
-                if (containers.indexOf(circ) == -1 && circ != circle._id) {
-                  data[circle._id].containers.push(circ);
-                  found = true;
-                }
-              });
+              res.send(200, 'updated');
             });
-          });
-          level++;
+          }
+
+        });
+      });
+
+    })
+
+
+  .get(function(req, res, next) {
+    Circle.buildPermissions(function(data) {
+      res.send(data);
+    })
+  });
+
+
+  function validateCircles(id, circles, callback) {
+    Circle.buildPermissions(function(data) {
+      circles = [].concat(circles);
+      circles.forEach(function(parent, index) {
+
+        if (data.circles[id].decendants.indexOf(parent) !== -1) {
+          return callback(true, 'Cannot reference parent in child relationship')
         }
 
-        //now in the sample we are preparing the d3 representation
-
-
-        var flare = {
-          "name": "flare",
-          "children": []
+        if (index === circles.length - 1) {
+          return callback(null, 'valid');
         }
-        for (var index in data) {
-          console.log(index);
-        }
-        /*
-        {
-                    "name": "analytics",
-                    "children": [{
-                      "name": "cluster",
-                      "children": [{
-                        "name": "AgglomerativeCluster",
-                        "size": 2
-                      }, {
-                        "name": "CommunityStructure",
-                        "size": 2
-                      }, {
-                        "name": "HierarchicalCluster",
-                        "size": 2
-                      }]
-                    }]
-                  }
-        */
-
-
-        res.json([flare, data]);
       });
     });
+  }
+
 
 
 };
 
-// function tree(child) {
-//   if (child.circles.length == 0) return ({child.name,size:1,_id:child._id});
+/*
+function buildTree(id, branch) {
 
-//   return (n * factorial(n - 1));
-// }
+     if (noParents(id) && hasChildren(id)) {    
+      data[id].children.forEach(function(child) {
 
+        if (id !== child) {
+
+          var length = branch.length;
+
+          branch.push({
+            "name": data[child].name,
+            "_id": data[child]._id
+          });
+
+          if (noChildren(child)) {
+            branch[length]["size"] = 1;
+          } else {
+            
+            branch[length]["children"] = []
+
+            buildTree(child, branch[length].children);
+          }
+
+        }
+
+      });
+    }
+
+  }
+*/
 
 /*
-          
-          if (!data.containers[circle._id]) {
-            data.containers[circle._id] = [];
-          } 
+ function buildTree(id, branch) {
 
-          if (!circle.circle) {
-            data.circles[circle._id] = circle.toObject();
-          } else {
+    if (noParents(id) && hasChildren(id)) {
 
- //we need to also check containers incase its ot in flat circles.
-            //order matters
-            console.log(data.circles[circle.circle]);
-            console.log(circle._id);
-            data.circles[circle.circle][circle._id] = circle;
+      var length = branch.length;
 
-            data.containers[circle._id].push(circle.circle);
-            //need to work on the container here
+      branch.push({
+        "name": data[id].name,
+        "_id": data[id]._id,
+        "children": []
+      });
+
+      data[id].children.forEach(function(child) {
+
+        if (id !== child) {
+          if (noChildren(child)) {
+            branch[length].children.push({
+              name: data[child].name,
+              _id: data[child]._id,
+              size: 1
+            });
+          } else {            
+            buildTree(child, branch[length].children);
           }
+
+        }
+
+      });
+    }
+
+  }
+
 */
