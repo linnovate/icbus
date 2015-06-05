@@ -18,7 +18,8 @@ exports.create = function(req, res) {
         json: {
             name: room.name,
             slug: room.slug || room.name,
-            description: room.description || ''
+            description: room.description || '',
+            isExternal: true
         },
         method: "POST"
     };

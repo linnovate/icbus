@@ -1,13 +1,8 @@
 'use strict';
 
-<<<<<<< HEAD
-// User routes use users controller
-var users = require('../controllers/users'),
-  config = require('meanio').loadConfig();
 
-=======
 var config = require('meanio').loadConfig();
->>>>>>> 49d48107714cca5798b131b9463c5adf2d793d02
+
 var jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
 module.exports = function(MeanUser, app, auth, database, passport) {
@@ -49,7 +44,6 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       var escaped = JSON.stringify(payload);
       escaped = encodeURI(escaped);
       // We are sending the payload inside the token
-<<<<<<< HEAD
       var token = jwt.sign(escaped, config.secret, {
         expiresInMinutes: 60 * 5
       });
@@ -78,13 +72,6 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       res.json({
         token: token
       });
-=======
-      var token = jwt.sign(escaped, config.secret, { expiresInMinutes: 60*5 });
-      MeanUser.events.publish('login', {
-        description: req.user.name + ' login to the system.'
-      });
-      res.json({ token: token });
->>>>>>> 49d48107714cca5798b131b9463c5adf2d793d02
     });
 
   // AngularJS route to get config of social buttons
