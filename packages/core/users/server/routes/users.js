@@ -1,6 +1,5 @@
 'use strict';
 
-
 var config = require('meanio').loadConfig();
 
 var jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
@@ -47,6 +46,9 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       var token = jwt.sign(escaped, config.secret, {
         expiresInMinutes: 60 * 5
       });
+      MeanUser.events.publish('login', {
+        description: req.user.name + ' login to the system.'
+      });
 
       var request = require('request');
 
@@ -54,8 +56,8 @@ module.exports = function(MeanUser, app, auth, database, passport) {
           if (!error && body) {
             if (req.user && req.user._id) {
               //no prtection yet, poc
-              
-              var signature  = JSON.parse(body);
+
+              var signature = JSON.parse(body);
 
               users.updateSignature(req.user, signature, function(err) {
                 console.log(err);
@@ -72,6 +74,7 @@ module.exports = function(MeanUser, app, auth, database, passport) {
       res.json({
         token: token
       });
+
     });
 
   // AngularJS route to get config of social buttons

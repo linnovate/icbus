@@ -16,7 +16,7 @@ module.exports = {
   mongoose: {
     debug: false
   },
-  hostname: 'http://localhost:3000',
+ // hostname: 'http://localhost:3000',
   app: {
     name: 'MEAN - FullStack JS - Development'
   },

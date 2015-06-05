@@ -18,5 +18,16 @@ Circles.register(function(app, auth, database) {
  
   Circles.aggregateAsset('css', 'circles.css');
 
+
+  Circles.aggregateAsset('js','d3.v3.min.js');
+
+  Circles.menus.add({
+    title: 'Circles',
+    link: 'manage circles',
+    roles: ['authenticated'],
+    menu: 'main'
+  });
+  
+
   return Circles;
 });
