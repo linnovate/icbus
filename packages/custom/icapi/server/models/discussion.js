@@ -66,5 +66,15 @@ DiscussionSchema.statics.load = function(id, cb) {
     _id: id
   }).populate('creator', 'name username').exec(cb);
 };
+/**
+ * Post middleware
+ */
+var elasticsearch  = require('../controllers/elasticsearch');
+DiscussionSchema.post('save', function () {
+  elasticsearch.save(this, 'discussion');
+});
+DiscussionSchema.pre('remove', function (next) {
+  elasticsearch.delete(this, 'discussion', next);
+});
 
 mongoose.model('Discussion', DiscussionSchema);

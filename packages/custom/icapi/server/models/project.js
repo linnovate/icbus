@@ -62,4 +62,15 @@ ProjectSchema.statics.load = function(id, cb) {
   }).populate('creator', 'name username').exec(cb);
 };
 
+/**
+ * Post middleware
+ */
+var elasticsearch  = require('../controllers/elasticsearch');
+ProjectSchema.post('save', function () {
+  elasticsearch.save(this, 'project');
+});
+ProjectSchema.pre('remove', function (next) {
+  elasticsearch.delete(this, 'project', next);
+});
+
 mongoose.model('Project', ProjectSchema);

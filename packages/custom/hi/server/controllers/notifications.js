@@ -3,7 +3,7 @@ var request = require('request'),
 
 exports.create = function(req, res) {
     var options = {
-        url : lcconfig.host +':' + lcconfig.port +'/rooms/'+ req.params.app.name +'/messages',
+        url : lcconfig.host +':' + lcconfig.port +'/rooms/'+ req.params.room +'/messages',
         headers : {
             "Authorization":"Bearer " + lcconfig.token
         },

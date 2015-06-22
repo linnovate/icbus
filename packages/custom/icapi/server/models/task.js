@@ -64,5 +64,15 @@ TaskSchema.statics.load = function(id, cb) {
     _id: id
   }).populate('creator', 'name username').exec(cb);
 };
+/**
+ * Post middleware
+ */
+var elasticsearch  = require('../controllers/elasticsearch');
+TaskSchema.post('save', function () {
+  elasticsearch.save(this, 'task');
+});
+TaskSchema.pre('remove', function (next) {
+  elasticsearch.delete(this, 'task', next);
+});
 
 mongoose.model('Tasks', TaskSchema);

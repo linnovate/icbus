@@ -29,7 +29,7 @@ exports.read = function(req, res, next) {
 exports.create = function(req, res, next) {
 
 	//this is just sample - validation coming soon
-	//We deal with each field indavidually unless it is in a schemaless object
+	//We deal with each field individually unless it is in a schemaless object
 	if (req.params.id) {
 		return res.send(401, 'Cannot create project with predefined id');
 	}
@@ -40,9 +40,10 @@ exports.create = function(req, res, next) {
 		title: req.body.title,
 		parent: req.body.parent || null,
 		color: req.body.color || null,
-    discussion: req.body.discussion || null,
-    creator : req.user._id
+		discussion: req.body.discussion || null,
+		creator : req.user._id
 	};
+console.log('ibus create')
 
 	new Project(data).save(function(err, project ) {
 		
@@ -51,7 +52,7 @@ exports.create = function(req, res, next) {
 		res.status(200);
 		return res.json(project);
 	});	
-}
+};
 
 exports.update = function(req, res, next) {
 
@@ -59,25 +60,24 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update project without id');
 	}
 
-	var data = {
-		updated: new Date()		
-	};
+	Project.findById(req.params.id, function (err, project) {
+		utils.checkAndHandleError(err, res);
 
-	(req.body.title) ? data.title = req.body.title : null;	
+		project.updated = new Date();
+		if (req.body.title) project.title = req.body.title;
+		if (req.body.parent)  project.parent = req.body.parent;
+		if (req.body.color)  project.color = req.body.color;
 
-	(req.body.parent) ? data.parent = req.body.parent : null;	
+		project.save(function(err, project) {
+			utils.checkAndHandleError(err, res, 'Failed to update project');
 
-	(req.body.color) ? data.color = req.body.color : null;	
+			res.status(200);
+			return res.json(project);
+		});
 
-	Project.findOneAndUpdate({_id:req.params.id}, {$set:data}, function (err, project) {
-
-		utils.checkAndHandleError(err, res, 'Failed to update project');
-
-		res.status(200)
-		return res.json(project);
 	});
 	
-}
+};
 
 exports.destroy = function(req, res, next) {
 
