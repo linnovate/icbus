@@ -7,14 +7,13 @@ var mongoose = require('mongoose');
 require('../models/project');
 var Project = mongoose.model('Project');
 
-exports.read = function(req, res, next) {	
+exports.read = function(req, res, next) {
 
 	var query = {};
 
 	if (req.params.id) {
 		query._id = req.params.id;
-	}	
-
+	}
 	var Query = Project.find(query);
 	Query.limit(200 || req.query.limit);
 	Query.exec(function(err, projects) {
@@ -33,7 +32,7 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create project with predefined id');
 	}
-
+	req.user ={_id: '558a68473df99095392d88cc'}
 	var data = {
 		created: new Date(),
 		updated: new Date(),
@@ -43,7 +42,6 @@ exports.create = function(req, res, next) {
 		discussion: req.body.discussion || null,
 		creator : req.user._id
 	};
-console.log('ibus create')
 
 	new Project(data).save(function(err, project ) {
 		

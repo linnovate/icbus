@@ -8,7 +8,7 @@ var permissionController = require('../controllers/permission');
 module.exports = function(Icapi, app, auth, database) {
 
   app.route('/api/projects/:id?')
-    .all(auth.requiresLogin, permissionController.echo)
+    //.all(auth.requiresLogin, permissionController.echo)
     //.post(permissionController.forceLogIn, projectController.create)     	//Create
     .post(projectController.create)     	//Create
     .get(projectController.read)        									//Read
@@ -16,7 +16,7 @@ module.exports = function(Icapi, app, auth, database) {
     .delete(projectController.destroy); 									//Delete
 
   app.route('/api/tasks/:id?')
-    .all(permissionController.echo)
+    //.all(permissionController.echo)
     //.post(permissionController.forceLogIn, taskController.create)
     .post(taskController.create)
     .get(taskController.read)
