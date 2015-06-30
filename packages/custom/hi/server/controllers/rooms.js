@@ -43,7 +43,6 @@ exports.create = function(req, res) {
 };
 
 exports.createForProject  = function(project, callback) {
-    console.log('createForProject')
     var options = {
         url : lcconfig.host +':' + lcconfig.port +'/rooms',
         headers : {
@@ -58,11 +57,9 @@ exports.createForProject  = function(project, callback) {
     };
     request(options, function(error, response, body) {
         if (response.body.errors) {
-            return res.status(500).json({
-                error: response.body.errors
-            });
+            return callback(response.body.errors, null);
         }
-        callback(body.id);
+        callback(null, body.id);
     });
 }
 

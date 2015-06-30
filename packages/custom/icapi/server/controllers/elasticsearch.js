@@ -31,3 +31,34 @@ exports.delete = function(doc, docType, room, next) {
         return next();
     });
 };
+
+exports.search = function (req, res) {
+    //var filters = [];
+    //if (req.query.title)
+    //    filters.push({'term': {'title': req.query.title}});
+    //if (req.query.color)
+    //    filters.push({'term': {'color': req.query.color}});
+    //if (req.query.creator)
+    //    filters.push({'term': {'creator': req.query.creator}});
+    var query = {
+        query: {
+            //'filtered': {
+            //    filter:  {and : filters}
+            //}
+    
+            'multi_match' : {
+                'query':    req.query.term,
+                'fields': [ 'title^3', 'color', 'creator']
+            }
+        }
+    };
+    mean.elasticsearch.search({'from': 0,
+        'size': 3000,
+        'body': query}, function (err, result) {
+        if (err){
+            res.send(500, err)
+        }
+        res.send(result.hits.hits)
+
+    })
+}

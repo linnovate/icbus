@@ -46,7 +46,8 @@ exports.create = function(req, res, next) {
 	new Project(data).save(function(err, project ) {
 		
 		utils.checkAndHandleError(err,res);
-		rooms.createForProject(project, function(roomId){
+		rooms.createForProject(project, function(error, roomId){
+			utils.checkAndHandleError(error,res);
 			project.room = roomId;
 			project.save(function(err, project) {
 				utils.checkAndHandleError(err,res);
