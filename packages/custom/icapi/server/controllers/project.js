@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 
 require('../models/project');
 var Project = mongoose.model('Project');
+var rooms = require('../../../hi/server/controllers/rooms');
 
 exports.read = function(req, res, next) {
 
@@ -26,7 +27,6 @@ exports.read = function(req, res, next) {
 }
 
 exports.create = function(req, res, next) {
-
 	//this is just sample - validation coming soon
 	//We deal with each field individually unless it is in a schemaless object
 	if (req.params.id) {
@@ -46,9 +46,13 @@ exports.create = function(req, res, next) {
 	new Project(data).save(function(err, project ) {
 		
 		utils.checkAndHandleError(err,res);
-
-		res.status(200);
-		return res.json(project);
+		rooms.createForProject(project, function(roomId){
+			project.room = roomId;
+			project.save(function(err, project) {
+				utils.checkAndHandleError(err,res);
+				return res.status(200).json(project);
+			});
+		});
 	});	
 };
 

@@ -69,10 +69,10 @@ TaskSchema.statics.load = function(id, cb) {
  */
 var elasticsearch  = require('../controllers/elasticsearch');
 TaskSchema.post('save', function () {
-  elasticsearch.save(this, 'task');
+  elasticsearch.save(this, 'task', this.project);
 });
 TaskSchema.pre('remove', function (next) {
-  elasticsearch.delete(this, 'task', next);
+  elasticsearch.delete(this, 'task', this.project, next);
 });
 
 mongoose.model('Tasks', TaskSchema);

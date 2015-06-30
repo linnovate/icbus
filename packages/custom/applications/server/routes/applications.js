@@ -8,7 +8,6 @@
  app.route('/api/applications')
  .get(applications.all)
  .post(auth.requiresLogin,function(req, res){
-      console.log('applications.create')
       applications.create(req, res, rooms.create)
      } );
  app.route('/api/applications/:applicationId')

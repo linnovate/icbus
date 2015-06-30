@@ -29,7 +29,6 @@ exports.read = function(req, res, next) {
 }
 
 exports.create = function(req, res, next) {
-
 	//this is just sample - validation coming soon
 	//We deal with each field indavidually unless it is in a schemaless object
 	if (req.params.id) {
@@ -50,7 +49,7 @@ exports.create = function(req, res, next) {
 	};
 	new Task(data).save(function(err, task ) {
 		utils.checkAndHandleError(err,res);
-		res.status(200)
+		res.status(200);
 		return res.json(task);
 	});
 };

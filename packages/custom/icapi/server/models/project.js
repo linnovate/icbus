@@ -43,7 +43,10 @@ var ProjectSchema = new Schema({
   watchers : [{
     type: Schema.ObjectId,
     ref: 'User'
-  }]
+  }],
+  room: {
+    type: String
+  }
 });
 
 /**
@@ -67,10 +70,10 @@ ProjectSchema.statics.load = function(id, cb) {
  */
 var elasticsearch  = require('../controllers/elasticsearch');
 ProjectSchema.post('save', function () {
-  elasticsearch.save(this, 'project');
+  elasticsearch.save(this, 'project', this.room);
 });
 ProjectSchema.pre('remove', function (next) {
-  elasticsearch.delete(this, 'project', next);
+  elasticsearch.delete(this, 'project',this.room, next);
 });
 
 mongoose.model('Project', ProjectSchema);
