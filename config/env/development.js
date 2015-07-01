@@ -53,5 +53,10 @@ module.exports = {
       pass: 'PASSWORD'
     }
   }, 
-  secret: 'SOME_TOKEN_SECRET'
+  secret: 'SOME_TOKEN_SECRET',
+  elasticsearch: {
+    host: 'http://localhost',
+    port: 9200,
+    log: 'trace'
+  }
 };

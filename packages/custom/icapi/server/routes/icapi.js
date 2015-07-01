@@ -5,7 +5,7 @@ var taskController = require('../controllers/task');
 
 var permissionController = require('../controllers/permission');
 
-module.exports = function(Icapi, app, auth, database) {
+module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
   app.route('/api/projects/:id?')
     //.all(auth.requiresLogin, permissionController.echo)

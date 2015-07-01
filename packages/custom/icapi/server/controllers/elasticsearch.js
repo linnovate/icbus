@@ -11,7 +11,6 @@ exports.save = function(doc, docType, room) {
         if (error) {
             return error;
         }
-        console.log(room)
         if (room)
             notifications.sendFromApi({entityType: docType, entity: doc, room:room, method: (response.created ? 'create' : 'update')});
         return doc;
