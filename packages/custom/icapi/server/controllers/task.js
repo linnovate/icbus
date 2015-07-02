@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 
 require('../models/task');
 var Task = mongoose.model('Tasks');
+var mean = require('meanio');
 
 exports.read = function(req, res, next) {	
 
@@ -34,7 +35,7 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create task with predefined id');
 	}
-	req.user = { _id :"55755f55e7e0f6d3717444f3"};
+	req.user = { _id :'55755f55e7e0f6d3717444f3'};
 	var data = {
 		created: new Date(),
 		updated: new Date(),
@@ -93,4 +94,16 @@ exports.destroy = function(req, res, next) {
 			return res.send(success ? 'Task deleted': 'Failed to delete task');
 		});
 	});
-}
+};
+
+exports.tagsList = function(req, res) {
+	var query = {
+		'query' : { 'query_string' : {'query' : '*'} },
+		'facets' : {
+			'tags' : { 'terms' : {'field' : 'tags'} }
+		}
+	};
+	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
+		res.send(response.facets.tags.terms)
+	});
+};

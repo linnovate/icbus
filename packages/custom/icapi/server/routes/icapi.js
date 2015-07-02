@@ -13,8 +13,9 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
     .post(projectController.create)     	//Create
     .get(projectController.read)        									//Read
     .put(projectController.update)      									//Update
-    .delete(projectController.destroy); 									//Delete
-
+    .delete(projectController.destroy);
+    							//Delete
+  app.route('/api/tasks/tags').get(taskController.tagsList);
   app.route('/api/tasks/:id?')
     //.all(permissionController.echo)
     //.post(permissionController.forceLogIn, taskController.create)
@@ -22,4 +23,6 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
     .get(taskController.read)
     .put(taskController.update)
     .delete(taskController.destroy);
+
+
 };
