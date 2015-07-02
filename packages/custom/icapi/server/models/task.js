@@ -64,15 +64,29 @@ TaskSchema.statics.load = function(id, cb) {
     _id: id
   }).populate('creator', 'name username').exec(cb);
 };
+TaskSchema.statics.project = function(id, cb){
+  require('./project');
+  var Project = mongoose.model('Project');
+  Project.findById(id,  function(err, project){
+    cb(project);
+  })
+};
 /**
  * Post middleware
  */
 var elasticsearch  = require('../controllers/elasticsearch');
 TaskSchema.post('save', function () {
-  elasticsearch.save(this, 'task', this.project);
+  var task = this;
+  TaskSchema.statics.project(this.project, function(project) {
+    elasticsearch.save(task, 'task', project.room);
+  });
 });
+
 TaskSchema.pre('remove', function (next) {
-  elasticsearch.delete(this, 'task', this.project, next);
+  var task = this;
+  TaskSchema.statics.project(this.project, function(project) {
+    elasticsearch.delete(task, 'task', project.room, next);
+  });
 });
 
 mongoose.model('Tasks', TaskSchema);

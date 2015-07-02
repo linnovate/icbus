@@ -12,7 +12,7 @@ exports.save = function(doc, docType, room) {
             return error;
         }
         if (room)
-            notifications.sendFromApi({entityType: docType, entity: doc, room:room, method: (response.created ? 'create' : 'update')});
+            notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: (response.created ? 'create' : 'update')});
         return doc;
     });
 };

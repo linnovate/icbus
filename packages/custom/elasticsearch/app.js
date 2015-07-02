@@ -70,6 +70,16 @@ Elasticsearch.register(function(app, auth, database) {
     });
   };
 
+    Elasticsearch.delete = function(options, callback) {
+        Elasticsearch.client.delete(options, function(error, response) {
+            if (error) {
+                callback(true, error);
+            } else {
+                callback(null, response);
+            }
+        });
+    };
+
   Elasticsearch.search = function(options, callback) {
     Elasticsearch.client.search(options, function(error, response) {
       if (error) {
