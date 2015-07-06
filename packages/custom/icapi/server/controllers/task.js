@@ -35,7 +35,6 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create task with predefined id');
 	}
-	req.user = { _id :'55755f55e7e0f6d3717444f3'};
 	var data = {
 		created: new Date(),
 		updated: new Date(),
@@ -60,7 +59,6 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update task without id');
 	}
-	req.user = { _id :'55755f55e7e0f6d3717444f3'};
 	Task.findById(req.params.id, function (err, task) {
 		utils.checkAndHandleError(err, res);
 
@@ -85,7 +83,6 @@ exports.destroy = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot destroy task without id');
 	}
-	req.user = { _id :'55755f55e7e0f6d3717444f3'};
 	Task.findById(req.params.id, function(err, task) {
 		utils.checkAndHandleError(err, res);
 		task.remove({user: req.user}, function(err, success) {

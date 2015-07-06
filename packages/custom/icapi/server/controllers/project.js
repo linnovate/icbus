@@ -32,7 +32,6 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create project with predefined id');
 	}
-	req.user ={_id: '558a68473df99095392d88cc'};
 	var data = {
 		created: new Date(),
 		updated: new Date(),
@@ -43,8 +42,7 @@ exports.create = function(req, res, next) {
 		creator : req.user._id
 	};
 
-	new Project(data).save({user: req.user}, function(err, project ) {
-		
+	new Project(data).save({user: req.user}, function(err, project) {
 		utils.checkAndHandleError(err,res);
 		rooms.createForProject(project, function(error, roomId){
 			utils.checkAndHandleError(error,res);
@@ -62,7 +60,6 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update project without id');
 	}
-	req.user ={_id: '558a68473df99095392d88cc'};
 	Project.findById(req.params.id, function (err, project) {
 		utils.checkAndHandleError(err, res);
 
@@ -87,7 +84,6 @@ exports.destroy = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot destroy project without id');
 	}
-	req.user ={_id: '558a68473df99095392d88cc'};
 
 	Project.findById(req.params.id, function(err, project) {
 		utils.checkAndHandleError(err, res);
