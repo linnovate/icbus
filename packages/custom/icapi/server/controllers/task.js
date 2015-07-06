@@ -6,8 +6,9 @@ var utils = require('./utils');
 var mongoose = require('mongoose');
 
 require('../models/task');
-var Task = mongoose.model('Tasks');
-var mean = require('meanio');
+var Task = mongoose.model('Tasks'),
+	mean = require('meanio'),
+	_ = require('lodash');
 
 exports.read = function(req, res, next) {	
 
@@ -15,7 +16,9 @@ exports.read = function(req, res, next) {
 
 	if (req.params.id) {
 		query._id = req.params.id;
-	}	
+	}
+	if (req.query)
+		query = req.query;
 
 	var Query = Task.find(query);
 	Query.populate('creator');
@@ -27,7 +30,44 @@ exports.read = function(req, res, next) {
 		res.status(200);
 		return res.json(tasks);
 	});
-}
+};
+
+exports.query = function(req, res) {
+	console.log(!(_.isEmpty(req.query)))
+	if (!(_.isEmpty(req.query))) {
+		var filters = [];
+		if (req.query.tags)
+			filters.push({term: {tags: req.query.tags}});
+		if (req.query.status)
+			filters.push({term: {status: req.query.status}});
+		//var query = {
+		//	query: {
+		//		filtered: {
+		//			filter: filters[0]
+		//			}
+		//		}
+        //
+		//};
+
+		var query = {
+			query : {
+				match : {
+					tags:{
+						query:req.query.tags.replace(',', ' '),
+						operator:'or'
+					}
+				}
+			}
+		}
+	}
+
+	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
+		if (err)
+			res.status(500).send('Failed to found documents');
+		else
+			res.send(response.hits.hits.map(function(item) {return item._source}))
+	});
+};
 
 exports.create = function(req, res, next) {
 	//this is just sample - validation coming soon
@@ -35,19 +75,14 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create task with predefined id');
 	}
+
 	req.user = { _id :'55755f55e7e0f6d3717444f3'};
-	var data = {
+	var task = {
 		created: new Date(),
 		updated: new Date(),
-		title: req.body.title,
-		parent : req.body.parent || null,
-		discussion : req.body.discussion || null,
-		project : req.body.project,
-		creator : req.user._id,
-		tags: req.body.tags || [],
-		due: req.body.due || null,
 		status: req.body.status || 'Received'
 	};
+	var data = _.extend(task, req.body);
 	new Task(data).save(function(err, task ) {
 		utils.checkAndHandleError(err,res);
 		res.status(200);
@@ -105,5 +140,23 @@ exports.tagsList = function(req, res) {
 	};
 	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
 		res.send(response.facets.tags.terms)
+	});
+};
+
+exports.getByEntity = function(req, res) {
+	var entities = {projects : 'project', users: 'creator', tags: 'tags'},
+		entity = entities[req.params.entity],
+		query = {
+			query: {
+				filtered: {
+					filter : {
+						term: {}
+					}
+				}
+			}
+	};
+	query.query.filtered.filter.term[entity] =  req.params.id;
+	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
+		res.send(response.hits.hits.map(function(item) {return item._source}))
 	});
 };

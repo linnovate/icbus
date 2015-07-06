@@ -69,11 +69,11 @@ ProjectSchema.statics.load = function(id, cb) {
  * Post middleware
  */
 var elasticsearch  = require('../controllers/elasticsearch');
-ProjectSchema.post('save', function () {
-  elasticsearch.save(this, 'project', this.room);
-});
 ProjectSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'project',this.room, next);
+});
+ProjectSchema.post('save', function () {
+  elasticsearch.save(this, 'project', this.room);
 });
 
 mongoose.model('Project', ProjectSchema);

@@ -9,20 +9,22 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
   app.route('/api/projects/:id?')
     //.all(auth.requiresLogin, permissionController.echo)
-    //.post(permissionController.forceLogIn, projectController.create)     	//Create
-    .post(projectController.create)     	//Create
-    .get(projectController.read)        									//Read
-    .put(projectController.update)      									//Update
+    .post(projectController.create)
+    .get(projectController.read)
+    .put(projectController.update)
     .delete(projectController.destroy);
-    							//Delete
-  app.route('/api/tasks/tags').get(taskController.tagsList);
-  app.route('/api/tasks/:id?')
+
+
+  app.route('/api/tasks/')
     //.all(permissionController.echo)
-    //.post(permissionController.forceLogIn, taskController.create)
     .post(taskController.create)
-    .get(taskController.read)
-    .put(taskController.update)
-    .delete(taskController.destroy);
-
-
+    .get(taskController.query);
+  app.route('/api/tasks/tags')
+      .get(taskController.tagsList);
+  app.route('/api/tasks/:id')
+      .get(taskController.read)
+      .put(taskController.update)
+      .delete(taskController.destroy);
+  app.route('/api/:entity/:id/tasks')
+      .get(taskController.getByEntity);
 };
