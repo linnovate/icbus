@@ -68,8 +68,8 @@ TaskSchema.statics.load = function(id, cb) {
 TaskSchema.statics.project = function(id, cb){
   require('./project');
   var Project = mongoose.model('Project');
-  Project.findById(id,  function(err, project){
-    cb(project);
+  Project.findById(id, function(err, project){
+    cb(err,project);
   })
 };
 /**
@@ -78,7 +78,9 @@ TaskSchema.statics.project = function(id, cb){
 var elasticsearch  = require('../controllers/elasticsearch');
 TaskSchema.post('save', function (req, next) {
   var task = this;
-  TaskSchema.statics.project(this.project, function(project) {
+  TaskSchema.statics.project(this.project, function(err, project) {
+    if (err){return err}
+
     elasticsearch.save(task, 'task', project.room);
   });
   next();
@@ -86,7 +88,8 @@ TaskSchema.post('save', function (req, next) {
 
 TaskSchema.pre('remove', function (next) {
   var task = this;
-  TaskSchema.statics.project(this.project, function(project) {
+  TaskSchema.statics.project(this.project, function(err, project) {
+    if (err){return err}
     elasticsearch.delete(task, 'task', project.room, next);
   });
   next();

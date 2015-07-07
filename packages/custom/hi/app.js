@@ -11,7 +11,7 @@ var Notifications = new Module('hi');
  * All MEAN packages require registration
  * Dependency injection is used to define required modules
  */
-Notifications.register(function(app, auth, database) {
+Notifications.register(function(app, auth, database, swagger) {
 
   //We enable routing. By default the Package Object is passed to the routes
   Notifications.routes(app, auth, database);
@@ -47,6 +47,8 @@ Notifications.register(function(app, auth, database) {
         //you now have the settings object
     });
     */
+
+  //swagger.add(__dirname);
 
   return Notifications;
 });
