@@ -1,7 +1,8 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
+  Schema = mongoose.Schema,
+  archive = require('./archive.js');
 
 
 var TaskSchema = new Schema({
@@ -75,13 +76,14 @@ TaskSchema.statics.project = function(id, cb){
  * Post middleware
  */
 var elasticsearch  = require('../controllers/elasticsearch');
-TaskSchema.post('save', function () {
+TaskSchema.post('save', function (req, next) {
   var task = this;
   TaskSchema.statics.project(this.project, function(err, project) {
     if (err){return err}
 
     elasticsearch.save(task, 'task', project.room);
   });
+  next();
 });
 
 TaskSchema.pre('remove', function (next) {
@@ -90,6 +92,9 @@ TaskSchema.pre('remove', function (next) {
     if (err){return err}
     elasticsearch.delete(task, 'task', project.room, next);
   });
+  next();
 });
+
+TaskSchema.plugin(archive);
 
 mongoose.model('Tasks', TaskSchema);

@@ -1,7 +1,8 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
+  Schema = mongoose.Schema,
+  archive = require('./archive.js');
 
 
 var ProjectSchema = new Schema({
@@ -69,11 +70,17 @@ ProjectSchema.statics.load = function(id, cb) {
  * Post middleware
  */
 var elasticsearch  = require('../controllers/elasticsearch');
+
+ProjectSchema.post('save', function (req, next) {
+  elasticsearch.save(this, 'project', this.room);
+  next();
+});
+
 ProjectSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'project',this.room, next);
+  next();
 });
-ProjectSchema.post('save', function () {
-  elasticsearch.save(this, 'project', this.room);
-});
+
+ProjectSchema.plugin(archive);
 
 mongoose.model('Project', ProjectSchema);

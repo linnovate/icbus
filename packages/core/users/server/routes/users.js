@@ -50,23 +50,23 @@ module.exports = function(MeanUser, app, auth, database, passport) {
         description: req.user.name + ' login to the system.'
       });
 
-      var request = require('request');
+      // var request = require('request');
 
-      request('http://127.0.0.1:3000/api/circles/stubs/signature', function(error, response, body) {
-          if (!error && body) {
-            if (req.user && req.user._id) {
-              //no prtection yet, poc
+      // request('http://127.0.0.1:3000/api/circles/stubs/signature', function(error, response, body) {
+      //     if (!error && body) {
+      //       if (req.user && req.user._id) {
+      //         //no prtection yet, poc
 
-              var signature = JSON.parse(body);
+      //         var signature = JSON.parse(body);
 
-              users.updateSignature(req.user, signature, function(err) {
-                console.log(err);
-              });
-            }
-          }
-        })
-        // Lookup user circles and code here
-        /*
+      //         users.updateSignature(req.user, signature, function(err) {
+      //           console.log(err);
+      //         });
+      //       }
+      //     }
+      //   })
+      // Lookup user circles and code here
+      /*
          
          TODO
 

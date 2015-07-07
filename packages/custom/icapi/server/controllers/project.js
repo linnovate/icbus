@@ -32,7 +32,6 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create project with predefined id');
 	}
-	req.user ={_id: '558a68473df99095392d88cc'}
 	var data = {
 		created: new Date(),
 		updated: new Date(),
@@ -43,13 +42,12 @@ exports.create = function(req, res, next) {
 		creator : req.user._id
 	};
 
-	new Project(data).save(function(err, project ) {
-		
+	new Project(data).save({user: req.user}, function(err, project) {
 		utils.checkAndHandleError(err,res);
 		rooms.createForProject(project, function(error, roomId){
 			utils.checkAndHandleError(error,res);
 			project.room = roomId;
-			project.save(function(err, project) {
+			project.save({user: req.user}, function(err, project) {
 				utils.checkAndHandleError(err,res);
 				return res.status(200).json(project);
 			});
@@ -62,7 +60,6 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update project without id');
 	}
-
 	Project.findById(req.params.id, function (err, project) {
 		utils.checkAndHandleError(err, res);
 
@@ -71,7 +68,7 @@ exports.update = function(req, res, next) {
 		if (req.body.parent)  project.parent = req.body.parent;
 		if (req.body.color)  project.color = req.body.color;
 
-		project.save(function(err, project) {
+		project.save({user: req.user}, function(err, project) {
 			utils.checkAndHandleError(err, res, 'Failed to update project');
 
 			res.status(200);
@@ -88,11 +85,13 @@ exports.destroy = function(req, res, next) {
 		return res.send(404, 'Cannot destroy project without id');
 	}
 
-	Project.remove({_id:req.params.id}, function(err, success) {
-		
-		utils.checkAndHandleError(err, res, 'Failed to destroy project');
+	Project.findById(req.params.id, function(err, project) {
+		utils.checkAndHandleError(err, res);
+		project.remove({user: req.user}, function(err, success) {
+			utils.checkAndHandleError(err, res, 'Failed to destroy project');
 
-		res.status(200);
-		return res.send(success ? 'Project deleted': 'Failed to delete project');
+			res.status(200);
+			return res.send(success ? 'Project deleted' : 'Failed to delete project');
+		});
 	});
 }

@@ -1,7 +1,8 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-  Schema = mongoose.Schema;
+  Schema = mongoose.Schema,
+  archive = require('./archive.js');
 
 
 var DiscussionSchema = new Schema({
@@ -76,5 +77,7 @@ DiscussionSchema.post('save', function () {
 DiscussionSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'discussion', next);
 });
+
+DiscussionSchema.plugin(archive);
 
 mongoose.model('Discussion', DiscussionSchema);

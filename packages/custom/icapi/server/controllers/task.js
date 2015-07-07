@@ -76,14 +76,15 @@ exports.create = function(req, res, next) {
 		return res.send(401, 'Cannot create task with predefined id');
 	}
 
-	req.user = { _id :'55755f55e7e0f6d3717444f3'};
 	var task = {
 		created: new Date(),
 		updated: new Date(),
 		status: req.body.status || 'Received'
 	};
+
 	var data = _.extend(task, req.body);
-	new Task(data).save(function(err, task ) {
+
+	new Task(data).save({user: req.user}, function(err, task) {
 		utils.checkAndHandleError(err,res);
 		res.status(200);
 		return res.json(task);
@@ -95,7 +96,6 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update task without id');
 	}
-
 	Task.findById(req.params.id, function (err, task) {
 		utils.checkAndHandleError(err, res);
 
@@ -106,7 +106,7 @@ exports.update = function(req, res, next) {
 		if (req.body.tags) task.tags = req.body.tags;
 		if (req.body.due) task.due = req.body.due;
 
-		task.save(function(err, task) {
+		task.save({user: req.user}, function(err, task) {
 			utils.checkAndHandleError(err, res, 'Failed to update task');
 			res.status(200);
 			return res.json(task);
@@ -120,10 +120,9 @@ exports.destroy = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot destroy task without id');
 	}
-
 	Task.findById(req.params.id, function(err, task) {
 		utils.checkAndHandleError(err, res);
-		task.remove(function(err, success) {
+		task.remove({user: req.user}, function(err, success) {
 			utils.checkAndHandleError(err, res, 'Failed to destroy task');
 			res.status(200);
 			return res.send(success ? 'Task deleted': 'Failed to delete task');
