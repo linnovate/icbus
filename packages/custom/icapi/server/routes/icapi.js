@@ -2,6 +2,7 @@
 
 var projectController = require('../controllers/project');
 var taskController = require('../controllers/task');
+var profileController = require('../controllers/profile');
 
 var permissionController = require('../controllers/permission');
 
@@ -29,6 +30,6 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
         .get(taskController.getByEntity);
 
     app.route('/api/profile')
-        .get(profile.profile, profile.show)
-        .put(profile.profile, auth.requiresLogin, profile.update);
+        .get(auth.requiresLogin, profileController.profile, profileController.show)
+        .put(auth.requiresLogin, profileController.profile, profileController.update);
 };
