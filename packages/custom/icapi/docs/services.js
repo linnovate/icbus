@@ -54,8 +54,47 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var tasksList = {
+    'spec': {
+      description: 'Task list',
+      path: '/tasks',
+      method: 'GET',
+      summary: 'Get tasks list',
+      notes: '',
+      type: 'Task',
+      nickname: 'GetTasks',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var createTask = {
+    'spec': {
+      description: 'Task creation',
+      path: '/tasks',
+      method: 'POST',
+      summary: 'create a task',
+      notes: '',
+      type: 'Task',
+      nickname: 'createTask',
+      produces: ['application/json'],
+      parameters: [{
+        name: 'body',
+        description: 'task to create',
+        required: true,
+        type: 'Task',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+
   swagger.addGet(usersList)
     .addGet(showProfile)
-    .addPut(updateProfile);
+    .addPut(updateProfile)
+      .addGet(tasksList)
+      .addPost(createTask)
+
 
 };

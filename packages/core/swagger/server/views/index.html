@@ -58,7 +58,8 @@
         log("added key " + key);
         window.authorizations.add("key", new ApiKeyAuthorization("api_key", key, "query"));
       }
-    })
+    });
+      window.authorizations.add("key", new ApiKeyAuthorization("authorization", 'Bearer ' + window.localStorage.getItem('JWT'), "header"));
     window.swaggerUi.load();
   });
   </script>

@@ -19,7 +19,7 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
     app.route('/api/tasks/')
     //.all(permissionController.echo)
-    .post(taskController.create)
+        .post(taskController.create)
         .get(taskController.query);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);

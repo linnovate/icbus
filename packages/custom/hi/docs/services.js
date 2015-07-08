@@ -4,42 +4,28 @@ exports.load = function(swagger, parms) {
 
   var searchParms = parms.searchableOptions;
 
-  var list = {
+  var send = {
     'spec': {
-      description: 'Article operations',
-      path: '/articles',
-      method: 'GET',
-      summary: 'Get all Articles',
-      notes: '',
-      type: 'Article',
-      nickname: 'getArticles',
-      produces: ['application/json'],
-      params: searchParms
-    }
-  };
-
-  var create = {
-    'spec': {
-      description: 'Device operations',
-      path: '/articles',
+      description: 'send notification to app',
+      path: '/api/notifications/:appName/:token/:room/:text',
       method: 'POST',
-      summary: 'Create article',
+      summary: 'send notification to app',
       notes: '',
-      type: 'Article',
-      nickname: 'createArticle',
+      type: '',
+      nickname: 'sendNotification',
       produces: ['application/json'],
       parameters: [{
         name: 'body',
         description: 'Article to create.  User will be inferred by the authenticated user.',
         required: true,
-        type: 'Article',
+        type: '',
         paramType: 'body',
         allowMultiple: false
       }]
     }
   };
 
-  swagger.addGet(list)
-    .addPost(create);
+  swagger
+    .addPost(send);
 
 };
