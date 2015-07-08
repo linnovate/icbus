@@ -33,9 +33,7 @@ var TaskSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
-  tags: [{
-    type: String
-  }],
+  tags: [ String],
   status: {
     type: String,
     enum: ['Received', 'Completed']

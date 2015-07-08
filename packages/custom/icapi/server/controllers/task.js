@@ -10,10 +10,8 @@ var Task = mongoose.model('Tasks'),
 	mean = require('meanio'),
 	_ = require('lodash');
 
-exports.read = function(req, res, next) {	
-
+exports.read = function(req, res, next) {
 	var query = {};
-
 	if (req.params.id) {
 		query._id = req.params.id;
 	}
@@ -33,28 +31,25 @@ exports.read = function(req, res, next) {
 };
 
 exports.query = function(req, res) {
-	console.log(!(_.isEmpty(req.query)))
 	if (!(_.isEmpty(req.query))) {
-		var filters = [];
-		if (req.query.tags)
-			filters.push({term: {tags: req.query.tags}});
+		var queries = [];
+		if (req.query.tags){
+			var tags = req.query.tags.split(',');
+			queries.push({
+				"terms" : {
+					"tags" : tags,
+					"minimum_should_match" : tags.length
+				}
+			});
+		}
 		if (req.query.status)
-			filters.push({term: {status: req.query.status}});
-		//var query = {
-		//	query: {
-		//		filtered: {
-		//			filter: filters[0]
-		//			}
-		//		}
-        //
-		//};
+			queries.push({term: {status: req.query.status}});
 
 		var query = {
 			query : {
-				match : {
-					tags:{
-						query:req.query.tags.replace(',', ' '),
-						operator:'or'
+				filtered: {
+					query : {
+						bool : {must: queries}
 					}
 				}
 			}
@@ -82,6 +77,9 @@ exports.create = function(req, res, next) {
 		status: req.body.status || 'Received'
 	};
 
+	if (req.body.tags){
+		req.body.tags = JSON.parse(req.body.tags);
+	}
 	var data = _.extend(task, req.body);
 
 	new Task(data).save({user: req.user}, function(err, task) {
