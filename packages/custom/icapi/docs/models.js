@@ -73,10 +73,56 @@ exports.models = {
       },
       watchers : {
         type: 'array',
-        description: 'array of users ids of watchers users'
+        description: 'array of ids of watchers users'
+      },
+      assign: {
+        type: 'array',
+        description: 'array of ids of assigned users'
       }
 
     }
 
+  },
+  Project: {
+    id :'Project',
+    required :['title'],
+    properties : {
+      title: {
+        type: 'string',
+        description :'title of project'
+      },
+      parent: {
+        type: 'string',
+        description: 'id of another project'
+      },
+      discussion: {
+        type:'string',
+        description:'id of discussion'
+      },
+      creator: {
+        type:'string',
+        description:'id of user who created the project'
+      },
+      manager: {
+        type:'string',
+        description:'id of user who manages the project'
+      },
+      signature: {
+        circles: {},
+        codes: {}
+      },
+      color: {
+        type: 'string',
+        description:'color'
+      },
+      watchers: [{
+        type: 'array',
+        description:'array of ids of watchers users'
+      }],
+      room: {
+        type: 'string',
+        description: 'id of letschat room'
+      }
+    }
   }
 };

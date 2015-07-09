@@ -11,49 +11,17 @@ var Task = mongoose.model('Tasks'),
 	_ = require('lodash');
 
 exports.read = function(req, res, next) {
-	var query = {};
-	if (req.params.id) {
-		query._id = req.params.id;
-	}
-	if (req.query)
-		query = req.query;
-
-	var Query = Task.find(query);
-	Query.populate('creator');
-	Query.limit(200 || req.query.limit);
-	Query.exec(function(err, tasks) {
-		
+	Task.findById(req.params.id).populate('assign').exec(function(err, tasks) {
 		utils.checkAndHandleError(err, res, 'Failed to read task');
-
 		res.status(200);
 		return res.json(tasks);
 	});
 };
 
 exports.query = function(req, res) {
+	var query = {};
 	if (!(_.isEmpty(req.query))) {
-		var queries = [];
-		if (req.query.tags){
-			var tags = req.query.tags.split(',');
-			queries.push({
-				"terms" : {
-					"tags" : tags,
-					"minimum_should_match" : tags.length
-				}
-			});
-		}
-		if (req.query.status)
-			queries.push({term: {status: req.query.status}});
-
-		var query = {
-			query : {
-				filtered: {
-					query : {
-						bool : {must: queries}
-					}
-				}
-			}
-		}
+		query = advancedSearch(req.query);
 	}
 
 	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
@@ -63,6 +31,33 @@ exports.query = function(req, res) {
 			res.send(response.hits.hits.map(function(item) {return item._source}))
 	});
 };
+
+function advancedSearch(query) {
+	var queries = [], jsonQuery;
+	for (var i in query){
+		var isArray = query[i].indexOf(',') > -1;
+		if (isArray){
+			var terms = query[i].split(',');
+			jsonQuery = {terms: {minimum_should_match: terms.length}};
+			jsonQuery.terms[i] = terms;
+			queries.push(jsonQuery);
+		}
+		else{
+			jsonQuery = {term: {}};
+			jsonQuery.term[i] = query[i];
+			queries.push(jsonQuery);
+		}
+	}
+	return {
+		query : {
+			filtered: {
+				query : {
+					bool : {must: queries}
+				}
+			}
+		}
+	}
+}
 
 exports.create = function(req, res, next) {
 	//this is just sample - validation coming soon
@@ -74,14 +69,10 @@ exports.create = function(req, res, next) {
 	var task = {
 		created: new Date(),
 		updated: new Date(),
-		status: req.body.status || 'Received'
+		status: req.body.data.status || 'Received'
 	};
 
-	if (req.body.tags){
-		req.body.tags = JSON.parse(req.body.tags);
-	}
-	var data = _.extend(task, req.body);
-
+	var data = _.extend(task, JSON.parse(req.body.data));
 	new Task(data).save({user: req.user}, function(err, task) {
 		utils.checkAndHandleError(err,res);
 		res.status(200);
@@ -96,13 +87,11 @@ exports.update = function(req, res, next) {
 	}
 	Task.findById(req.params.id, function (err, task) {
 		utils.checkAndHandleError(err, res);
-
+		var data = JSON.parse(req.body.data);
+		for (var i in data){
+			task[i] = data[i];
+		}
 		task.updated = new Date();
-
-		if (req.body.title)  task.title = req.body.title;
-		if (req.body.parent) task.parent = req.body.parent;
-		if (req.body.tags) task.tags = req.body.tags;
-		if (req.body.due) task.due = req.body.due;
 
 		task.save({user: req.user}, function(err, task) {
 			utils.checkAndHandleError(err, res, 'Failed to update task');

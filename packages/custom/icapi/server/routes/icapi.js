@@ -16,11 +16,9 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
         .put(projectController.update)
         .delete(projectController.destroy);
 
-
-    app.route('/api/tasks/')
-    //.all(permissionController.echo)
+    app.route('/api/tasks')
         .post(taskController.create)
-        .get(taskController.query);
+        .get(auth.requiresLogin, taskController.query);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);
     app.route('/api/tasks/:id')
@@ -36,4 +34,17 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
     app.route('/api/users')
         .get(usersController.read);
+
+
+    //temporary -because of swagger bug with 'tasks' word
+
+    app.route('/api/task')
+        .post(taskController.create)
+        .get(taskController.query);
+    app.route('/api/task/tags')
+        .get(taskController.tagsList);
+    app.route('/api/task/:id')
+        .get(taskController.read)
+        .put(taskController.update)
+        .delete(taskController.destroy);
 };
