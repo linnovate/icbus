@@ -5,16 +5,16 @@
  */
 var Module = require('meanio').Module;
 
-var Notifications = new Module('hi');
+var Hi = new Module('hi');
 
 /*
  * All MEAN packages require registration
  * Dependency injection is used to define required modules
  */
-Notifications.register(function(app, auth, database, swagger) {
+Hi.register(function(app, auth, database, swagger) {
 
   //We enable routing. By default the Package Object is passed to the routes
-  Notifications.routes(app, auth, database);
+  Hi.routes(app, auth, database);
 
   //We are adding a link to the main menu for all authenticated users
   //Notifications.menus.add({
@@ -23,8 +23,8 @@ Notifications.register(function(app, auth, database, swagger) {
   //  roles: ['authenticated'],
   //  menu: 'main'
   //});
-  
-  Notifications.aggregateAsset('css', 'notifications.css');
+
+  Hi.aggregateAsset('css', 'notifications.css');
 
   /**
     //Uncomment to use. Requires meanio@0.3.7 or above
@@ -50,5 +50,5 @@ Notifications.register(function(app, auth, database, swagger) {
 
   //swagger.add(__dirname);
 
-  return Notifications;
+  return Hi;
 });

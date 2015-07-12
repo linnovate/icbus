@@ -33,9 +33,7 @@ var TaskSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
-  tags: [{
-    type: String
-  }],
+  tags: [ String],
   status: {
     type: String,
     enum: ['Received', 'Completed']
@@ -45,6 +43,10 @@ var TaskSchema = new Schema({
   },
   //should we maybe have finer grain control on this
   watchers : [{
+    type: Schema.ObjectId,
+    ref: 'User'
+  }],
+  assign : [{
     type: Schema.ObjectId,
     ref: 'User'
   }]
@@ -63,7 +65,8 @@ TaskSchema.path('title').validate(function(title) {
 TaskSchema.statics.load = function(id, cb) {
   this.findOne({
     _id: id
-  }).populate('creator', 'name username').exec(cb);
+  }).populate('creator', 'name username')
+    .populate('assign', 'name username').exec(cb);
 };
 TaskSchema.statics.project = function(id, cb){
   require('./project');
