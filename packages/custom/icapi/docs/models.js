@@ -31,11 +31,11 @@ exports.models = {
     }
   },
 
-  Task : {
-    id :'Task',
-    required :['title', 'project'],
-    properties : {
-      id : {
+  Task: {
+    id: 'Task',
+    required: ['title', 'project'],
+    properties: {
+      id: {
         type: 'string',
         description: 'Unique identifier for the task'
       },
@@ -43,11 +43,11 @@ exports.models = {
         type: 'string',
         description: ''
       },
-      project : {
+      project: {
         type: 'string',
         description: 'id of project'
       },
-      parent : {
+      parent: {
         type: 'string',
         description: 'id of another task'
       },
@@ -71,7 +71,7 @@ exports.models = {
         type: 'date',
         description: 'due date of task'
       },
-      watchers : {
+      watchers: {
         type: 'array',
         description: 'array of ids of watchers users'
       },
@@ -84,28 +84,28 @@ exports.models = {
 
   },
   Project: {
-    id :'Project',
-    required :['title'],
-    properties : {
+    id: 'Project',
+    required: ['title'],
+    properties: {
       title: {
         type: 'string',
-        description :'title of project'
+        description: 'title of project'
       },
       parent: {
         type: 'string',
         description: 'id of another project'
       },
       discussion: {
-        type:'string',
-        description:'id of discussion'
+        type: 'string',
+        description: 'id of discussion'
       },
       creator: {
-        type:'string',
-        description:'id of user who created the project'
+        type: 'string',
+        description: 'id of user who created the project'
       },
       manager: {
-        type:'string',
-        description:'id of user who manages the project'
+        type: 'string',
+        description: 'id of user who manages the project'
       },
       signature: {
         circles: {},
@@ -113,15 +113,37 @@ exports.models = {
       },
       color: {
         type: 'string',
-        description:'color'
+        description: 'color'
       },
       watchers: [{
         type: 'array',
-        description:'array of ids of watchers users'
+        description: 'array of ids of watchers users'
       }],
       room: {
         type: 'string',
         description: 'id of letschat room'
+      }
+    }
+  },
+  Archive: {
+    id: 'Archive',
+    properties: {
+
+      t: {
+        type: 'date',
+        description: 'date of update'
+      },
+      o: {
+        type: 'string',
+        description: 'operation type(i=insert/u=update/d=delete)'
+      },
+      d: {
+        type: 'Schema.Types.Mixed',
+        description: 'updated data'
+      },
+      u: {
+        type: 'Schema.ObjectId',
+        description: 'id of user who update the data'
       }
     }
   }

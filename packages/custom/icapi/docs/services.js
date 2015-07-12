@@ -178,7 +178,21 @@ exports.load = function(swagger, parms) {
       produces: ['application/json'],
       params: searchParms
     }
-  }
+  };
+
+  var tasksHistory = {
+    'spec': {
+      description: 'get all updates history for a single task',
+      path: '/history/tasks/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single task',
+      notes: '',
+      type: 'Archive',
+      nickname: 'GetTaskHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
 
   var createProject = {
     'spec': {
@@ -232,4 +246,5 @@ exports.load = function(swagger, parms) {
       .addPut(updateTask)
       .addDelete(deleteTask)
       .addGet(getTasksPerEntity)
+      .addGet(tasksHistory)
 };
