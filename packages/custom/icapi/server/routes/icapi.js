@@ -28,6 +28,8 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
         .delete(taskController.destroy);
     app.route('/api/:entity/:id/tasks')
         .get(taskController.getByEntity);
+    app.route('/api/history/tasks/:id')
+        .get(taskController.readHistory);
 
     app.route('/api/profile')
         .get(auth.requiresLogin, profileController.profile, profileController.show)

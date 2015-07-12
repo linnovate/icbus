@@ -78,6 +78,6 @@ DiscussionSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'discussion', next);
 });
 
-DiscussionSchema.plugin(archive);
+DiscussionSchema.plugin(archive, 'discussion');
 
 mongoose.model('Discussion', DiscussionSchema);

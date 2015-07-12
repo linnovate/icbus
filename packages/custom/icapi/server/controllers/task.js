@@ -3,10 +3,12 @@
 var utils = require('./utils');
 
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+	ObjectId = require('mongoose').Types.ObjectId;
 
 require('../models/task');
 var Task = mongoose.model('Tasks'),
+	TaskArchive = mongoose.model('tasks_archive'),
 	mean = require('meanio'),
 	_ = require('lodash');
 
@@ -145,4 +147,21 @@ exports.getByEntity = function(req, res) {
 	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
 		res.send(response.hits.hits.map(function(item) {return item._source}))
 	});
+};
+
+exports.readHistory = function(req, res, next) {
+	if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+		var Query = TaskArchive.find({
+			'd._id': new ObjectId(req.params.id)
+		});
+		Query.populate('u');
+		Query.exec(function(err, tasks) {
+			console.log(err, tasks)
+			utils.checkAndHandleError(err, res, 'Failed to read history for task ' + req.params.id);
+
+			res.status(200);
+			return res.json(tasks);
+		});
+	} else
+		utils.checkAndHandleError(req.params.id + ' is not a mongoose ObjectId', res, 'Failed to read history for task ' + req.params.id);
 };
