@@ -81,6 +81,6 @@ ProjectSchema.pre('remove', function (next) {
   next();
 });
 
-ProjectSchema.plugin(archive);
+ProjectSchema.plugin(archive, 'project');
 
 mongoose.model('Project', ProjectSchema);

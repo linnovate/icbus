@@ -10,10 +10,10 @@ am.archiveCollectionName = function(collectionName) {
   return collectionName + '_archive';
 }
 
-am.ArchiveModel = function(collectionName) {
+am.ArchiveModel = function(collectionName, name) {
 
   if (!(collectionName in am.archiveModels)) {
-    var schema = new mongoose.Schema({
+    var schema = new Schema({
       t: {
         type: Date,
         required: true
@@ -23,7 +23,7 @@ am.ArchiveModel = function(collectionName) {
         required: true
       },
       d: {
-        type: mongoose.Schema.Types.Mixed,
+        type: Schema.Types.Mixed,
         required: true
       },
       u: {
@@ -44,20 +44,22 @@ am.ArchiveModel = function(collectionName) {
 
 
 
-module.exports = function archivePlugin(schema) {
+module.exports = function archivePlugin(schema, collectionName) {
 
   // Clear all archive collection from Schema
   schema.statics.archiveModel = function() {
-    return am.ArchiveModel(am.archiveCollectionName(this.collection.name));
+    return am.ArchiveModel(am.archiveCollectionName(collectionName));
   };
 
   // Clear all archive documents from archive collection
   schema.statics.clearArchive = function(callback) {
-    var Archive = am.ArchiveModel(am.archiveCollectionName(this.collection.name));
+    var Archive = am.ArchiveModel(am.archiveCollectionName(collectionName));
     Archive.remove({}, function(err) {
       callback(err);
     });
   };
+
+  am.ArchiveModel(am.archiveCollectionName(collectionName));
 
   // Create a copy when insert or update
   schema.pre('save', function(next, req, callback) {
@@ -70,7 +72,7 @@ module.exports = function archivePlugin(schema) {
     archiveDoc['d'] = d;
     archiveDoc['u'] = req.user;
 
-    var archive = new am.ArchiveModel(am.archiveCollectionName(this.collection.name))(archiveDoc);
+    var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);
     next(callback);
   });
@@ -86,7 +88,7 @@ module.exports = function archivePlugin(schema) {
     archiveDoc['d'] = d;
     archiveDoc['u'] = req.user;
 
-    var archive = new am.ArchiveModel(am.archiveCollectionName(this.collection.name))(archiveDoc);
+    var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);
     next(callback);
   });
