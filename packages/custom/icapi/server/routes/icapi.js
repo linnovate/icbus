@@ -9,10 +9,11 @@ var permissionController = require('../controllers/permission');
 
 module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
-    app.route('/api/projects/:id?')
+    app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
-    .post(projectController.create)
-        .get(projectController.read)
+        .post(projectController.create)
+        .get(projectController.read);
+    app.route('/api/projects/:id')
         .put(projectController.update)
         .delete(projectController.destroy);
 

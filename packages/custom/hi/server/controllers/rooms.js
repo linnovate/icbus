@@ -1,6 +1,9 @@
 var request = require('request'),
     lcconfig = require('meanio').loadConfig().letschat,
-    _ = require('lodash');
+    _ = require('lodash'),
+    Q = require('q'),
+    notifications = require('./notifications');
+
 
 exports.create = function(req, res) {
 
@@ -42,7 +45,9 @@ exports.create = function(req, res) {
 
 };
 
-exports.createForProject  = function(project, callback) {
+exports.createForProject  = function(project) {
+    var deferred = Q.defer();
+    var dt = new Date().toJSON();
     var options = {
         url : lcconfig.host +':' + lcconfig.port +'/rooms',
         headers : {
@@ -50,18 +55,24 @@ exports.createForProject  = function(project, callback) {
         },
         json: {
             name: project.title,
-            slug: project.title.toLowerCase().replace(/[^a-z0-9 ]/gi,'').trim().replace(/ /g, '_'),
+            slug: (project.title + '_created_at_' + dt).toLowerCase().replace(/[^a-z0-9 ]/gi,'').trim().replace(/ /g, '_') ,
             isExternal: true
         },
         method: "POST"
     };
     request(options, function(error, response, body) {
-        if (response.body.errors) {
-            return callback(response.body.errors, null);
+        if (response.body.errors)
+            deferred.reject(response.body.errors);
+        else{
+            notifications.sendFromApi({entityType:'project',title: project.title, method:'create'})
+                .then(function(){
+                    deferred.resolve(body.id)
+                });
         }
-        callback(null, body.id);
+
     });
-}
+    return deferred.promise;
+};
 
 exports.all = function(req, res) {
     var options = {
