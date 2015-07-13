@@ -61,8 +61,8 @@ exports.createForProject  = function(project) {
         method: "POST"
     };
     request(options, function(error, response, body) {
-        if (response.body.errors)
-            deferred.reject(response.body.errors);
+        if (error || response.body.errors)
+            deferred.reject(error || response.body.errors);
         else{
             notifications.sendFromApi({entityType:'project',title: project.title, method:'create'})
                 .then(function(){

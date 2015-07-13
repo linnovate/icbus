@@ -7,14 +7,16 @@ var mongoose = require('mongoose'),
 
 var TaskSchema = new Schema({
   created: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   updated: {
     type: Date
   },  
   title: {
     type: String,
-    required: true    
+    required: true,
+    default: 'New Task'
   },
   project : {
     type: Schema.ObjectId,
@@ -36,7 +38,8 @@ var TaskSchema = new Schema({
   tags: [ String],
   status: {
     type: String,
-    enum: ['Received', 'Completed']
+    enum: ['Received', 'Completed'],
+    default: 'Received'
   },
   due: {
     type: Date,

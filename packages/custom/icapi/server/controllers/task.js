@@ -67,15 +67,7 @@ exports.create = function(req, res, next) {
 	if (req.params.id) {
 		return res.send(401, 'Cannot create task with predefined id');
 	}
-
-	var task = {
-		created: new Date(),
-		updated: new Date(),
-		status: req.body.data.status || 'Received'
-	};
-
-	var data = _.extend(task, JSON.parse(req.body.data));
-	new Task(data).save({user: req.user}, function(err, task) {
+	new Task(req.body).save({user: req.user}, function(err, task) {
 		utils.checkAndHandleError(err,res);
 		res.status(200);
 		return res.json(task);
