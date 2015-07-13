@@ -12,14 +12,15 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
     app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
         .post(projectController.create)
-        .get(projectController.read);
+        .get(projectController.all);
     app.route('/api/projects/:id')
+        .get(projectController.read)
         .put(projectController.update)
         .delete(projectController.destroy);
 
     app.route('/api/tasks')
         .post(taskController.create)
-        .get(auth.requiresLogin, taskController.query);
+        .get(taskController.all);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);
     app.route('/api/tasks/:id')
@@ -43,7 +44,7 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
     app.route('/api/task')
         .post(taskController.create)
-        .get(taskController.query);
+        .get(taskController.all);
     app.route('/api/task/tags')
         .get(taskController.tagsList);
     app.route('/api/task/:id')

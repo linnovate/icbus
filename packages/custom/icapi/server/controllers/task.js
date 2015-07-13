@@ -10,7 +10,8 @@ require('../models/task');
 var Task = mongoose.model('Tasks'),
 	TaskArchive = mongoose.model('tasks_archive'),
 	mean = require('meanio'),
-	_ = require('lodash');
+	_ = require('lodash'),
+	elasticsearch = require('./elasticsearch');
 
 exports.read = function(req, res, next) {
 	Task.findById(req.params.id).populate('assign').exec(function(err, tasks) {
@@ -20,10 +21,10 @@ exports.read = function(req, res, next) {
 	});
 };
 
-exports.query = function(req, res) {
+exports.all = function(req, res) {
 	var query = {};
 	if (!(_.isEmpty(req.query))) {
-		query = advancedSearch(req.query);
+		query = elasticsearch.advancedSearch(req.query);
 	}
 
 	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
@@ -34,32 +35,7 @@ exports.query = function(req, res) {
 	});
 };
 
-function advancedSearch(query) {
-	var queries = [], jsonQuery;
-	for (var i in query){
-		var isArray = query[i].indexOf(',') > -1;
-		if (isArray){
-			var terms = query[i].split(',');
-			jsonQuery = {terms: {minimum_should_match: terms.length}};
-			jsonQuery.terms[i] = terms;
-			queries.push(jsonQuery);
-		}
-		else{
-			jsonQuery = {term: {}};
-			jsonQuery.term[i] = query[i];
-			queries.push(jsonQuery);
-		}
-	}
-	return {
-		query : {
-			filtered: {
-				query : {
-					bool : {must: queries}
-				}
-			}
-		}
-	}
-}
+
 
 exports.create = function(req, res, next) {
 	//this is just sample - validation coming soon
