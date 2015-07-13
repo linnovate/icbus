@@ -28,21 +28,20 @@ exports.read = function(req, res, next) {
 
 exports.create = function(req, res, next) {
 	var project = {
-		created: new Date(),
-		updated: new Date(),
 		creator : req.user._id
 	};
 	project = _.extend(project,req.body);
-
 	rooms.createForProject(project)
 		.then(function (roomId) {
 			project.room = roomId;
+		}, function (error) {
+			console.log('cannot create a room in lets-chat '+ error);
+		})
+		.done(function(){
 			new Project(project).save({user: req.user}, function(err, response) {
 				utils.checkAndHandleError(err,res);
 				res.json(response);
 			});
-		}, function (error) {
-			utils.checkAndHandleError(error,res);
 		});
 };
 
