@@ -7,8 +7,8 @@ var mongoose = require('mongoose'),
 	ObjectId = require('mongoose').Types.ObjectId;
 
 require('../models/task');
-var Task = mongoose.model('Tasks'),
-	TaskArchive = mongoose.model('tasks_archive'),
+var Task = mongoose.model('Task'),
+	TaskArchive = mongoose.model('task_archive'),
 	mean = require('meanio'),
 	_ = require('lodash');
 

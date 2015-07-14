@@ -101,6 +101,6 @@ TaskSchema.pre('remove', function (next) {
   next();
 });
 
-TaskSchema.plugin(archive, 'tasks');
+TaskSchema.plugin(archive, 'task');
 
-mongoose.model('Tasks', TaskSchema);
+mongoose.model('Task', TaskSchema);

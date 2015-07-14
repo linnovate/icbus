@@ -5,7 +5,12 @@
  */
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    Busboy = require('busboy'),
+    fs = require('fs'),
+    path = require('path'),
+    utils = require('./utils'),
+    config = require('meanio').loadConfig();
 
 /**
  * Find profile by user id
@@ -29,13 +34,34 @@ exports.update = function(req, res) {
         profile: req.body
     });
     user.save(function(err) {
-        if (err) {
-            return res.status(500).json({
-                error: 'Cannot update the profile'
-            });
-        }
+        utils.checkAndHandleError(err, res, 'Cannot update the profile');
         res.json(user.profile);
     });
+};
+/**
+ * Update user avatar
+ */
+exports.uploadAvatar = function(req, res, next) {
+
+    var busboy = new Busboy({
+        headers: req.headers
+    });
+    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+
+        var saveTo = path.join(config.root, 'packages/core/users/public/assets/img/avatar', req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]));
+
+        file.pipe(fs.createWriteStream(saveTo));
+        req.body.avatar = path.join(config.hostname, 'users/assets/img/avatar', req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]));
+        req.file = true;
+    });
+    busboy.on('finish', function() {
+        if (req.file)
+            next();
+        else
+            utils.checkAndHandleError('Didn\'t find any avatar to upload', res, 'Didn\'t find any avatar to upload');
+    });
+    return req.pipe(busboy);
+
 };
 /**
  * Show user profile

@@ -70,6 +70,7 @@ modules/views/
 /public/build/
 /packages/contrib/
 /packages/**/**/public/assets/lib
+/packages/core/users/public/assets/img/*
 
 
 # --------------------

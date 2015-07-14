@@ -54,6 +54,19 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var uploadAvatar = {
+    'spec': {
+      description: 'Users operations',
+      path: '/avatar',
+      method: 'POST',
+      summary: 'upload user\'s avatar',
+      notes: '<p>Request URL: host/api/avatar.</p> <p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>',
+      type: '{}',
+      nickname: 'uploadAvatar',
+      produces: ['application/json']
+    }
+  };
+
   var tasksList = {
     'spec': {
       description: 'Tasks operations',
@@ -220,7 +233,7 @@ exports.load = function(swagger, parms) {
       description: 'project operations',
       path: '/projects',
       method: 'GET',
-      summary: 'Get tasks list',
+      summary: 'Get projects list',
       notes: '',
       type: 'Project',
       nickname: 'GetTasks',
@@ -229,16 +242,13 @@ exports.load = function(swagger, parms) {
     }
   };
 
-
-
-
-
   swagger
       .addGet(usersList)
       .addGet(showProfile)
       .addGet(tasksList)
       .addPost(createTask)
       .addPut(updateProfile)
+      .addPost(uploadAvatar)
       .addGet(projectsList)
       .addPost(createProject)
       .addGet(tagsList)
