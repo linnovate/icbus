@@ -30,7 +30,6 @@ exports.models = {
       }
     }
   },
-
   Task: {
     id: 'Task',
     required: ['title', 'project'],
@@ -81,7 +80,6 @@ exports.models = {
       }
 
     }
-
   },
   Project: {
     id: 'Project',
@@ -119,6 +117,52 @@ exports.models = {
         type: 'array',
         description: 'array of ids of watchers users'
       }],
+      room: {
+        type: 'string',
+        description: 'id of letschat room'
+      }
+    }
+  },
+  Attachment: {
+    id: 'Attachment',
+    required: ['name', 'issue', 'issueId'],
+    properties: {
+      id: {
+        type: 'string',
+        description: 'Unique identifier for the attachment'
+      },
+      created: {
+        type: 'string',
+        description: 'created date of attachment'
+      },
+      updated: {
+        type: 'string',
+        description: 'last updated date of attachment'
+      },
+      name: {
+        type: 'string',
+        description: 'name of attachment'
+      },
+      path: {
+        type: 'string',
+        description: 'path direction of attachment'
+      },
+      issue: {
+        type: 'string',
+        description: 'name of issue the attachment related to'
+      },
+      issueId: {
+        type: 'string',
+        description: 'id of issue the attachment related to'
+      },
+      creator: {
+        type: 'string',
+        description: 'id of user who created the attachment'
+      },
+      updater: {
+        type: 'string',
+        description: 'id of user who updated the attachment'
+      },
       room: {
         type: 'string',
         description: 'id of letschat room'

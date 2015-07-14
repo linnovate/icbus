@@ -242,6 +242,60 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var attachmentsList = {
+    'spec': {
+      description: 'attachments operations',
+      path: '/attachments',
+      method: 'GET',
+      summary: 'Get attachments list',
+      notes: '',
+      type: 'Attachment',
+      nickname: 'GetAttachments',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var createAttachment = {
+    'spec': {
+      description: 'Attachment creation',
+      path: '/attachments',
+      method: 'POST',
+      summary: 'Create an attachment',
+      type: 'Attachment',
+      nickname: 'createAttachment',
+      produces: ['application/json'],
+      notes: '<p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p> On fields you must send {issue: "string", issueId: "string"}.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>'
+    }
+  };
+
+  var updateAttachment = {
+    'spec': {
+      description: 'Update an attachment',
+      path: '/attachments/:id',
+      method: 'POST',
+      summary: 'Update an attachment',
+      type: 'Attachment',
+      nickname: 'updateAttachment',
+      produces: ['application/json'],
+      notes: '<p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p> On fields you must send {issue: "string", issueId: "string"}.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>'
+    }
+  };
+
+  var attachmentsHistory = {
+    'spec': {
+      description: 'get all updates history for a single attachment',
+      path: '/history/attachments/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single attachment',
+      notes: '',
+      type: 'Archive',
+      nickname: 'GetAttachmentHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
   swagger
       .addGet(usersList)
       .addGet(showProfile)
@@ -257,4 +311,8 @@ exports.load = function(swagger, parms) {
       .addDelete(deleteTask)
       .addGet(getTasksPerEntity)
       .addGet(tasksHistory)
+      .addGet(attachmentsList)
+      .addPost(createAttachment)
+      .addPost(updateAttachment)
+      .addGet(attachmentsHistory)
 };

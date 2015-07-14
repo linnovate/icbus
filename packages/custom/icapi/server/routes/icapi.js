@@ -12,7 +12,7 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
     app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
-        .post(projectController.create)
+    .post(projectController.create)
         .get(projectController.all);
     app.route('/api/projects/:id')
         .get(projectController.read)
@@ -41,6 +41,17 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
 
     app.route('/api/users')
         .get(usersController.read);
+
+    app.route('/api/attachments')
+        .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
+        .get(auth.requiresLogin, attachmentsController.query);
+    app.route('/api/attachments/:id')
+        .get(attachmentsController.read)
+        .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.update);
+    app.route('/api/history/attachments/:id')
+        .get(attachmentsController.readHistory);
+    app.route('/api/attachments/upload')
+        .post(auth.requiresLogin, attachmentsController.upload);
 
     //temporary -because of swagger bug with 'tasks' word
 

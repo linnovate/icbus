@@ -43,5 +43,6 @@ module.exports = {
   },
 
   // The session cookie name
-  sessionName: 'connect.sid'
+  sessionName: 'connect.sid',
+  attachmentDir: rootPath + '/files'
 };
