@@ -4,45 +4,48 @@ var utils = require('./utils'),
 	mongoose = require('mongoose'),
 	Project = mongoose.model('Project'),
 	rooms = require('../../../hi/server/controllers/rooms'),
-	_ = require('lodash');
-
-
+	_ = require('lodash'),
+	elasticsearch = require('./elasticsearch'),
+	mean = require('meanio');
 
 exports.read = function(req, res, next) {
-
-	var query = {};
-
-	if (req.params.id) {
-		query._id = req.params.id;
-	}
-	var Query = Project.find(query);
-	Query.limit(200 || req.query.limit);
-	Query.exec(function(err, projects) {
-		
-		utils.checkAndHandleError(err, res, 'Failed to create project');
-
+	Project.findById(req.params.id,function(err, project) {
+		utils.checkAndHandleError(err, res, 'Failed to load project');
 		res.status(200);
-		return res.json(projects);
+		return res.json(project);
 	});
-}
+};
+
+exports.all = function(req, res) {
+	var query = {};
+	if (!(_.isEmpty(req.query))) {
+		query = elasticsearch.advancedSearch(req.query);
+	}
+
+	mean.elasticsearch.search({index:'project','body': query}, function(err,response) {
+		if (err)
+			res.status(500).send('Failed to found project');
+		else
+			res.send(response.hits.hits.map(function(item) {return item._source}))
+	});
+};
 
 exports.create = function(req, res, next) {
 	var project = {
-		created: new Date(),
-		updated: new Date(),
 		creator : req.user._id
 	};
 	project = _.extend(project,req.body);
-
 	rooms.createForProject(project)
 		.then(function (roomId) {
 			project.room = roomId;
+		}, function (error) {
+			console.log('cannot create a room in lets-chat '+ error);
+		})
+		.done(function(){
 			new Project(project).save({user: req.user}, function(err, response) {
 				utils.checkAndHandleError(err,res);
 				res.json(response);
 			});
-		}, function (error) {
-			utils.checkAndHandleError(error,res);
 		});
 };
 

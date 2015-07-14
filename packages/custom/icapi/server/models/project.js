@@ -7,14 +7,16 @@ var mongoose = require('mongoose'),
 
 var ProjectSchema = new Schema({
   created: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   updated: {
     type: Date
   },  
   title: {
     type: String,
-    required: true    
+    required: true,
+    default: 'New Project'
   },
   parent : {
     type: Schema.ObjectId,

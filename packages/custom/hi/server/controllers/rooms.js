@@ -60,10 +60,13 @@ exports.createForProject  = function(project) {
         },
         method: "POST"
     };
+    console.log('pre request')
     request(options, function(error, response, body) {
-        if (error || response.body.errors)
-            deferred.reject(error || response.body.errors);
+        if (error || response.body.errors || body == 'Unauthorized'){
+            deferred.reject(error || response.body.errors || 'Unauthorized');
+        }
         else{
+            console.log('else')
             notifications.sendFromApi({entityType:'project',title: project.title, method:'create'})
                 .then(function(){
                     deferred.resolve(body.id)

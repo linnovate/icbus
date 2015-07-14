@@ -61,4 +61,32 @@ exports.search = function (req, res) {
         res.send(result.hits.hits)
 
     })
-}
+};
+
+
+exports.advancedSearch = function(query) {
+    var queries = [], jsonQuery;
+    for (var i in query){
+        var isArray = query[i].indexOf(',') > -1;
+        if (isArray){
+            var terms = query[i].split(',');
+            jsonQuery = {terms: {minimum_should_match: terms.length}};
+            jsonQuery.terms[i] = terms;
+            queries.push(jsonQuery);
+        }
+        else{
+            jsonQuery = {term: {}};
+            jsonQuery.term[i] = query[i];
+            queries.push(jsonQuery);
+        }
+    }
+    return {
+        query : {
+            filtered: {
+                query : {
+                    bool : {must: queries}
+                }
+            }
+        }
+    }
+};
