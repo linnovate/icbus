@@ -296,6 +296,33 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var starredTasks = {
+    'spec': {
+      description: 'get all starred tasks of user',
+      path: '/task/starred',
+      method: 'GET',
+      summary: 'get all starred tasks of user',
+      type: 'Task',
+      nickname: 'starredTasks',
+      produces: ['application/json'],
+      params: searchParms,
+      notes: 'The really path is \'/tasks/starred\'',
+    }
+  };
+
+  var starTask = {
+    'spec': {
+      description: 'star or unstar a task',
+      path: '/task/:id/star',
+      method: 'PATCH',
+      summary: 'star or unstar a task',
+      type: 'Task',
+      nickname: 'starTask',
+      produces: ['application/json'],
+      notes: 'The really path is \'/tasks/:id/star\'',
+    }
+  };
+
   swagger
       .addGet(usersList)
       .addGet(showProfile)
@@ -315,4 +342,7 @@ exports.load = function(swagger, parms) {
       .addPost(createAttachment)
       .addPost(updateAttachment)
       .addGet(attachmentsHistory)
+      .addGet(starredTasks)
+      .addPatch(starTask)
+
 };
