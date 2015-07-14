@@ -12,7 +12,10 @@ exports.save = function(doc, docType, room) {
             return error;
         }
         if (room)
-            notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: (response.created ? 'create' : 'update')});
+            if (docType === 'attachment')
+                notifications.sendFromApi({entityType: docType, title: doc.name, room:room, method: 'uploaded'});
+            else
+                notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: (response.created ? 'created' : 'updated')});
         return doc;
     });
 };
@@ -27,7 +30,7 @@ exports.delete = function(doc, docType, room, next) {
             return error
         }
         if (room)
-            notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: 'delete'});
+            notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: 'deleted'});
         return next();
     });
 };

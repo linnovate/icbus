@@ -56,6 +56,20 @@ AttachmentSchema.statics.load = function(id, cb) {
 		_id: id
 	}).populate('creator', 'name username').exec(cb);
 };
+AttachmentSchema.statics.task = function(id, cb) {
+	require('./task');
+	var Task = mongoose.model('Task');
+	Task.findById(id).populate('project').exec(function(err, task) {
+		cb(err, task.project);
+	})
+};
+AttachmentSchema.statics.project = function(id, cb) {
+	require('./project');
+	var Project = mongoose.model('Project');
+	Project.findById(id, function(err, project) {
+		cb(err, project);
+	})
+};
 
 /**
  * Post middleware
@@ -63,8 +77,15 @@ AttachmentSchema.statics.load = function(id, cb) {
 var elasticsearch = require('../controllers/elasticsearch');
 
 AttachmentSchema.post('save', function(req, next) {
-	elasticsearch.save(this, 'attachment', this.room);
-	next();
+	var attachment = this;
+	AttachmentSchema.statics[attachment.issue](attachment.issueId, function(err, project) {
+		if (err) {
+			return err
+		}
+		elasticsearch.save(attachment, 'attachment', project.room);
+		next();
+	});
+
 });
 
 AttachmentSchema.pre('remove', function(next) {
