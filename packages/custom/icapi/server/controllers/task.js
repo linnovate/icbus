@@ -38,12 +38,11 @@ exports.all = function(req, res) {
 
 
 exports.create = function(req, res, next) {
-	//this is just sample - validation coming soon
-	//We deal with each field indavidually unless it is in a schemaless object
-	if (req.params.id) {
-		return res.send(401, 'Cannot create task with predefined id');
-	}
-	new Task(req.body).save({user: req.user}, function(err, task) {
+	var task = {
+		creator : req.user._id
+	};
+	task = _.extend(task,req.body);
+	new Task(task).save({user: req.user}, function(err, task) {
 		utils.checkAndHandleError(err,res);
 		res.status(200);
 		return res.json(task);
