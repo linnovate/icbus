@@ -20,13 +20,13 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
         .delete(projectController.destroy);
 
     app.route('/api/tasks')
-        .post(taskController.create)
+        .post(auth.requiresLogin, taskController.create)
         .get(taskController.all);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);
     app.route('/api/tasks/:id')
         .get(taskController.read)
-        .put(taskController.update)
+        .put(auth.requiresLogin, taskController.update)
         .delete(taskController.destroy);
     app.route('/api/:entity/:id/tasks')
         .get(taskController.getByEntity);

@@ -67,7 +67,7 @@ exports.createForProject  = function(project) {
         }
         else{
             console.log('else')
-            notifications.sendFromApi({entityType:'project',title: project.title, method:'create'})
+            notifications.sendFromApi({entityType:'project',title: project.title, method:'created'})
                 .then(function(){
                     deferred.resolve(body.id)
                 });

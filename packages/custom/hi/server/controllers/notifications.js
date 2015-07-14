@@ -29,7 +29,7 @@ exports.sendFromApi = function(params) {
             "Authorization":"Bearer " + lcconfig.token
         },
         json: {
-            "text":params.entityType+' '+ params.title + ' was ' +  params.method +'d'
+            "text":params.entityType+' '+ params.title + ' was ' +  params.method
         },
         method: "POST"
     };
