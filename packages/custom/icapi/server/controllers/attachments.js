@@ -8,6 +8,7 @@ var mongoose = require('mongoose'),
 require('../models/attachment');
 var Attachment = mongoose.model('Attachment'),
 	AttachmentArchive = mongoose.model('attachment_archive'),
+	elasticsearch = require('./elasticsearch'),
 	mean = require('meanio'),
 	_ = require('lodash'),
 	path = require('path'),
@@ -37,7 +38,7 @@ exports.read = function(req, res, next) {
 exports.query = function(req, res) {
 	var query = {};
 	if (!(_.isEmpty(req.query))) {
-		query = advancedSearch(req.query);
+		query = elasticsearch.advancedSearch(req.query);
 	}
 
 	mean.elasticsearch.search({
@@ -51,41 +52,6 @@ exports.query = function(req, res) {
 				return item._source
 			}))
 	});
-};
-
-function advancedSearch(query) {
-	var queries = [],
-		jsonQuery;
-	for (var i in query) {
-		var isArray = query[i].indexOf(',') > -1;
-		if (isArray) {
-			var terms = query[i].split(',');
-			jsonQuery = {
-				terms: {
-					minimum_should_match: terms.length
-				}
-			};
-			jsonQuery.terms[i] = terms;
-			queries.push(jsonQuery);
-		} else {
-			jsonQuery = {
-				term: {}
-			};
-			jsonQuery.term[i] = query[i];
-			queries.push(jsonQuery);
-		}
-	}
-	return {
-		query: {
-			filtered: {
-				query: {
-					bool: {
-						must: queries
-					}
-				}
-			}
-		}
-	}
 };
 
 exports.create = function(req, res, next) {
