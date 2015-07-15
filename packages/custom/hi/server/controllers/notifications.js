@@ -66,12 +66,14 @@ exports.sendFile = function(params) {
     };
 
     request(messageOptions, function(error, response, body) {
-        if (response.body.errors || error)
-            deferred.reject(response.body.errors || error);
-        else
+        if (response && response.body.errors || error) {
+            console.log(response ? response.body.errors : error)
+            deferred.reject(response ? response.body.errors : error);
+        } else {
             var rqst = request(fileOptions, function(error, response, body) {
-                if (error) {
-                    deferred.reject(error);
+                if (error || body === 'Bad Request') {
+                    console.log(error || body);
+                    deferred.reject(error || body);
                 } else {
                     messageOptions.json.text = 'upload://' + JSON.parse(body).url;
                     request(messageOptions, function(error, response, body) {
@@ -84,8 +86,9 @@ exports.sendFile = function(params) {
 
                 }
             });
-        var form = rqst.form();
-        form.append('file', fs.createReadStream(params.path));
+            var form = rqst.form();
+            form.append('file', fs.createReadStream(params.path));
+        }
     });
 
     return deferred.promise;
