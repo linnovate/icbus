@@ -63,7 +63,7 @@ exports.load = function(swagger, parms) {
       notes: '<p>Request URL: host/api/avatar.</p> <p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>',
       type: '{}',
       nickname: 'uploadAvatar',
-      produces: ['application/json']
+      produces: ['multipart/form-data']
     }
   };
 
@@ -264,7 +264,7 @@ exports.load = function(swagger, parms) {
       summary: 'Create an attachment',
       type: 'Attachment',
       nickname: 'createAttachment',
-      produces: ['application/json'],
+      produces: ['multipart/form-data'],
       notes: '<p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p> On fields you must send {issue: "string", issueId: "string"}.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>'
     }
   };
@@ -277,7 +277,7 @@ exports.load = function(swagger, parms) {
       summary: 'Update an attachment',
       type: 'Attachment',
       nickname: 'updateAttachment',
-      produces: ['application/json'],
+      produces: ['multipart/form-data'],
       notes: '<p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p> On fields you must send {issue: "string", issueId: "string"}.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>'
     }
   };
