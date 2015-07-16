@@ -48,10 +48,10 @@ exports.uploadAvatar = function(req, res, next) {
     });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
 
-        var saveTo = path.join(config.root, 'packages/core/users/public/assets/img/avatar', req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]));
+        var saveTo = config.root + '/packages/core/users/public/assets/img/avatar/' + req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
 
         file.pipe(fs.createWriteStream(saveTo));
-        req.body.avatar = path.join(config.hostname, 'users/assets/img/avatar', req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]));
+        req.body.avatar = config.hostname + '/users/assets/img/avatar/' + req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
         req.file = true;
     });
     busboy.on('finish', function() {
