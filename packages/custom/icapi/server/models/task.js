@@ -75,7 +75,7 @@ TaskSchema.statics.project = function(id, cb){
   require('./project');
   var Project = mongoose.model('Project');
   Project.findById(id, function(err, project){
-    cb(err,project);
+    cb(err,project || {});
   })
 };
 /**

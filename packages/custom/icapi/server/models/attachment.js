@@ -35,9 +35,6 @@ var AttachmentSchema = new Schema({
 	updater: {
 		type: Schema.ObjectId,
 		ref: 'User'
-	},
-	room: {
-		type: String
 	}
 });
 
@@ -60,14 +57,14 @@ AttachmentSchema.statics.task = function(id, cb) {
 	require('./task');
 	var Task = mongoose.model('Task');
 	Task.findById(id).populate('project').exec(function(err, task) {
-		cb(err, task.project);
+		cb(err, {room: task.project.room, title: task.title});
 	})
 };
 AttachmentSchema.statics.project = function(id, cb) {
 	require('./project');
 	var Project = mongoose.model('Project');
 	Project.findById(id, function(err, project) {
-		cb(err, project);
+		cb(err, {room: project.room, title: project.title});
 	})
 };
 
@@ -78,11 +75,11 @@ var elasticsearch = require('../controllers/elasticsearch');
 
 AttachmentSchema.post('save', function(req, next) {
 	var attachment = this;
-	AttachmentSchema.statics[attachment.issue](attachment.issueId, function(err, project) {
+	AttachmentSchema.statics[attachment.issue](attachment.issueId, function(err, result) {
 		if (err) {
 			return err
 		}
-		elasticsearch.save(attachment, 'attachment', project.room);
+		elasticsearch.save(attachment, 'attachment', result.room, result.title);
 		next();
 	});
 

@@ -2,7 +2,7 @@ var mean  = require('meanio');
 var notifications = require('../../../hi/server/controllers/notifications'),
     utils = require('./utils');
 
-exports.save = function(doc, docType, room) {
+exports.save = function(doc, docType, room, title) {
     mean.elasticsearch.index({
         index: docType,
         type: docType,
@@ -12,7 +12,7 @@ exports.save = function(doc, docType, room) {
         utils.checkAndHandleError(error, res);
         if (room)
             if (docType === 'attachment')
-                notifications.sendFromApi({entityType: docType, title: doc.name, room:room, method: 'uploaded'});
+                notifications.sendFile({entityType: docType, title: title, room:room, method: 'uploaded', path: doc.path, issue:doc.issue});
             else
                 notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: (response.created ? 'created' : 'updated')});
         return doc;

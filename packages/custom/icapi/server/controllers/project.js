@@ -81,11 +81,15 @@ exports.destroy = function(req, res, next) {
 
 	Project.findById(req.params.id, function(err, project) {
 		utils.checkAndHandleError(err, res);
-		project.remove({user: req.user}, function(err, success) {
-			utils.checkAndHandleError(err, res, 'Failed to destroy project');
+		if (!project) utils.checkAndHandleError('Cannot find project with id: ' + req.params.id, res, 'Cannot find project with id: ' + req.params.id);
+		else
+			project.remove({
+				user: req.user
+			}, function(err, success) {
+				utils.checkAndHandleError(err, res, 'Failed to destroy project');
 
-			res.status(200);
-			return res.send(success ? 'Project deleted' : 'Failed to delete project');
-		});
+				res.status(200);
+				return res.send(success ? 'Project deleted' : 'Failed to delete project');
+			});
 	});
 };
