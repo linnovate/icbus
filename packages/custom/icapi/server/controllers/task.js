@@ -57,14 +57,11 @@ exports.update = function(req, res, next) {
 	}
 	Task.findById(req.params.id, function (err, task) {
 		utils.checkAndHandleError(err, res);
-		var data = JSON.parse(req.body.data);
-		for (var i in data){
-			task[i] = data[i];
-		}
+		task = _.extend(task, req.body);
 		task.updated = new Date();
 
 		task.save({user: req.user}, function(err, task) {
-			utils.checkAndHandleError(err, res, 'Failed to update task');
+			utils.checkAndHandleError(err, res);
 			res.status(200);
 			return res.json(task);
 		});

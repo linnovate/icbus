@@ -121,7 +121,7 @@ exports.load = function(swagger, parms) {
       produces: ['application/json'],
       parameters: [{
         name: 'body',
-        description: 'task to create (into \'data\' main key)',
+        description: 'task to create',
         required: true,
         type: 'Task',
         paramType: 'body',
@@ -157,7 +157,7 @@ exports.load = function(swagger, parms) {
       params: searchParms,
       parameters: [{
         name: 'body',
-        description: 'task to update (into \'data\' main key)',
+        description: 'task to update',
         required: true,
         type: 'Task',
         paramType: 'body',
