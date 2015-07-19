@@ -175,7 +175,7 @@ exports.load = function(swagger, parms) {
       notes: 'The really path is \'/tasks/:id\'',
       type: 'Task',
       nickname: 'deleteTask',
-      produces: ['application/json'],
+      produces: ['application/json']
     }
   };
 
@@ -306,7 +306,7 @@ exports.load = function(swagger, parms) {
       nickname: 'starredTasks',
       produces: ['application/json'],
       params: searchParms,
-      notes: 'The really path is \'/tasks/starred\'',
+      notes: 'The really path is \'/tasks/starred\''
     }
   };
 
@@ -319,7 +319,27 @@ exports.load = function(swagger, parms) {
       type: 'Task',
       nickname: 'starTask',
       produces: ['application/json'],
-      notes: 'The really path is \'/tasks/:id/star\'',
+      notes: 'The really path is \'/tasks/:id/star\''
+    }
+  };
+
+  var generalSearch = {
+    'spec': {
+      description: 'search a term in whole data',
+      path: '/search',
+      method: 'GET',
+      summary: 'search a term in whole data',
+      type: ['Task', 'Project', 'User'],
+      nickname: 'search',
+      produces: ['application/json'],
+      parameters: [{
+        name: 'term',
+        required: false,
+        type: 'string',
+        paramType: 'query',
+        allowMultiple: false
+      }],
+      notes: 'get the search results grouped by type (task, project...)'
     }
   };
 
@@ -431,4 +451,5 @@ exports.load = function(swagger, parms) {
     .addPost(commentCreate)
     .addPut(commentUpdate)
     .addDelete(commentDelete)
+    .addGet(generalSearch)
 };

@@ -22,7 +22,7 @@ exports.all = function(req, res) {
 		query = elasticsearch.advancedSearch(req.query);
 	}
 
-	mean.elasticsearch.search({index:'project','body': query}, function(err,response) {
+	mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
 		if (err)
 			res.status(500).send('Failed to found project');
 		else

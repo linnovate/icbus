@@ -1,15 +1,16 @@
 'use strict';
 
-var projectController = require('../controllers/project');
-var taskController = require('../controllers/task');
-var commentController = require('../controllers/comments');
-var profileController = require('../controllers/profile');
-var usersController = require('../controllers/users');
-var attachmentsController = require('../controllers/attachments');
+var projectController = require('../controllers/project'),
+    taskController = require('../controllers/task'),
+    commentController = require('../controllers/comments'),
+    profileController = require('../controllers/profile'),
+    usersController = require('../controllers/users'),
+    elasticsearchController = require('../controllers/elasticsearch'),
+    attachmentsController = require('../controllers/attachments');
 
-var permissionController = require('../controllers/permission');
+//var permissionController = require('../controllers/permission');
 
-module.exports = function(Icapi, app, auth, database, elasticsearch) {
+module.exports = function(Icapi, app, auth) {
 
     app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
@@ -68,6 +69,19 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
         .get(attachmentsController.readHistory);
     app.route('/api/attachments/upload')
         .post(auth.requiresLogin, attachmentsController.upload);
+    app.route('/api/search')
+        .get(elasticsearchController.search);
+
+
+
+
+
+
+
+
+
+
+
 
     //temporary -because of swagger bug with 'tasks' word
 

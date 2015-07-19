@@ -28,7 +28,7 @@ exports.all = function(req, res) {
 		query = elasticsearch.advancedSearch(req.query);
 	}
 
-	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
+	mean.elasticsearch.search({index:'task','body': query, size: 3000}, function(err,response) {
 		if (err)
 			res.status(500).send('Failed to found documents');
 		else
@@ -94,7 +94,7 @@ exports.tagsList = function(req, res) {
 			'tags' : { 'terms' : {'field' : 'tags'} }
 		}
 	};
-	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
+	mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
 		res.send(response.facets.tags.terms)
 	});
 };
@@ -112,7 +112,7 @@ exports.getByEntity = function(req, res) {
 			}
 	};
 	query.query.filtered.filter.term[entity] =  req.params.id;
-	mean.elasticsearch.search({index:'task','body': query}, function(err,response) {
+	mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
 		res.send(response.hits.hits.map(function(item) {return item._source}))
 	});
 };
@@ -124,7 +124,6 @@ exports.readHistory = function(req, res, next) {
 		});
 		Query.populate('u');
 		Query.exec(function(err, tasks) {
-			console.log(err, tasks)
 			utils.checkAndHandleError(err, res, 'Failed to read history for task ' + req.params.id);
 
 			res.status(200);
