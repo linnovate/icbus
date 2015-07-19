@@ -2,6 +2,7 @@
 
 var projectController = require('../controllers/project');
 var taskController = require('../controllers/task');
+var commentController = require('../controllers/comments');
 var profileController = require('../controllers/profile');
 var usersController = require('../controllers/users');
 var attachmentsController = require('../controllers/attachments');
@@ -37,6 +38,16 @@ module.exports = function(Icapi, app, auth, database, elasticsearch) {
         .get(taskController.getByEntity);
     app.route('/api/history/tasks/:id')
         .get(taskController.readHistory);
+
+    app.route('/api/comments')
+        .post(auth.requiresLogin, commentController.create)
+        .get(commentController.all);
+    app.route('/api/comments/:id')
+        .get(commentController.read)
+        .put(auth.requiresLogin, commentController.update)
+        .delete(commentController.destroy);
+    app.route('/api/history/comments/:id')
+        .get(commentController.readHistory);
 
     app.route('/api/profile')
         .get(auth.requiresLogin, profileController.profile, profileController.show)

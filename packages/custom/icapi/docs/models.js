@@ -30,6 +30,33 @@ exports.models = {
       }
     }
   },
+  Comment: {
+    id: 'Comment',
+    required: ['title', 'task', 'text'],
+    properties: {
+      id: {
+        type: 'string',
+        description: 'Unique identifier for the comment'
+      },
+      title: {
+        type: 'string',
+        description: 'title of comment'
+      },
+      text: {
+        type: 'string',
+        description: 'text of comment'
+      },
+      task: {
+        type: 'string',
+        description: 'id of task'
+      },
+      creator: {
+        type: 'string',
+        description: 'id of user who created the comment'
+      }
+
+    }
+  },
   Task: {
     id: 'Task',
     required: ['title', 'project'],

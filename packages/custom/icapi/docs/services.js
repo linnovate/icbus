@@ -130,7 +130,7 @@ exports.load = function(swagger, parms) {
     }
   };
 
-  var getTask ={
+  var getTask = {
     'spec': {
       description: 'get a single task',
       path: '/task/:id',
@@ -323,26 +323,112 @@ exports.load = function(swagger, parms) {
     }
   };
 
-  swagger
-      .addGet(usersList)
-      .addGet(showProfile)
-      .addGet(tasksList)
-      .addPost(createTask)
-      .addPut(updateProfile)
-      .addPost(uploadAvatar)
-      .addGet(projectsList)
-      .addPost(createProject)
-      .addGet(tagsList)
-      .addGet(getTask)
-      .addPut(updateTask)
-      .addDelete(deleteTask)
-      .addGet(getTasksPerEntity)
-      .addGet(tasksHistory)
-      .addGet(attachmentsList)
-      .addPost(createAttachment)
-      .addPost(updateAttachment)
-      .addGet(attachmentsHistory)
-      .addGet(starredTasks)
-      .addPatch(starTask)
+  var commentsList = {
+    'spec': {
+      description: 'comment operations',
+      path: '/comments',
+      method: 'GET',
+      summary: 'Get comments list',
+      notes: '',
+      type: 'Comment',
+      nickname: 'GetComments',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
 
+  var commentShow = {
+    'spec': {
+      description: 'comment operations',
+      path: '/comments/:id',
+      method: 'GET',
+      summary: 'Get one comment by _id',
+      notes: '',
+      type: 'Comment',
+      nickname: 'commentShow',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var commentCreate = {
+    'spec': {
+      description: 'comment creation',
+      path: '/comments',
+      method: 'POST',
+      summary: 'create a comment',
+      notes: '------------------------there is a problem to create via swagger, because you don\'t have req.user------------------',
+      type: 'Comment',
+      nickname: 'commentCreate',
+      produces: ['application/json'],
+      parameters: [{
+        name: 'body',
+        description: 'comment to create',
+        required: true,
+        type: 'Comment',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var commentUpdate = {
+    'spec': {
+      description: 'Update a comment',
+      path: '/comments/:id',
+      method: 'PUT',
+      summary: 'Update a comment',
+      type: 'Comment',
+      nickname: 'commentUpdate',
+      produces: ['application/json'],
+      params: searchParms,
+      parameters: [{
+        name: 'body',
+        description: 'comment to update',
+        required: true,
+        type: 'Comment',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var commentDelete = {
+    'spec': {
+      description: 'Delete a comment',
+      path: '/comments/:id',
+      method: 'DELETE',
+      summary: 'delete a comment',
+      type: 'Comment',
+      nickname: 'commentDelete',
+      produces: ['application/json'],
+    }
+  };
+
+  swagger
+    .addGet(usersList)
+    .addGet(showProfile)
+    .addGet(tasksList)
+    .addPost(createTask)
+    .addPut(updateProfile)
+    .addPost(uploadAvatar)
+    .addGet(projectsList)
+    .addPost(createProject)
+    .addGet(tagsList)
+    .addGet(getTask)
+    .addPut(updateTask)
+    .addDelete(deleteTask)
+    .addGet(getTasksPerEntity)
+    .addGet(tasksHistory)
+    .addGet(attachmentsList)
+    .addPost(createAttachment)
+    .addPost(updateAttachment)
+    .addGet(attachmentsHistory)
+    .addGet(starredTasks)
+    .addPatch(starTask)
+    .addGet(commentsList)
+    .addGet(commentShow)
+    .addPost(commentCreate)
+    .addPut(commentUpdate)
+    .addDelete(commentDelete)
 };
