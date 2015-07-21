@@ -39,7 +39,7 @@ exports.send = function(doc, task) {
 					to: user.email,
 					from: config.emailFrom
 				};
-				mailOptions = templates.comment_email(user, doc.text, from, task, mailOptions);
+				mailOptions = templates.comment_email(user, doc.text, from, task, config.icu.uri, mailOptions);
 				sendMail(mailOptions);
 			}
 		});

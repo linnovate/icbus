@@ -58,5 +58,8 @@ module.exports = {
     host: 'http://localhost',
     port: 9200,
     log: 'trace'
+  },
+  icu: {
+    uri: 'http://localhost:3000'
   }
 };

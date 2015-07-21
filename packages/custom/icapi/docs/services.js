@@ -242,6 +242,20 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var projectsHistory = {
+    'spec': {
+      description: 'get all updates history for a single project',
+      path: '/history/projects/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single project',
+      notes: '',
+      type: 'Project',
+      nickname: 'GetProjectHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
   var attachmentsList = {
     'spec': {
       description: 'attachments operations',
@@ -425,6 +439,116 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var commentHistory = {
+    'spec': {
+      description: 'get all updates history for a single comment',
+      path: '/history/comments/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single comment',
+      notes: '',
+      type: 'Comment',
+      nickname: 'GetCommentHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var discussionsList = {
+    'spec': {
+      description: 'discussion operations',
+      path: '/discussions',
+      method: 'GET',
+      summary: 'Get discussions list',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'GetDiscussions',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var discussionShow = {
+    'spec': {
+      description: 'discussion operations',
+      path: '/discussions/:id',
+      method: 'GET',
+      summary: 'Get one discussion by _id',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'discussionShow',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var discussionCreate = {
+    'spec': {
+      description: 'discussion creation',
+      path: '/discussions',
+      method: 'POST',
+      summary: 'create a discussion',
+      notes: '------------------------there is a problem to create via swagger, because you don\'t have req.user------------------',
+      type: 'Discussion',
+      nickname: 'discussionCreate',
+      produces: ['application/json'],
+      parameters: [{
+        name: 'body',
+        description: 'discussion to create',
+        required: true,
+        type: 'Discussion',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var discussionUpdate = {
+    'spec': {
+      description: 'Update a discussion',
+      path: '/discussions/:id',
+      method: 'PUT',
+      summary: 'Update a discussion',
+      type: 'Discussion',
+      nickname: 'discussionUpdate',
+      produces: ['application/json'],
+      params: searchParms,
+      parameters: [{
+        name: 'body',
+        description: 'discussion to update',
+        required: true,
+        type: 'Discussion',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var discussionDelete = {
+    'spec': {
+      description: 'Delete a discussion',
+      path: '/discussions/:id',
+      method: 'DELETE',
+      summary: 'delete a discussion',
+      type: 'Discussion',
+      nickname: 'discussionDelete',
+      produces: ['application/json'],
+    }
+  };
+
+  var discussionHistory = {
+    'spec': {
+      description: 'get all updates history for a single discussion',
+      path: '/history/discussions/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single discussion',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'GetDiscussionHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
   swagger
     .addGet(usersList)
     .addGet(showProfile)
@@ -433,6 +557,7 @@ exports.load = function(swagger, parms) {
     .addPut(updateProfile)
     .addPost(uploadAvatar)
     .addGet(projectsList)
+    .addGet(projectsHistory)
     .addPost(createProject)
     .addGet(tagsList)
     .addGet(getTask)
@@ -451,5 +576,12 @@ exports.load = function(swagger, parms) {
     .addPost(commentCreate)
     .addPut(commentUpdate)
     .addDelete(commentDelete)
+    .addGet(commentHistory)
     .addGet(generalSearch)
+    .addGet(discussionsList)
+    .addGet(discussionShow)
+    .addPost(discussionCreate)
+    .addPut(discussionUpdate)
+    .addDelete(discussionDelete)
+    .addGet(discussionHistory)
 };

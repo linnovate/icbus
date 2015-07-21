@@ -196,6 +196,52 @@ exports.models = {
       }
     }
   },
+  Discussion: {
+    id: 'Discussion',
+    required: ['title'],
+    properties: {
+      id: {
+        type: 'string',
+        description: 'Unique identifier for the discussion'
+      },
+      created: {
+        type: 'string',
+        description: 'created date of discussion'
+      },
+      updated: {
+        type: 'string',
+        description: 'last updated date of discussion'
+      },
+      title: {
+        type: 'string',
+        description: 'title of discussion'
+      },
+      content: {
+        type: 'string',
+        description: 'content of discussion (short description)'
+      },
+      creator: {
+        type: 'string',
+        description: 'id of user who created the discussion'
+      },
+      manager: {
+        type: 'string',
+        description: 'id of user who manage the discussion'
+      },
+      date: {
+        type: 'string',
+        description: 'date of discussion'
+      },
+      members: {
+        type: 'array',
+        description: 'array of ids of members'
+      },
+      watchers: {
+        type: 'array',
+        description: 'array of ids of watchers users'
+      }
+    }
+  },
   Archive: {
     id: 'Archive',
     properties: {

@@ -43,7 +43,7 @@ exports.create = function(req, res, next) {
 		creator : req.user._id
 	};
 	task = _.extend(task,req.body);
-	new Task(task).save({user: req.user}, function(err, task) {
+	new Task(task).save({user: req.user, discussion: req.body.discussion}, function(err, task) {
 		utils.checkAndHandleError(err,res);
 		res.status(200);
 		return res.json(task);
@@ -60,7 +60,7 @@ exports.update = function(req, res, next) {
 		task = _.extend(task, req.body);
 		task.updated = new Date();
 
-		task.save({user: req.user}, function(err, task) {
+		task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
 			utils.checkAndHandleError(err, res);
 			res.status(200);
 			return res.json(task);
@@ -76,7 +76,7 @@ exports.destroy = function(req, res, next) {
 	}
 	Task.findById(req.params.id, function(err, task) {
 		utils.checkAndHandleError(err, res);
-		task.remove({user: req.user}, function(err, success) {
+		task.remove({user: req.user, discussion: req.body.discussion}, function(err, success) {
 			utils.checkAndHandleError(err, res, 'Failed to destroy task');
 			res.status(200);
 			return res.send(success ? 'Task deleted': 'Failed to delete task');
@@ -117,9 +117,10 @@ exports.getByEntity = function(req, res) {
 exports.readHistory = function(req, res, next) {
 	if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
 		var Query = TaskArchive.find({
-			'd._id': new ObjectId(req.params.id)
+			'c._id': new ObjectId(req.params.id)
 		});
 		Query.populate('u');
+		Query.populate('d');
 		Query.exec(function(err, tasks) {
 			utils.checkAndHandleError(err, res, 'Failed to read history for task ' + req.params.id);
 

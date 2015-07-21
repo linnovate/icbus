@@ -61,7 +61,8 @@ exports.create = function(req, res, next) {
 	req.data.creator = req.user._id;
 
 	new Attachment(req.data).save({
-		user: req.user
+		user: req.user,
+		discussion: req.body.discussion
 	}, function(err, attachment) {
 		utils.checkAndHandleError(err, res, 'Failed to save attachment');
 		res.status(200);
@@ -82,7 +83,8 @@ exports.update = function(req, res, next) {
 		attachment.name = req.data.name;
 
 		attachment.save({
-			user: req.user
+			user: req.user,
+			discussion: req.body.discussion
 		}, function(err, attachment) {
 			utils.checkAndHandleError(err, res, 'Failed to update attachment: ' + req.params.id);
 			res.status(200);
@@ -95,9 +97,10 @@ exports.update = function(req, res, next) {
 exports.readHistory = function(req, res, next) {
 	if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
 		var Query = AttachmentArchive.find({
-			'd._id': new ObjectId(req.params.id)
+			'c._id': new ObjectId(req.params.id)
 		});
 		Query.populate('u');
+		Query.populate('d');
 		Query.exec(function(err, attachments) {
 			utils.checkAndHandleError(err, res, 'Failed to read history for attachment: ' + req.params.id);
 

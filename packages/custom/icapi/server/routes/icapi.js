@@ -3,6 +3,7 @@
 var projectController = require('../controllers/project'),
     taskController = require('../controllers/task'),
     commentController = require('../controllers/comments'),
+    discussionController = require('../controllers/discussion'),
     profileController = require('../controllers/profile'),
     usersController = require('../controllers/users'),
     elasticsearchController = require('../controllers/elasticsearch'),
@@ -20,6 +21,8 @@ module.exports = function(Icapi, app, auth) {
         .get(projectController.read)
         .put(projectController.update)
         .delete(projectController.destroy);
+    app.route('/api/history/projects/:id')
+        .get(projectController.readHistory);
 
     app.route('/api/tasks')
         .post(auth.requiresLogin, taskController.create)
@@ -72,15 +75,15 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/search')
         .get(elasticsearchController.search);
 
-
-
-
-
-
-
-
-
-
+    app.route('/api/discussions')
+        .post(discussionController.create)
+        .get(discussionController.all);
+    app.route('/api/discussions/:id')
+        .get(discussionController.read)
+        .put(discussionController.update)
+        .delete(discussionController.destroy);
+    app.route('/api/history/discussions/:id')
+        .get(discussionController.readHistory);
 
 
     //temporary -because of swagger bug with 'tasks' word

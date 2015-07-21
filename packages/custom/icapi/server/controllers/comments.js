@@ -47,7 +47,8 @@ exports.create = function(req, res, next) {
 	};
 	comment = _.extend(comment, req.body);
 	new Comment(comment).save({
-		user: req.user
+		user: req.user,
+		discussion: req.body.discussion
 	}, function(err, comment) {
 		utils.checkAndHandleError(err, res);
 		res.status(200);
@@ -68,7 +69,8 @@ exports.update = function(req, res, next) {
 				comment = _.extend(comment, req.body);
 				comment.updated = new Date();
 				comment.save({
-					user: req.user
+					user: req.user,
+					discussion: req.body.discussion
 				}, function(err, comment) {
 					utils.checkAndHandleError(err, res, 'Failed to update comment');
 					res.status(200);
@@ -90,7 +92,8 @@ exports.destroy = function(req, res, next) {
 			if (!comment) utils.checkAndHandleError('Cannot find comment with id: ' + req.params.id, res, 'Cannot find comment with id: ' + req.params.id);
 			else
 				comment.remove({
-					user: req.user
+					user: req.user,
+					discussion: req.body.discussion
 				}, function(err, success) {
 					utils.checkAndHandleError(err, res, 'Failed to destroy comment');
 					res.status(200);
@@ -103,9 +106,10 @@ exports.destroy = function(req, res, next) {
 exports.readHistory = function(req, res, next) {
 	if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
 		var Query = CommentArchive.find({
-			'd._id': new ObjectId(req.params.id)
+			'c._id': new ObjectId(req.params.id)
 		});
 		Query.populate('u');
+		Query.populate('d');
 		Query.exec(function(err, comments) {
 			utils.checkAndHandleError(err, res, 'Failed to read history for comment ' + req.params.id);
 
