@@ -198,7 +198,7 @@ exports.models = {
   },
   Discussion: {
     id: 'Discussion',
-    required: ['title'],
+    required: ['name'],
     properties: {
       id: {
         type: 'string',
@@ -212,9 +212,9 @@ exports.models = {
         type: 'string',
         description: 'last updated date of discussion'
       },
-      title: {
+      name: {
         type: 'string',
-        description: 'title of discussion'
+        description: 'name of discussion'
       },
       content: {
         type: 'string',
@@ -231,6 +231,10 @@ exports.models = {
       date: {
         type: 'string',
         description: 'date of discussion'
+      },
+      active: {
+        type: 'string',
+        description: 'active of discussion'
       },
       members: {
         type: 'array',

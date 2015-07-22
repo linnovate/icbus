@@ -12,7 +12,7 @@ var DiscussionSchema = new Schema({
   updated: {
     type: Date
   },
-  title: {
+  name: {
     type: String,
     required: true
   },
@@ -29,6 +29,9 @@ var DiscussionSchema = new Schema({
   },
   date: {
     type: Date
+  },
+  active: {
+    type: Boolean
   },
   //should we maybe have finer grain control on this
 
@@ -52,9 +55,9 @@ var DiscussionSchema = new Schema({
 /**
  * Validations
  */
-DiscussionSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
+DiscussionSchema.path('name').validate(function(name) {
+  return !!name;
+}, 'Name cannot be blank');
 
 DiscussionSchema.path('content').validate(function(content) {
   return !!content;
