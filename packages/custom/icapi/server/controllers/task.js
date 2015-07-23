@@ -97,20 +97,34 @@ exports.tagsList = function(req, res) {
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {projects : 'project', users: 'creator', tags: 'tags'},
+	var entities = {projects : 'project', users: 'creator', tags: 'tags', _id: '_id'},
 		entity = entities[req.params.entity],
 		query = {
 			query: {
 				filtered: {
 					filter : {
-						term: {}
+						terms: {}
 					}
 				}
 			}
 	};
-	query.query.filtered.filter.term[entity] =  req.params.id;
+	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
+	query.query.filtered.filter.terms[entity] =  req.params.id;
 	mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
 		res.send(response.hits.hits.map(function(item) {return item._source}))
+	});
+};
+
+exports.getByDiscussion = function(req, res, next) {
+	if (req.params.entity !== 'discussions') return next();
+	var Query = TaskArchive.distinct('c._id' ,{
+		'd': req.params.id
+	});
+	Query.exec(function(err, tasks) {
+		utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+		req.params.id = tasks;
+		req.params.entity = '_id';
+		next();
 	});
 };
 
