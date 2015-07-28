@@ -351,7 +351,15 @@ exports.load = function(swagger, parms) {
         required: false,
         type: 'string',
         paramType: 'query',
-        allowMultiple: false
+        allowMultiple: false,
+        description: 'what to search'
+      }, {
+        name: 'index',
+        required: false,
+        type: 'string',
+        paramType: 'query',
+        allowMultiple: false,
+        description: 'index to search'
       }],
       notes: 'get the search results grouped by type (task, project...)'
     }

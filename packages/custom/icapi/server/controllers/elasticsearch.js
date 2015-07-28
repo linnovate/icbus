@@ -39,9 +39,9 @@ exports.search = function (req, res) {
         var query = {
             query: {
                 'multi_match' : {
-                    'query':    req.query.term.replace(',', ' '),
+                    'query': req.query.term.replace(',', ' '),
                     'type' : 'cross_fields',
-                    'fields': [ 'title^3', 'color', 'name', 'tags'],
+                    'fields': ['title^3', 'color', 'name', 'tags'],
                     'operator': 'or'
                 }
             },
@@ -65,7 +65,7 @@ exports.search = function (req, res) {
             }
     };
     var options = {
-        index: ['project', 'task', 'discussion', 'user'],
+        index: req.query.index ? req.query.index.split(',') : ['project', 'task', 'discussion', 'user'],
         ignore_unavailable: true,
         from: 0,
         size: 3000,
