@@ -60,7 +60,11 @@ module.exports = function(Icapi, app, auth) {
         .post(auth.requiresLogin, profileController.profile, profileController.uploadAvatar, profileController.update)
 
     app.route('/api/users')
+        .get(usersController.all);
+    app.route('/api/users/:id')
         .get(usersController.read);
+    app.route('/api/:entity/:id/users')
+        .get(usersController.getByEntity);
 
     app.route('/api/attachments')
         .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
