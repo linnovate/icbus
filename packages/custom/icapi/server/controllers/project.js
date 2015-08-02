@@ -17,12 +17,12 @@ exports.read = function(req, res, next) {
 };
 
 exports.all = function(req, res) {
-	var query = {};
+	var query = {query:{ match_all : { }	}};
 	if (!(_.isEmpty(req.query))) {
 		query = elasticsearch.advancedSearch(req.query);
 	}
 
-	mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
+	mean.elasticsearch.search({index:'project',body: query, size:3000}, function(err,response) {
 		if (err)
 			res.status(500).send('Failed to found project');
 		else
@@ -35,7 +35,7 @@ exports.create = function(req, res, next) {
 		creator : req.user._id
 	};
 	project = _.extend(project,req.body);
-	rooms.createForProject(project)
+	rooms.createForProject(req, res, project)
 		.then(function (roomId) {
 			project.room = roomId;
 		}, function (error) {
@@ -49,6 +49,7 @@ exports.create = function(req, res, next) {
 		});
 };
 
+
 exports.update = function(req, res, next) {
 
 	if (!req.params.id) {
@@ -58,19 +59,24 @@ exports.update = function(req, res, next) {
 		utils.checkAndHandleError(err, res);
 
 		project.updated = new Date();
-		if (req.body.title) project.title = req.body.title;
-		if (req.body.parent)  project.parent = req.body.parent;
-		if (req.body.color)  project.color = req.body.color;
-
-		project.save({user: req.user}, function(err, project) {
+		for (var i in req.body){
+			project[i] = req.body[i];
+		}
+		project.save({user: req.user}, function (err, project) {
 			utils.checkAndHandleError(err, res, 'Failed to update project');
-
-			res.status(200);
-			return res.json(project);
+			if (req.body.watchers && !(_.isEqual(req.body.watchers.sort(), project.watchers.sort()))) {//if we have some changes in watchers field
+				rooms.updateParticipants(project.room, project.title, req.body.watchers)
+					.then(function () {
+						return res.status(200).json(project);
+					},
+					function (error) {
+						utils.checkAndHandleError(error, res, 'Failed to update room');
+					});
+			}
+			return res.status(200).json(project);
 		});
 
 	});
-	
 };
 
 exports.destroy = function(req, res, next) {

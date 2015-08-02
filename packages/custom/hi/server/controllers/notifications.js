@@ -35,8 +35,9 @@ exports.sendFromApi = function(params) {
     request(options, function(error, response, body) {
         if (response.body.errors || error)
             deferred.reject(response.body.errors || error);
-        else
+        else {
             deferred.resolve(response);
+        }
     });
     return deferred.promise;
 };
@@ -92,4 +93,4 @@ exports.sendFile = function(params) {
     });
 
     return deferred.promise;
-}
+};

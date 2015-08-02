@@ -57,9 +57,8 @@ exports.update = function(req, res, next) {
 	}
 	Task.findById(req.params.id, function (err, task) {
 		utils.checkAndHandleError(err, res);
-		var data = JSON.parse(req.body.data);
-		for (var i in data){
-			task[i] = data[i];
+		for (var i in req.body){
+			task[i] = req.body[i];
 		}
 		task.updated = new Date();
 
@@ -100,7 +99,7 @@ exports.tagsList = function(req, res) {
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {projects : 'project', users: 'creator', tags: 'tags'},
+	var entities = {projects : 'project', users: 'creator'},
 		entity = entities[req.params.entity],
 		query = {
 			query: {
@@ -155,7 +154,6 @@ exports.starTask = function(req, res){
 
 exports.getStarredTasks = function(req, res){
 	User.findById(req.user._id, function(err, user){
-		console.log(user)
 		utils.checkAndHandleError(err, res, 'Failed to load user');
 		if (!user.profile || !user.profile.starredTasks || user.profile.starredTasks.length == 0){
 			res.json([]);
