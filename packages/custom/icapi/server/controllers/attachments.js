@@ -59,11 +59,14 @@ var saveAttachment = function(data, user, discussion, cb) {
 		user: user,
 		discussion: discussion
 	}, function(err, attachment) {
+		console.log(err, attachment)
 		cb(attachment)
 	});
 };
 
 exports.create = function(req, res, next) {
+	console.log('create attachment')
+	console.log(req.data.attachments)
 	var attachments = req.data.attachments;
 	req.data.created = new Date();
 	req.data.updated = new Date();
