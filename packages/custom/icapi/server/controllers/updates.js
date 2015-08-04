@@ -54,9 +54,10 @@ var getAttachmentsForUpdate = function(item, query, cb) {
 	query.query.filtered.filter.term.issueId = item._id
 	mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function(err,response) {
 		item.attachments = [];
-		item.attachments = response.hits.hits.map(function(attachment) {
-			return attachment._source;
-		})
+		if(!err)
+			item.attachments = response.hits.hits.map(function(attachment) {
+				return attachment._source;
+			})
 		cb(item);
 	});
 };
