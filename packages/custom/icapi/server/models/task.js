@@ -20,8 +20,7 @@ var TaskSchema = new Schema({
   },
   project: {
     type: Schema.ObjectId,
-    ref: 'Project',
-    required: true
+    ref: 'Project'
   },
   parent: {
     type: Schema.ObjectId,

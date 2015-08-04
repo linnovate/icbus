@@ -44,7 +44,7 @@ UpdateSchema.statics.task = function(id, cb) {
 	require('./task');
 	var Task = mongoose.model('Task');
 	Task.findById(id).populate('project').exec(function(err, task) {
-		cb(err, {room: task.project.room, title: task.title});
+		cb(err, {room: task.project ? task.project.room : null, title: task.title});
 	})
 };
 UpdateSchema.statics.project = function(id, cb) {
