@@ -129,6 +129,7 @@ exports.readHistory = function(req, res, next) {
 };
 
 exports.upload = function(req, res, next) {
+	console.log('start upload...');
 	Date.prototype.yyyymmdd = function() {
 		var yyyy = this.getFullYear().toString();
 		var mm = (this.getMonth() + 1).toString();
@@ -149,6 +150,7 @@ exports.upload = function(req, res, next) {
 		var saveTo = path.join(config.attachmentDir, d, new Date().getTime() + '-' + path.basename(filename));
 
 		mkdirp(path.join(config.attachmentDir, d), function(err) {
+			console.log('err:', err);
 			file.pipe(fs.createWriteStream(saveTo));
 		});
 		req.data.attachments.push({
@@ -161,6 +163,7 @@ exports.upload = function(req, res, next) {
 		req.data[fieldname] = val;
 	});
 	busboy.on('finish', function() {
+		console.log('finish', req.file)
 		if (req.file)
 			next();
 		else
