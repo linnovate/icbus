@@ -12,10 +12,11 @@ var Task = mongoose.model('Task'),
 	TaskArchive = mongoose.model('task_archive'),
 	mean = require('meanio'),
 	_ = require('lodash'),
-	elasticsearch = require('./elasticsearch');
+	elasticsearch = require('./elasticsearch'),
+	Update = mongoose.model('Update');
 
 exports.read = function(req, res, next) {
-	Task.findById(req.params.id).populate('assign').exec(function(err, tasks) {
+	Task.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, tasks) {
 		utils.checkAndHandleError(err, res, 'Failed to read task');
 		res.status(200);
 		return res.json(tasks);
@@ -36,17 +37,30 @@ exports.all = function(req, res) {
 	});
 };
 
-
-
 exports.create = function(req, res, next) {
 	var task = {
-		creator : req.user._id
+		creator: req.user._id
 	};
-	task = _.extend(task,req.body);
-	new Task(task).save({user: req.user, discussion: req.body.discussion}, function(err, task) {
-		utils.checkAndHandleError(err,res);
-		res.status(200);
-		return res.json(task);
+	task = _.extend(task, req.body);
+	new Task(task).save({
+		user: req.user,
+		discussion: req.body.discussion
+	}, function(err, task) {
+		if (err) utils.checkAndHandleError(err, res);
+		else {
+			new Update({
+				creator: req.user,
+				created: task.created,
+				type: 'createTask',
+				issueId: task._id,
+				issue: 'task'
+			}).save({
+				user: req.user,
+				discussion: req.body.discussion
+			}, function(err, update) {});
+			res.status(200);
+			return res.json(task);
+		}
 	});
 };
 
@@ -56,15 +70,20 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update task without id');
 	}
 	Task.findById(req.params.id, function (err, task) {
-		utils.checkAndHandleError(err, res);
-		task = _.extend(task, req.body);
-		task.updated = new Date();
+		if(err) utils.checkAndHandleError(err, res);
+		else {
+			if (!task) utils.checkAndHandleError(true, res, 'Cannot find task with id: ' + req.params.id);
+			else {
+				task = _.extend(task, req.body);
+				task.updated = new Date();
 
-		task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
-			utils.checkAndHandleError(err, res);
-			res.status(200);
-			return res.json(task);
-		});
+				task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
+					utils.checkAndHandleError(err, res);
+					res.status(200);
+					return res.json(task);
+				});
+			}
+		}
 	});
 	
 };
@@ -76,11 +95,14 @@ exports.destroy = function(req, res, next) {
 	}
 	Task.findById(req.params.id, function(err, task) {
 		utils.checkAndHandleError(err, res);
-		task.remove({user: req.user, discussion: req.body.discussion}, function(err, success) {
-			utils.checkAndHandleError(err, res, 'Failed to destroy task');
-			res.status(200);
-			return res.send(success ? 'Task deleted': 'Failed to delete task');
-		});
+		if (!task) utils.checkAndHandleError(true, res, 'Cannot find task with id: ' + req.params.id);
+		else {
+			task.remove({user: req.user, discussion: req.body.discussion}, function(err, success) {
+				utils.checkAndHandleError(err, res, 'Failed to destroy task');
+				res.status(200);
+				return res.send(success ? 'Task deleted': 'Failed to delete task');
+			});
+		}
 	});
 };
 
@@ -97,7 +119,7 @@ exports.tagsList = function(req, res) {
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {projects : 'project', users: 'creator', tags: 'tags', _id: '_id'},
+	var entities = {projects : 'project', users: 'assign', tags: 'tags', _id: '_id'},
 		entity = entities[req.params.entity],
 		query = {
 			query: {
@@ -165,19 +187,21 @@ exports.starTask = function(req, res){
 	})
 };
 
-exports.getStarredTasks = function(req, res){
-	User.findById(req.user._id, function(err, user){
-		console.log(user)
+exports.getStarredTasks = function(req, res) {
+	User.findById(req.user._id, function(err, user) {
 		utils.checkAndHandleError(err, res, 'Failed to load user');
-		if (!user.profile || !user.profile.starredTasks || user.profile.starredTasks.length == 0){
+		if (!user.profile || !user.profile.starredTasks || user.profile.starredTasks.length == 0) {
 			res.json([]);
+		} else {
+			Task.find({
+				'_id': {
+					$in: user.profile.starredTasks
+				}
+			}, function(err, tasks) {
+				utils.checkAndHandleError(err, res, 'Failed to read tasks');
+				res.status(200);
+				return res.json(tasks);
+			});
 		}
-		Task.find({
-			'_id': { $in: user.profile.starredTasks}
-		}, function(err, tasks){
-			utils.checkAndHandleError(err, res, 'Failed to read tasks');
-			res.status(200);
-			return res.json(tasks);
-		});
 	})
 };

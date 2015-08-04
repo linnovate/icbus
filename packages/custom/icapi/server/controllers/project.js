@@ -58,19 +58,21 @@ exports.update = function(req, res, next) {
 	}
 	Project.findById(req.params.id, function (err, project) {
 		utils.checkAndHandleError(err, res);
+		if (!project) utils.checkAndHandleError(true, res, 'Cannot find project with id: ' + req.params.id);
+		else {
+			project.updated = new Date();
+			if (req.body.title) project.title = req.body.title;
+			if (req.body.parent)  project.parent = req.body.parent;
+			if (req.body.color)  project.color = req.body.color;
+			if (req.body.watchers)  project.watchers = req.body.watchers;
 
-		project.updated = new Date();
-		if (req.body.title) project.title = req.body.title;
-		if (req.body.parent)  project.parent = req.body.parent;
-		if (req.body.color)  project.color = req.body.color;
+			project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
+				utils.checkAndHandleError(err, res, 'Failed to update project');
 
-		project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
-			utils.checkAndHandleError(err, res, 'Failed to update project');
-
-			res.status(200);
-			return res.json(project);
-		});
-
+				res.status(200);
+				return res.json(project);
+			});
+		}
 	});
 	
 };
@@ -93,6 +95,25 @@ exports.destroy = function(req, res, next) {
 				res.status(200);
 				return res.send(success ? 'Project deleted' : 'Failed to delete project');
 			});
+	});
+};
+
+exports.getByEntity = function(req, res) {
+	var entities = {users: 'creator', _id: '_id'},
+		entity = entities[req.params.entity],
+		query = {
+			query: {
+				filtered: {
+					filter : {
+						terms: {}
+					}
+				}
+			}
+	};
+	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
+	query.query.filtered.filter.terms[entity] =  req.params.id;
+	mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
+		res.send(response.hits.hits.map(function(item) {return item._source}))
 	});
 };
 

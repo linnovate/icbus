@@ -67,6 +67,9 @@ AttachmentSchema.statics.project = function(id, cb) {
 		cb(err, {room: project.room, title: project.title});
 	})
 };
+AttachmentSchema.statics.update = function(id, cb) {
+	cb(null, {});
+};
 
 /**
  * Post middleware

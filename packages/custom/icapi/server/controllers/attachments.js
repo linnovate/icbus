@@ -54,20 +54,34 @@ exports.query = function(req, res) {
 	});
 };
 
-exports.create = function(req, res, next) {
+var saveAttachment = function(data, user, discussion, cb) {
+	new Attachment(data).save({
+		user: user,
+		discussion: discussion
+	}, function(err, attachment) {
+		cb(attachment)
+	});
+};
 
+exports.create = function(req, res, next) {
+	var attachments = req.data.attachments;
 	req.data.created = new Date();
 	req.data.updated = new Date();
 	req.data.creator = req.user._id;
-
-	new Attachment(req.data).save({
-		user: req.user,
-		discussion: req.body.discussion
-	}, function(err, attachment) {
-		utils.checkAndHandleError(err, res, 'Failed to save attachment');
-		res.status(200);
-		return res.json(attachment);
-	});
+	var c = 0,
+		savedAttachments = [];
+	for (var i = 0; i < attachments.length; i++) {
+		req.data.name = attachments[i].name;
+		req.data.path = attachments[i].path;
+		saveAttachment(req.data, req.user, req.body.discussion, function(attachment) {
+			c++;
+			savedAttachments.push(attachment)
+			if (c === attachments.length) {
+				res.status(200);
+				return res.json(savedAttachments);
+			}
+		})
+	}
 };
 
 exports.update = function(req, res, next) {
@@ -112,7 +126,6 @@ exports.readHistory = function(req, res, next) {
 };
 
 exports.upload = function(req, res, next) {
-
 	Date.prototype.yyyymmdd = function() {
 		var yyyy = this.getFullYear().toString();
 		var mm = (this.getMonth() + 1).toString();
@@ -122,7 +135,9 @@ exports.upload = function(req, res, next) {
 
 	var d = new Date().yyyymmdd();
 
-	req.data = {};
+	req.data = {
+		attachments: []
+	};
 
 	var busboy = new Busboy({
 		headers: req.headers
@@ -133,8 +148,10 @@ exports.upload = function(req, res, next) {
 		mkdirp(path.join(config.attachmentDir, d), function(err) {
 			file.pipe(fs.createWriteStream(saveTo));
 		});
-		req.data.name = filename;
-		req.data.path = saveTo;
+		req.data.attachments.push({
+			name: filename,
+			path: saveTo
+		})
 		req.file = true;
 	});
 	busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {

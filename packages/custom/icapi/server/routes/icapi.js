@@ -7,7 +7,8 @@ var projectController = require('../controllers/project'),
     profileController = require('../controllers/profile'),
     usersController = require('../controllers/users'),
     elasticsearchController = require('../controllers/elasticsearch'),
-    attachmentsController = require('../controllers/attachments');
+    attachmentsController = require('../controllers/attachments'),
+    updatesController = require('../controllers/updates');
 
 //var permissionController = require('../controllers/permission');
 
@@ -23,6 +24,8 @@ module.exports = function(Icapi, app, auth) {
         .delete(projectController.destroy);
     app.route('/api/history/projects/:id')
         .get(projectController.readHistory);
+    app.route('/api/:entity/:id/projects')
+        .get(projectController.getByEntity);
 
     app.route('/api/tasks')
         .post(auth.requiresLogin, taskController.create)
@@ -88,6 +91,18 @@ module.exports = function(Icapi, app, auth) {
         .delete(discussionController.destroy);
     app.route('/api/history/discussions/:id')
         .get(discussionController.readHistory);
+
+    app.route('/api/updates')
+        .post(updatesController.create)
+        .get(updatesController.all);
+    app.route('/api/updates/:id')
+        .get(updatesController.read)
+        .put(updatesController.update)
+    //     // .delete(updatesController.destroy);
+    app.route('/api/:entity/:id/updates')
+        .get(updatesController.getByEntity);
+    app.route('/api/history/updates/:id')
+        .get(updatesController.readHistory);
 
 
     //temporary -because of swagger bug with 'tasks' word

@@ -49,10 +49,10 @@ var TaskSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   }],
-  assign: [{
+  assign: {
     type: Schema.ObjectId,
     ref: 'User'
-  }],
+  },
   description: {
     type: String
   }
