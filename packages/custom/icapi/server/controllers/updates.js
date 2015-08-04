@@ -82,6 +82,10 @@ exports.getByEntity = function(req, res) {
 		else {
 			var items = [],
 				length = response.hits.hits.length;
+			if(length === 0) {
+				res.status(200);
+				return res.json([]);
+			}
 			for(var i = 0; i< response.hits.hits.length;i++){
 				getAttachmentsForUpdate(response.hits.hits[i]._source, query, function(item){
 					items.push(item);
