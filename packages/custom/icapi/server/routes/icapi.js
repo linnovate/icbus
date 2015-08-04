@@ -70,7 +70,10 @@ module.exports = function(Icapi, app, auth) {
         .get(usersController.getByEntity);
 
     app.route('/api/attachments')
-        .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
+        .post(function(req, res, next){
+            console.log('*******');
+            next();
+        }, auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
         .get(auth.requiresLogin, attachmentsController.query);
     app.route('/api/attachments/:id')
         .get(attachmentsController.read)
