@@ -77,13 +77,16 @@ exports.getByEntity = function(req, res) {
 			}
 	};
 	mean.elasticsearch.search({index: 'update', 'body': query, size: 3000}, function(err,response) {
-		var items = [],
-			length = response.hits.hits.length;
-		for(var i = 0; i< response.hits.hits.length;i++){
-			getAttachmentsForUpdate(response.hits.hits[i]._source, query, function(item){
-				items.push(item);
-				if(items.length === length) res.send(items);
-			});
+		if (err) return res.status(200).send([]);
+		else {
+			var items = [],
+				length = response.hits.hits.length;
+			for(var i = 0; i< response.hits.hits.length;i++){
+				getAttachmentsForUpdate(response.hits.hits[i]._source, query, function(item){
+					items.push(item);
+					if(items.length === length) res.send(items);
+				});
+			}
 		}
 	})	
 };
