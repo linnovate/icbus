@@ -60,10 +60,18 @@ exports.load = function(swagger, parms) {
       path: '/avatar',
       method: 'POST',
       summary: 'upload user\'s avatar',
-      notes: '<p>Request URL: host/api/avatar.</p> <p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>',
+      notes: '<p>Request URL: host/api/avatar.</p> <p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p>',
       type: '{}',
       nickname: 'uploadAvatar',
-      produces: ['multipart/form-data']
+      produces: ['multipart/form-data'],
+      parameters: [{
+        name: 'body',
+        dataType: 'file',
+        description: 'avatar',
+        required: true,
+        paramType: 'body',
+        allowMultiple: false
+      }]
     }
   };
 
