@@ -29,7 +29,13 @@ module.exports = function(Icapi, app, auth) {
 
     app.route('/api/tasks')
         .post(auth.requiresLogin, taskController.create)
-        .options(taskController.create)
+        .options(function(req, res) {
+            res.header("Access-Control-Allow-Origin", req.headers.origin);
+            res.header("Access-Control-Allow-Methods", "POST");
+            res.header("Access-Control-Allow-Headers", "accept, content-type");
+            res.header("Access-Control-Max-Age", "1728000");
+            res.send(200);
+        })
         .get(taskController.all);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);
