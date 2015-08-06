@@ -29,6 +29,7 @@ module.exports = function(Icapi, app, auth) {
 
     app.route('/api/tasks')
         .post(auth.requiresLogin, taskController.create)
+        .options(taskController.create)
         .get(taskController.all);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);
@@ -70,10 +71,7 @@ module.exports = function(Icapi, app, auth) {
         .get(usersController.getByEntity);
 
     app.route('/api/attachments')
-        .post(function(req, res, next){
-            console.log('*******');
-            next();
-        }, auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
+        .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
         .get(auth.requiresLogin, attachmentsController.query);
     app.route('/api/attachments/:id')
         .get(attachmentsController.read)

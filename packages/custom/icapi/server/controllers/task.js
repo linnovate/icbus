@@ -39,7 +39,7 @@ exports.all = function(req, res) {
 
 exports.create = function(req, res, next) {
 	var task = {
-		creator: req.user._id
+		creator: req.user
 	};
 	task = _.extend(task, req.body);
 	new Task(task).save({
