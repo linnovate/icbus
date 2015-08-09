@@ -30,10 +30,9 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/tasks')
         .post(auth.requiresLogin, taskController.create)
         .options(function(req, res) {
-            res.header("Access-Control-Allow-Origin", req.headers.origin);
-            res.header("Access-Control-Allow-Methods", "POST");
-            res.header("Access-Control-Allow-Headers", "accept, content-type");
-            res.header("Access-Control-Max-Age", "1728000");
+            res.header('Access-Control-Allow-Methods', 'POST');
+            res.header('Access-Control-Allow-Headers', 'accept, content-type, authorization');
+            res.header('Access-Control-Max-Age', '1728000');
             res.send(200);
         })
         .get(taskController.all);
@@ -98,6 +97,10 @@ module.exports = function(Icapi, app, auth) {
         .delete(discussionController.destroy);
     app.route('/api/history/discussions/:id')
         .get(discussionController.readHistory);
+    app.route('/api/invite/discussions/:id')
+        .get(discussionController.invite);
+    app.route('/api/summary/discussions/:id')
+        .get(discussionController.summary);
 
     app.route('/api/updates')
         .post(updatesController.create)
