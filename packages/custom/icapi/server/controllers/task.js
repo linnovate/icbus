@@ -16,10 +16,12 @@ var Task = mongoose.model('Task'),
 	Update = mongoose.model('Update');
 
 exports.read = function(req, res, next) {
-	Task.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, tasks) {
-		utils.checkAndHandleError(err, res, 'Failed to read task');
-		res.status(200);
-		return res.json(tasks);
+	Task.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, task) {
+		if (err || !task) utils.checkAndHandleError(err ? err : !task, res, 'Failed to read task with id: ' + req.params.id);
+		else {
+			res.status(200);
+			return res.json(task);
+		}
 	});
 };
 
@@ -100,7 +102,7 @@ exports.destroy = function(req, res, next) {
 			task.remove({user: req.user, discussion: req.body.discussion}, function(err, success) {
 				utils.checkAndHandleError(err, res, 'Failed to destroy task');
 				res.status(200);
-				return res.send(success ? 'Task deleted': 'Failed to delete task');
+				return res.send({message: (success ? 'Task deleted': 'Failed to delete task')});
 			});
 		}
 	});
@@ -133,7 +135,10 @@ exports.getByEntity = function(req, res) {
 	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
 	query.query.filtered.filter.terms[entity] =  req.params.id;
 	mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
-		res.send(response.hits.hits.map(function(item) {return item._source}))
+		if(err) {
+			res.status(200).send([]);
+		}
+		else res.send(response.hits.hits.map(function(item) {return item._source}))
 	});
 };
 

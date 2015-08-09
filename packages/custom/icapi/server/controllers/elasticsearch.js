@@ -27,7 +27,7 @@ exports.delete = function(doc, docType, room, next) {
         type: docType,
         id: doc._id.toString()
     }, function(error, response){
-        utils.checkAndHandleError(error, res);
+        // utils.checkAndHandleError(error, res);
         if (room)
             notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: 'deleted'});
         return next();
