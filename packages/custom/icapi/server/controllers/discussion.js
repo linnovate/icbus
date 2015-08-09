@@ -12,9 +12,11 @@ var utils = require('./utils'),
 
 exports.read = function(req, res, next) {
 	Discussion.findById(req.params.id, function(err, discussion) {
-		utils.checkAndHandleError(err, res, 'Failed to load discussion');
-		res.status(200);
-		return res.json(discussion);
+		if (err || !discussion) utils.checkAndHandleError(err ? err : !discussion, res, {message: 'Failed to read discussion with id: ' + req.params.id});
+		else {
+			res.status(200);
+			return res.json(discussion);
+		}
 	});
 };
 

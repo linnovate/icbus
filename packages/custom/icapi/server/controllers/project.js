@@ -12,9 +12,11 @@ var utils = require('./utils'),
 
 exports.read = function(req, res, next) {
 	Project.findById(req.params.id,function(err, project) {
-		utils.checkAndHandleError(err, res, 'Failed to load project');
-		res.status(200);
-		return res.json(project);
+		if (err || !project) utils.checkAndHandleError(err ? err : !project, res, {message: 'Failed to read project with id: ' + req.params.id});
+		else {
+			res.status(200);
+			return res.json(project);
+		}
 	});
 };
 

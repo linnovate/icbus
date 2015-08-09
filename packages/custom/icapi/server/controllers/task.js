@@ -16,8 +16,8 @@ var Task = mongoose.model('Task'),
 	Update = mongoose.model('Update');
 
 exports.read = function(req, res, next) {
-	Task.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, task) {
-		if (err || !task) utils.checkAndHandleError(err ? err : !task, res, 'Failed to read task with id: ' + req.params.id);
+	Task.findById(req.params.id).populate('assign').populate('watchers').populate('project').exec(function(err, task) {
+		if (err || !task) utils.checkAndHandleError(err ? err : !task, res, {message: 'Failed to read task with id: ' + req.params.id});
 		else {
 			res.status(200);
 			return res.json(task);
