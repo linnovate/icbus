@@ -64,7 +64,7 @@ exports.update = function(req, res, next) {
 	Comment.findById(req.params.id, function(err, comment) {
 		if (err) utils.checkAndHandleError(err, res);
 		else {
-			if (!comment) utils.checkAndHandleError('Cannot find comment with id: ' + req.params.id, res, 'Cannot find comment with id: ' + req.params.id);
+			if (!comment) utils.checkAndHandleError(true, res, 'Cannot find comment with id: ' + req.params.id);
 			else {
 				comment = _.extend(comment, req.body);
 				comment.updated = new Date();
@@ -89,7 +89,7 @@ exports.destroy = function(req, res, next) {
 	Comment.findById(req.params.id, function(err, comment) {
 		if (err) utils.checkAndHandleError(err, res);
 		else {
-			if (!comment) utils.checkAndHandleError('Cannot find comment with id: ' + req.params.id, res, 'Cannot find comment with id: ' + req.params.id);
+			if (!comment) utils.checkAndHandleError(true, res, 'Cannot find comment with id: ' + req.params.id);
 			else
 				comment.remove({
 					user: req.user,
@@ -97,7 +97,7 @@ exports.destroy = function(req, res, next) {
 				}, function(err, success) {
 					utils.checkAndHandleError(err, res, 'Failed to destroy comment');
 					res.status(200);
-					return res.send(success ? 'Comment deleted' : 'Failed to delete comment');
+					return res.send({message: (success ? 'Comment deleted' : 'Failed to delete comment')});
 				});
 		}
 	});

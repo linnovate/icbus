@@ -7,6 +7,7 @@ var utils = require('./utils'),
 	DiscussionArchive = mongoose.model('discussion_archive'),
 	_ = require('lodash'),
 	elasticsearch = require('./elasticsearch'),
+	mailManager = require('./mailManager'),
 	mean = require('meanio');
 
 exports.read = function(req, res, next) {
@@ -92,7 +93,7 @@ exports.destroy = function(req, res, next) {
 					utils.checkAndHandleError(err, res, 'Failed to destroy discussion');
 
 					res.status(200);
-					return res.send(success ? 'Discussion deleted' : 'Failed to delete discussion');
+					return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
 				});
 		}
 	});
@@ -112,4 +113,22 @@ exports.readHistory = function(req, res, next) {
 		});
 	} else
 		utils.checkAndHandleError(req.params.id + ' is not a mongoose ObjectId', res, 'Failed to read history for discussion ' + req.params.id);
+};
+
+exports.invite = function(req, res) {
+	Discussion.findOne({
+		_id: req.params.id
+	}).populate('creator').populate('watchers').exec(function(err, discussion) {
+		mailManager.inviteDiscussion(discussion);
+		res.json({});
+	});
+};
+
+exports.summary = function(req, res) {
+	Discussion.findOne({
+		_id: req.params.id
+	}).populate('creator').populate('watchers').exec(function(err, discussion) {
+		mailManager.summaryDiscussion(discussion);
+		res.json({});
+	});
 };

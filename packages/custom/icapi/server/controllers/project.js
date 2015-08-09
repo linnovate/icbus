@@ -93,7 +93,7 @@ exports.destroy = function(req, res, next) {
 				utils.checkAndHandleError(err, res, 'Failed to destroy project');
 
 				res.status(200);
-				return res.send(success ? 'Project deleted' : 'Failed to delete project');
+				return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
 			});
 	});
 };
