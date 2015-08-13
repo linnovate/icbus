@@ -53,11 +53,6 @@ exports.search = function (req, res) {
                     aggs: {
                         top: {
                             top_hits: {
-                                    _source: {
-                                    include: [
-                                        '_id', 'title', 'color', 'name', 'tags'
-                                    ]
-                                }
                             }
                         }
                     }
