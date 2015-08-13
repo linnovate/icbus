@@ -65,7 +65,7 @@ exports.search = function (req, res) {
             }
     };
     var options = {
-        index: req.query.index ? req.query.index.split(',') : ['project', 'task', 'discussion', 'user'],
+        index: req.query.index ? req.query.index.split(',') : ['project', 'task', 'discussion', 'user', 'attachment'],
         ignore_unavailable: true,
         from: 0,
         size: 3000,
