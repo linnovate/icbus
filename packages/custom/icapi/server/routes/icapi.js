@@ -48,7 +48,7 @@ module.exports = function(Icapi, app, auth) {
         .delete(taskController.destroy);
 
     app.route('/api/:entity/:id/tasks')
-        .get(taskController.getByDiscussion, taskController.getByEntity);
+        .get(taskController.getByDiscussion, taskController.getByEntityFromMongo);
     app.route('/api/history/tasks/:id')
         .get(taskController.readHistory);
 

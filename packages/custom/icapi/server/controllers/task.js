@@ -142,6 +142,20 @@ exports.getByEntity = function(req, res) {
 	});
 };
 
+exports.getByEntityFromMongo = function(req, res){
+    var Query = Task.find({
+        'project': req.params.id
+    });
+
+    Query.exec(function(err, tasks) {
+        utils.checkAndHandleError(err, res, 'Failed to read tasks by project ' + req.params.id);
+
+        res.status(200);
+
+        return res.json(tasks);
+    });
+};
+
 exports.getByDiscussion = function(req, res, next) {
 	if (req.params.entity !== 'discussions') return next();
 	var Query = TaskArchive.distinct('c._id' ,{
