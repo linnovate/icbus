@@ -76,11 +76,11 @@ module.exports = function(Icapi, app, auth) {
         .get(usersController.getByEntity);
 
     app.route('/api/attachments')
-        .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
+        .post(auth.requiresLogin, attachmentsController.create, attachmentsController.upload)
         .get(auth.requiresLogin, attachmentsController.query);
     app.route('/api/attachments/:id')
         .get(attachmentsController.read)
-        .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.update);
+        .post(auth.requiresLogin, attachmentsController.update, attachmentsController.upload);
     app.route('/api/history/attachments/:id')
         .get(attachmentsController.readHistory);
     app.route('/api/attachments/upload')

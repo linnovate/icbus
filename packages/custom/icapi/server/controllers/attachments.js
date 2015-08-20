@@ -105,6 +105,7 @@ exports.update = function(req, res, next) {
 		}, function(err, attachment) {
 			utils.checkAndHandleError(err, res, 'Failed to update attachment: ' + req.params.id);
 			res.status(200);
+			next();
 			return res.json(attachment);
 		});
 	});
