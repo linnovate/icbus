@@ -13,9 +13,8 @@ var DiscussionSchema = new Schema({
     type: Date
   },
   title: {
-    type: String,
-    required: true,
-    default: 'New Discussion'
+    type: String
+    //required: true
   },
   content: {
     type: String
@@ -65,9 +64,9 @@ var DiscussionSchema = new Schema({
 /**
  * Validations
  */
-DiscussionSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
+//DiscussionSchema.path('title').validate(function(title) {
+  //return !!title;
+//}, 'Title cannot be blank');
 
 DiscussionSchema.path('content').validate(function(content) {
   return !!content;

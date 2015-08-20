@@ -14,9 +14,7 @@ var TaskSchema = new Schema({
     type: Date
   },
   title: {
-    type: String,
-    required: true,
-    default: 'New Task'
+    type: String
   },
   project: {
     type: Schema.ObjectId,
@@ -56,13 +54,6 @@ var TaskSchema = new Schema({
     type: String
   }
 });
-
-/**
- * Validations
- */
-TaskSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
 
 /**
  * Statics
