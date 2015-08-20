@@ -47,6 +47,9 @@ var ProjectSchema = new Schema({
     enum: ['New', 'Archived', 'Cancelled', 'In-Progress', 'Completed'],
     default: 'New'
   },
+  description: {
+    type: String
+  },
   //should we maybe have finer grain control on this
   watchers : [{
     type: Schema.ObjectId,

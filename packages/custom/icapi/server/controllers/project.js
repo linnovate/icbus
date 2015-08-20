@@ -4,6 +4,7 @@ var utils = require('./utils'),
 	mongoose = require('mongoose'),
 	ObjectId = require('mongoose').Types.ObjectId,
 	Project = mongoose.model('Project'),
+	User = mongoose.model('User'),
 	ProjectArchive = mongoose.model('project_archive'),
 	rooms = require('../../../hi/server/controllers/rooms'),
 	_ = require('lodash'),
@@ -133,4 +134,43 @@ exports.readHistory = function(req, res, next) {
 		});
 	} else
 		utils.checkAndHandleError(req.params.id + ' is not a mongoose ObjectId', res, 'Failed to read history for project ' + req.params.id);
+};
+
+exports.starProject = function(req, res){
+	User.findById(req.user._id, function(err, user){
+		utils.checkAndHandleError(err, res, 'Failed to load user');
+		var set;
+		if (!user.profile || !user.profile.starredProjects){
+			set = {'profile.starredProjects': [req.params.id] };
+		}
+		else {
+			if (user.profile.starredProjects.indexOf(req.params.id) > -1)
+				set = { $pull: { 'profile.starredProjects': req.params.id } };
+			else
+				set = { $push: { 'profile.starredProjects': req.params.id } };
+		}
+		user.update(set, function(err, updated) {
+			utils.checkAndHandleError(err, res,'Cannot update the starred projects');
+			res.json(updated);
+		});
+	})
+};
+
+exports.getStarredProjects = function(req, res) {
+	User.findById(req.user._id, function(err, user) {
+		utils.checkAndHandleError(err, res, 'Failed to load user');
+		if (!user.profile || !user.profile.starredProjects || user.profile.starredProjects.length == 0) {
+			res.json([]);
+		} else {
+			Project.find({
+				'_id': {
+					$in: user.profile.starredProjects
+				}
+			}, function(err, projects) {
+				utils.checkAndHandleError(err, res, 'Failed to read projects');
+				res.status(200);
+				return res.json(projects);
+			});
+		}
+	})
 };
