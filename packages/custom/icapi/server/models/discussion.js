@@ -38,6 +38,11 @@ var DiscussionSchema = new Schema({
   description: {
     type: String
   },
+  status: {
+    type: String,
+    enum: ['Set', 'Done', 'Postponed', 'Cancelled', 'Archived'],
+    default: 'Set'
+  },
   //should we maybe have finer grain control on this
 
   /*
