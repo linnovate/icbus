@@ -39,7 +39,7 @@ var TaskSchema = new Schema({
     default: 'New'
   },
   due: {
-    type: Date,
+    type: Date
   },
   //should we maybe have finer grain control on this
   watchers: [{

@@ -12,7 +12,7 @@ var utils = require('./utils'),
 	mean = require('meanio');
 
 exports.read = function(req, res, next) {
-	Project.findById(req.params.id,function(err, project) {
+	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
 		if (err || !project) utils.checkAndHandleError(err ? err : !project, res, {message: 'Failed to read project with id: ' + req.params.id});
 		else {
 			res.status(200);
@@ -22,17 +22,30 @@ exports.read = function(req, res, next) {
 };
 
 exports.all = function(req, res) {
-	var query = {};
-	if (!(_.isEmpty(req.query))) {
-		query = elasticsearch.advancedSearch(req.query);
-	}
+    var Query = Project.find({});
+    Query.populate('watchers');
 
-	mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
-		if (err)
-			res.status(500).send('Failed to found project');
-		else
-			res.send(response.hits.hits.map(function(item) {return item._source}))
-	});
+    Query.exec(function(err, tasks) {
+        if(err)
+            utils.checkAndHandleError(err, res, 'Failed to found projects');
+
+        res.status(200);
+
+        return res.json(tasks);
+    });
+
+    //from elasticsearch
+	//var query = {};
+	//if (!(_.isEmpty(req.query))) {
+	//	query = elasticsearch.advancedSearch(req.query);
+	//}
+    //
+	//mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
+	//	if (err)
+	//		res.status(500).send('Failed to found project');
+	//	else
+	//		res.send(response.hits.hits.map(function(item) {return item._source}))
+	//});
 };
 
 exports.create = function(req, res, next) {
@@ -102,22 +115,39 @@ exports.destroy = function(req, res, next) {
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {users: 'creator', _id: '_id'},
-		entity = entities[req.params.entity],
-		query = {
-			query: {
-				filtered: {
-					filter : {
-						terms: {}
-					}
-				}
-			}
-	};
-	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
-	query.query.filtered.filter.terms[entity] =  req.params.id;
-	mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
-		res.send(response.hits.hits.map(function(item) {return item._source}))
-	});
+    var entities = {users: 'creator', _id: '_id'},
+        entityQuery = {};
+    entityQuery[entities[req.params.entity]] = req.params.id;
+
+    var Query = Project.find(entityQuery);
+
+    Query.populate('watchers');
+
+    Query.exec(function(err, projects) {
+        if(err)
+            utils.checkAndHandleError(err, res, 'Failed to read projects by' + req.params.entity + ' ' + req.params.id);
+
+        res.status(200);
+
+        return res.json(projects);
+    });
+
+	//var entities = {users: 'creator', _id: '_id'},
+	//	entity = entities[req.params.entity],
+	//	query = {
+	//		query: {
+	//			filtered: {
+	//				filter : {
+	//					terms: {}
+	//				}
+	//			}
+	//		}
+	//};
+	//if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
+	//query.query.filtered.filter.terms[entity] =  req.params.id;
+	//mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
+	//	res.send(response.hits.hits.map(function(item) {return item._source}))
+	//});
 };
 
 exports.readHistory = function(req, res, next) {

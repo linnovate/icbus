@@ -26,17 +26,28 @@ exports.read = function(req, res, next) {
 };
 
 exports.all = function(req, res) {
-	var query = {};
-	if (!(_.isEmpty(req.query))) {
-		query = elasticsearch.advancedSearch(req.query);
-	}
+    var Query = Task.find({});
+    Query.populate('assign').populate('watchers').populate('project');
+    Query.exec(function(err, tasks) {
+        if (err)
+            utils.checkAndHandleError(err, res, 'Failed to found tasks');
+        res.status(200);
 
-	mean.elasticsearch.search({index:'task','body': query, size: 3000}, function(err,response) {
-		if (err)
-			res.status(500).send('Failed to found documents');
-		else
-			res.send(response.hits.hits.map(function(item) {return item._source}))
-	});
+        return res.json(tasks);
+    });
+
+	//var query = {};
+	//if (!(_.isEmpty(req.query))) {
+	//	query = elasticsearch.advancedSearch(req.query);
+	//}
+	//mean.elasticsearch.search({index:'task','body': query, size: 3000}, function(err,response) {
+	//	if (err)
+	//		res.status(500).send('Failed to found tasks');
+	//	else {
+     //       res.send(list);
+     //   }
+    //
+	//});
 };
 
 exports.create = function(req, res, next) {
@@ -121,39 +132,39 @@ exports.tagsList = function(req, res) {
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {projects : 'project', users: 'assign', tags: 'tags', _id: '_id'},
-		entity = entities[req.params.entity],
-		query = {
-			query: {
-				filtered: {
-					filter : {
-						terms: {}
-					}
-				}
-			}
-	};
-	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
-	query.query.filtered.filter.terms[entity] =  req.params.id;
-	mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
-		if(err) {
-			res.status(200).send([]);
-		}
-		else res.send(response.hits.hits.map(function(item) {return item._source}))
-	});
-};
+    var entities = {projects : 'project', users: 'assign', tags: 'tags', _id: '_id'},
+        entityQuery = {};
+    entityQuery[entities[req.params.entity]] = req.params.id;
 
-exports.getByEntityFromMongo = function(req, res){
-    var Query = Task.find({
-        'project': req.params.id
-    });
+    var Query = Task.find(entityQuery);
+    Query.populate('assign').populate('watchers').populate('project');
 
     Query.exec(function(err, tasks) {
-        utils.checkAndHandleError(err, res, 'Failed to read tasks by project ' + req.params.id);
+        if(err)
+            utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
 
         res.status(200);
 
         return res.json(tasks);
     });
+
+	//	query = {
+	//		query: {
+	//			filtered: {
+	//				filter : {
+	//					terms: {}
+	//				}
+	//			}
+	//		}
+	//};
+	//if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
+	//query.query.filtered.filter.terms[entity] =  req.params.id;
+	//mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
+	//	if(err) {
+	//		res.status(500).send([]);
+	//	}
+	//	else res.send(response.hits.hits.map(function(item) {return item._source}))
+	//});
 };
 
 exports.getByDiscussion = function(req, res, next) {
