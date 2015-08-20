@@ -11,7 +11,7 @@ var utils = require('./utils'),
 	mean = require('meanio');
 
 exports.read = function(req, res, next) {
-	Discussion.findById(req.params.id, function(err, discussion) {
+	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, discussion) {
 		if (err || !discussion) utils.checkAndHandleError(err ? err : !discussion, res, {message: 'Failed to read discussion with id: ' + req.params.id});
 		else {
 			res.status(200);
@@ -21,23 +21,35 @@ exports.read = function(req, res, next) {
 };
 
 exports.all = function(req, res) {
-	var query = {};
-	if (!(_.isEmpty(req.query))) {
-		query = elasticsearch.advancedSearch(req.query);
-	}
+    var Query = Discussion.find({});
+    Query.populate('assign').populate('watchers');
 
-	mean.elasticsearch.search({
-		index: 'discussion',
-		'body': query,
-		size: 3000
-	}, function(err, response) {
-		if (err)
-			res.status(500).send('Failed to found discussion');
-		else
-			res.send(response.hits.hits.map(function(item) {
-				return item._source
-			}))
-	});
+    Query.exec(function(err, tasks) {
+        if(err)
+            utils.checkAndHandleError(err, res, 'Failed to found discussion');
+
+        res.status(200);
+
+        return res.json(tasks);
+    });
+
+	//var query = {};
+	//if (!(_.isEmpty(req.query))) {
+	//	query = elasticsearch.advancedSearch(req.query);
+	//}
+    //
+	//mean.elasticsearch.search({
+	//	index: 'discussion',
+	//	'body': query,
+	//	size: 3000
+	//}, function(err, response) {
+	//	if (err)
+	//		res.status(500).send('Failed to found discussion');
+	//	else
+	//		res.send(response.hits.hits.map(function(item) {
+	//			return item._source
+	//		}))
+	//});
 };
 
 exports.create = function(req, res, next) {
@@ -120,7 +132,7 @@ exports.readHistory = function(req, res, next) {
 exports.invite = function(req, res) {
 	Discussion.findOne({
 		_id: req.params.id
-	}).populate('creator').populate('watchers').exec(function(err, discussion) {
+	}).populate('assign').populate('watchers').exec(function(err, discussion) {
 		mailManager.inviteDiscussion(discussion);
 		res.json({});
 	});
@@ -129,7 +141,7 @@ exports.invite = function(req, res) {
 exports.summary = function(req, res) {
 	Discussion.findOne({
 		_id: req.params.id
-	}).populate('creator').populate('watchers').exec(function(err, discussion) {
+	}).populate('assign').populate('watchers').exec(function(err, discussion) {
 		mailManager.summaryDiscussion(discussion);
 		res.json({});
 	});

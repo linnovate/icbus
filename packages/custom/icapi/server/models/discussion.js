@@ -14,7 +14,8 @@ var DiscussionSchema = new Schema({
   },
   title: {
     type: String,
-    required: true
+    required: true,
+    default: 'New Discussion'
   },
   content: {
     type: String
@@ -23,11 +24,12 @@ var DiscussionSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
-  manager: {
+  //manager
+  assign: {
     type: Schema.ObjectId,
     ref: 'User'
   },
-  date: {
+    due: {
     type: Date
   },
   active: {
