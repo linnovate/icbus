@@ -8,8 +8,7 @@ var utils = require('./utils'),
 	ProjectArchive = mongoose.model('project_archive'),
 	rooms = require('../../../hi/server/controllers/rooms'),
 	_ = require('lodash'),
-	elasticsearch = require('./elasticsearch'),
-	mean = require('meanio');
+	Update = mongoose.model('Update');
 
 exports.read = function(req, res, next) {
 	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
@@ -77,13 +76,26 @@ exports.update = function(req, res, next) {
 		if (!project) utils.checkAndHandleError(true, res, 'Cannot find project with id: ' + req.params.id);
 		else {
 			project.updated = new Date();
-			if (req.body.title) project.title = req.body.title;
-			if (req.body.parent)  project.parent = req.body.parent;
-			if (req.body.color)  project.color = req.body.color;
-			if (req.body.watchers)  project.watchers = req.body.watchers;
+
+      var shouldCreateUpdate = project.description !== req.body.description;
+
+		  project = _.extend(project, req.body);
 
 			project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
 				utils.checkAndHandleError(err, res, 'Failed to update project');
+
+        if (shouldCreateUpdate) {
+          new Update({
+            creator: req.user,
+            created: new Date(),
+            type: 'update',
+            issueId: project._id,
+            issue: 'project'
+          }).save({
+            user: req.user,
+            discussion: req.body.discussion
+          }, function(err, update) {});
+        }
 
 				res.status(200);
 				return res.json(project);

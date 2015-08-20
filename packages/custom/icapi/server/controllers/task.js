@@ -64,7 +64,7 @@ exports.create = function(req, res, next) {
 			new Update({
 				creator: req.user,
 				created: task.created,
-				type: 'createTask',
+				type: 'create',
 				issueId: task._id,
 				issue: 'task'
 			}).save({
@@ -87,18 +87,33 @@ exports.update = function(req, res, next) {
 		else {
 			if (!task) utils.checkAndHandleError(true, res, 'Cannot find task with id: ' + req.params.id);
 			else {
+        var shouldCreateUpdate = task.description !== req.body.description;
+
 				task = _.extend(task, req.body);
 				task.updated = new Date();
 
 				task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
 					utils.checkAndHandleError(err, res);
-					res.status(200);
-					return res.json(task);
+
+          if (shouldCreateUpdate) {
+            new Update({
+              creator: req.user,
+              created: new Date(),
+              type: 'update',
+              issueId: task._id,
+              issue: 'task'
+            }).save({
+              user: req.user,
+              discussion: req.body.discussion
+            }, function(err, update) {});
+          }
+
+          res.status(200);
+          return res.json(task);
 				});
 			}
 		}
 	});
-	
 };
 
 exports.destroy = function(req, res, next) {

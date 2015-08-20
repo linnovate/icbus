@@ -8,7 +8,8 @@ var utils = require('./utils'),
 	_ = require('lodash'),
 	elasticsearch = require('./elasticsearch'),
 	mailManager = require('./mailManager'),
-	mean = require('meanio');
+	mean = require('meanio'),
+	Update = mongoose.model('Update');
 
 exports.read = function(req, res, next) {
 	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, discussion) {
@@ -73,6 +74,8 @@ exports.update = function(req, res, next) {
 	Discussion.findById(req.params.id, function(err, discussion) {
 		utils.checkAndHandleError(err, res);
 
+    var shouldCreateUpdate = discussion.description !== req.body.description;
+
 		discussion = _.extend(discussion, req.body);
 
 		discussion.updated = new Date();
@@ -81,6 +84,19 @@ exports.update = function(req, res, next) {
 			user: req.user
 		}, function(err, discussion) {
 			utils.checkAndHandleError(err, res, 'Failed to update discussion');
+
+      if (shouldCreateUpdate) {
+        new Update({
+          creator: req.user,
+          created: new Date(),
+          type: 'update',
+          issueId: discussion._id,
+          issue: 'discussion'
+        }).save({
+          user: req.user,
+          discussion: req.body.discussion
+        }, function(err, update) {});
+      }
 
 			res.status(200);
 			return res.json(discussion);
