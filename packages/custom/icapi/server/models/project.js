@@ -14,9 +14,7 @@ var ProjectSchema = new Schema({
     type: Date
   },  
   title: {
-    type: String,
-    required: true,
-    default: 'New Project'
+    type: String
   },
   parent : {
     type: Schema.ObjectId,
@@ -56,13 +54,6 @@ var ProjectSchema = new Schema({
     type: String
   }
 });
-
-/**
- * Validations
- */
-ProjectSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
 
 /**
  * Statics
