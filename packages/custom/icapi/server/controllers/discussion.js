@@ -11,28 +11,25 @@ var utils = require('./utils'),
 	mean = require('meanio'),
 	Update = mongoose.model('Update');
 
-exports.read = function(req, res, next) {
-	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function(err, discussion) {
-		if (err || !discussion) utils.checkAndHandleError(err ? err : !discussion, res, {message: 'Failed to read discussion with id: ' + req.params.id});
-		else {
-			res.status(200);
-			return res.json(discussion);
-		}
+exports.read = function (req, res, next) {
+	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
+		utils.checkAndHandleError(err ? err : !discussion, res, {message: 'Failed to read discussion with id: ' + req.params.id});
+
+		res.status(200);
+		return res.json(discussion);
 	});
 };
 
-exports.all = function(req, res) {
-    var Query = Discussion.find({});
-    Query.populate('assign').populate('watchers');
+exports.all = function (req, res) {
+	var Query = Discussion.find({});
+	Query.populate('assign').populate('watchers');
 
-    Query.exec(function(err, tasks) {
-        if(err)
-            utils.checkAndHandleError(err, res, 'Failed to found discussion');
+	Query.exec(function (err, tasks) {
+		utils.checkAndHandleError(err, res, 'Failed to found discussion');
 
-        res.status(200);
-
-        return res.json(tasks);
-    });
+		res.status(200);
+		return res.json(tasks);
+	});
 
 	//var query = {};
 	//if (!(_.isEmpty(req.query))) {
@@ -67,7 +64,6 @@ exports.create = function(req, res, next) {
 };
 
 exports.update = function(req, res, next) {
-
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update discussion without id');
 	}
@@ -77,7 +73,6 @@ exports.update = function(req, res, next) {
     var shouldCreateUpdate = discussion.description !== req.body.description;
 
 		discussion = _.extend(discussion, req.body);
-
 		discussion.updated = new Date();
 
 		discussion.save({
@@ -106,26 +101,22 @@ exports.update = function(req, res, next) {
 
 };
 
-exports.destroy = function(req, res, next) {
-
+exports.destroy = function (req, res, next) {
 	if (!req.params.id) {
-		return res.send(404, 'Cannot destroy discussion without an id');
+		return res.send(404, 'Cannot delete discussion without an id');
 	}
 
-	Discussion.findById(req.params.id, function(err, discussion) {
-		if (err) utils.checkAndHandleError(err, res);
-		else {
-			if (!discussion) utils.checkAndHandleError('Cannot find discussion with id: ' + req.params.id, res, 'Cannot find discussion with id: ' + req.params.id);
-			else
-				discussion.remove({
-					user: req.user
-				}, function(err, success) {
-					utils.checkAndHandleError(err, res, 'Failed to destroy discussion');
+	Discussion.findById(req.params.id, function (err, discussion) {
+		utils.checkAndHandleError(err || !discussion, res, 'Cannot find discussion with id: ' + req.params.id);
 
-					res.status(200);
-					return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
-				});
-		}
+		discussion.remove({
+			user: req.user
+		}, function (err, success) {
+			utils.checkAndHandleError(err, res, 'Failed to destroy discussion');
+
+			res.status(200);
+			return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
+		});
 	});
 };
 

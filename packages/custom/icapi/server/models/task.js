@@ -35,7 +35,7 @@ var TaskSchema = new Schema({
   tags: [String],
   status: {
     type: String,
-    enum: ['New', 'Agenda', 'Assigned', 'In-Progress', 'Review', 'Rejected', 'Done', 'Received', 'Completed'],
+    enum: ['New', 'Agenda', 'Assigned', 'In progress', 'Review', 'Rejected', 'Done', 'Received', 'Completed'],
     default: 'New'
   },
   due: {
