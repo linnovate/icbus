@@ -21,11 +21,16 @@ exports.read = function(req, res, next) {
 	}).exec(function(err, update) {
 		utils.checkAndHandleError(err, res, 'Failed to read update');
 
-		Update.findById(req.params.id).populate('creator', 'name').populate('updater', 'name').populate('issueId', null, update.issue.charAt(0).toUpperCase() + update.issue.slice(1)).exec(function(err, update) {
-			utils.checkAndHandleError(err, res, 'Failed to read update');
-			res.status(200);
-			return res.json(update);
-		});
+		Update.findById(req.params.id)
+			.populate('creator', 'name')
+			.populate('updater', 'name')
+			.populate('issueId', null, update.issue.charAt(0).toUpperCase() + update.issue.slice(1))
+			.exec(function (err, update) {
+				utils.checkAndHandleError(err, res, 'Failed to read update');
+
+				res.status(200);
+				return res.json(update);
+			});
 	});
 
 };
@@ -40,24 +45,24 @@ exports.all = function(req, res) {
 		index: 'update',
 		body: query
 	}, function(err, response) {
-		if (err)
-			res.status(500).send('Failed to find updates');
-		else
-			res.send(response.hits.hits.map(function(item) {
-				return item._source
-			}))
+		utils.checkAndHandleError(err, res, 'Failed to find updates');
+
+		res.send(response.hits.hits.map(function(item) {
+			return item._source
+		}))
 	});
 };
 
-var getAttachmentsForUpdate = function(item, query, cb) {
+var getAttachmentsForUpdate = function (item, query, cb) {
 	query.query.filtered.filter.term.issue = 'update';
-	query.query.filtered.filter.term.issueId = item._id
-	mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function(err,response) {
+	query.query.filtered.filter.term.issueId = item._id;
+	mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function (err, response) {
 		item.attachments = [];
-		if(!err)
-			item.attachments = response.hits.hits.map(function(attachment) {
+		if (!err) {
+			item.attachments = response.hits.hits.map(function (attachment) {
 				return attachment._source;
-			})
+			});
+		}
 		cb(item);
 	});
 };
@@ -77,27 +82,26 @@ exports.getByEntity = function(req, res) {
 				}
 			}
 	};
-	mean.elasticsearch.search({index: 'update', 'body': query, size: 3000}, function(err,response) {
-		if (err) return res.status(200).send([]);
-		else {
-			var items = [],
-				length = response.hits.hits.length;
-			if(length === 0) {
-				res.status(200);
-				return res.json([]);
-			}
-			for(var i = 0; i< response.hits.hits.length;i++){
-				getAttachmentsForUpdate(response.hits.hits[i]._source, query, function(item){
-					items.push(item);
-					if(items.length === length) res.send(items);
-				});
-			}
+
+	mean.elasticsearch.search({index: 'update', 'body': query, size: 3000}, function (err, response) {
+		utils.checkAndHandleError(err, res);
+
+		var items = [],
+			length = response.hits.hits.length;
+		if (length === 0) {
+			res.status(200);
+			return res.json([]);
 		}
-	})	
+		for (var i = 0; i < response.hits.hits.length; i++) {
+			getAttachmentsForUpdate(response.hits.hits[i]._source, query, function (item) {
+				items.push(item);
+				if (items.length === length) res.send(items);
+			});
+		}
+	})
 };
 
 exports.create = function(req, res, next) {
-
 	req.body.created = new Date();
 	req.body.updated = new Date();
 	req.body.creator = req.user._id;
@@ -107,18 +111,20 @@ exports.create = function(req, res, next) {
 		discussion: req.body.discussion
 	}, function(err, update) {
 		utils.checkAndHandleError(err, res, 'Failed to save update');
+
 		res.status(200);
 		return res.json(update);
 	});
 };
 
 exports.update = function(req, res, next) {
-
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update update without an id');
 	}
+
 	Update.findById(req.params.id, function(err, update) {
 		utils.checkAndHandleError(err, res);
+
 		update.updated = new Date();
 		update.updater = req.user._id;
 		update.path = req.data.path;
@@ -129,6 +135,7 @@ exports.update = function(req, res, next) {
 			discussion: req.body.discussion
 		}, function(err, update) {
 			utils.checkAndHandleError(err, res, 'Failed to update update: ' + req.params.id);
+
 			res.status(200);
 			return res.json(update);
 		});
@@ -149,6 +156,7 @@ exports.readHistory = function(req, res, next) {
 			res.status(200);
 			return res.json(updates);
 		});
-	} else
-		utils.checkAndHandleError(req.params.id + ' is not a mongoose ObjectId', res, 'Failed to read history for update ' + req.params.id);
+	} else {
+		utils.checkAndHandleError(true, res, 'Failed to read history for update ' + req.params.id);
+	}
 };

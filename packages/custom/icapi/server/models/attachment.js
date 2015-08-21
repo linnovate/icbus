@@ -45,6 +45,14 @@ AttachmentSchema.path('name').validate(function(name) {
 	return !!name;
 }, 'Name cannot be blank');
 
+AttachmentSchema.path('issue').validate(function(issue) {
+	return !!issue;
+}, 'Issue cannot be blank');
+
+AttachmentSchema.path('issueId').validate(function(issueId) {
+	return !!issueId;
+}, 'Issue id cannot be blank');
+
 /**
  * Statics
  */
