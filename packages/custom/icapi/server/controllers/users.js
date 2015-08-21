@@ -5,6 +5,7 @@
  */
 var mongoose = require('mongoose'),
 	User = mongoose.model('User'),
+	_ = require('lodash'),
 	utils = require('./utils');
 
 /**
@@ -31,6 +32,62 @@ exports.read = function(req, res) {
 		return res.json(user);
 	});
 };
+
+exports.create = function (req, res, next) {
+	var user = {};
+	user = _.extend(user, req.body);
+	new User(user).save(function (err, task) {
+		if (err) {
+			utils.checkAndHandleError(err, res);
+		} else {
+			res.status(200);
+			return res.json(task);
+		}
+	});
+};
+
+exports.update = function (req, res, next) {
+	if (!req.params.id) {
+		return res.send(404, 'Cannot update user without id');
+	}
+	User.findById(req.params.id, function (err, user) {
+		if (err) {
+			utils.checkAndHandleError(err, res);
+		} else {
+			if (!user) {
+				utils.checkAndHandleError(true, res, 'Cannot find user with id: ' + req.params.id);
+			} else {
+        var newData = _.pick(req.body, ['name', 'username', 'password', 'email', 'profile']);
+				_.extend(user, newData);
+
+				user.save(function (err, user) {
+					utils.checkAndHandleError(err, res);
+					res.status(200);
+					return res.json(user);
+				});
+			}
+		}
+	});
+};
+
+exports.destroy = function (req, res, next) {
+  if (!req.params.id) {
+    return res.send(404, 'Cannot remove user without id');
+  }
+  User.findById(req.params.id, function (err, user) {
+    utils.checkAndHandleError(err, res);
+    if (!user) {
+      utils.checkAndHandleError(true, res, 'Cannot find user with id: ' + req.params.id);
+    } else {
+      user.remove({user: req.user, discussion: req.body.discussion}, function (err, success) {
+        utils.checkAndHandleError(err, res, 'Failed to delete user');
+        res.status(200);
+        return res.send({message: 'User deleted'});
+      });
+    }
+  });
+};
+
 exports.getByEntity = function(req, res) { //It is a temporary function. need to change this function to use elasticsearch!!!!
 	res.status(200);
 	return res.json([]);
