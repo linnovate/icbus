@@ -16,7 +16,7 @@ module.exports = function(Icapi, app, auth) {
 
     app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
-    .post(projectController.create)
+        .post(projectController.create)
         .get(projectController.all);
     app.route('/api/projects/:id')
         .get(projectController.read)
@@ -62,16 +62,16 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/history/comments/:id')
         .get(commentController.readHistory);
 
-    app.route('/api/profile')
-        .get(auth.requiresLogin, profileController.profile, profileController.show)
-        .put(auth.requiresLogin, profileController.profile, profileController.update);
     app.route('/api/avatar')
-        .post(auth.requiresLogin, profileController.profile, profileController.uploadAvatar, profileController.update)
+        .post(auth.requiresLogin, profileController.profile, profileController.uploadAvatar, profileController.update);
 
     app.route('/api/users')
+        .post(usersController.create)
         .get(usersController.all);
     app.route('/api/users/:id')
-        .get(usersController.read);
+        .get(usersController.read)
+        .put(auth.requiresLogin, usersController.update)
+        .delete(usersController.destroy);
     app.route('/api/:entity/:id/users')
         .get(usersController.getByEntity);
 
@@ -107,7 +107,7 @@ module.exports = function(Icapi, app, auth) {
         .get(updatesController.all);
     app.route('/api/updates/:id')
         .get(updatesController.read)
-        .put(updatesController.update)
+        .put(updatesController.update);
     //     // .delete(updatesController.destroy);
     app.route('/api/:entity/:id/updates')
         .get(updatesController.getByEntity);

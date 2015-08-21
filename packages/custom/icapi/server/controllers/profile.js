@@ -21,15 +21,15 @@ exports.profile = function(req, res, next) {
     }).exec(function(err, user) {
         if (err) return next(err);
         if (!user) return next(new Error('Failed to load user ' + id));
-        req.profile = user;
+        req.profile = user.profile;
         next();
     });
 };
+
 /**
  * Update user profile
  */
 exports.update = function(req, res) {
-
     var user = _.extend(req.profile, {
         profile: req.body
     });
@@ -38,20 +38,23 @@ exports.update = function(req, res) {
         res.json(user.profile);
     });
 };
+
 /**
  * Update user avatar
  */
 exports.uploadAvatar = function(req, res, next) {
-
     var busboy = new Busboy({
         headers: req.headers
     });
-    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
 
-        var saveTo = config.root + '/packages/core/users/public/assets/img/avatar/' + req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
+    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+        if (!req.user) {
+            utils.checkAndHandleError(true, res, 'User not found');
+        }
+        var saveTo = config.root + '/packages/core/users/public/assets/img/avatar/' + req.user._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
 
         file.pipe(fs.createWriteStream(saveTo));
-        req.body.avatar = config.hostname + '/users/assets/img/avatar/' + req.profile._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
+        req.body.avatar = config.hostname + '/users/assets/img/avatar/' + req.user._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
         req.file = true;
     });
     busboy.on('finish', function() {
@@ -62,10 +65,4 @@ exports.uploadAvatar = function(req, res, next) {
     });
     return req.pipe(busboy);
 
-};
-/**
- * Show user profile
- */
-exports.show = function(req, res) {
-    res.json(req.profile.profile);
 };
