@@ -21,11 +21,15 @@ exports.read = function(req, res, next) {
 	}).exec(function(err, update) {
 		utils.checkAndHandleError(err, res, 'Failed to read update');
 
-		Update.findById(req.params.id).populate('creator', 'name').populate('updater', 'name').populate('issueId', null, update.issue.charAt(0).toUpperCase() + update.issue.slice(1)).exec(function(err, update) {
-			utils.checkAndHandleError(err, res, 'Failed to read update');
-			res.status(200);
-			return res.json(update);
-		});
+		Update.findById(req.params.id)
+			.populate('creator', 'name')
+			.populate('updater', 'name')
+			.populate('issueId', null, update.issue.charAt(0).toUpperCase() + update.issue.slice(1))
+			.exec(function (err, update) {
+				utils.checkAndHandleError(err, res, 'Failed to read update');
+				res.status(200);
+				return res.json(update);
+			});
 	});
 
 };
@@ -49,15 +53,16 @@ exports.all = function(req, res) {
 	});
 };
 
-var getAttachmentsForUpdate = function(item, query, cb) {
+var getAttachmentsForUpdate = function (item, query, cb) {
 	query.query.filtered.filter.term.issue = 'update';
-	query.query.filtered.filter.term.issueId = item._id
-	mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function(err,response) {
+	query.query.filtered.filter.term.issueId = item._id;
+	mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function (err, response) {
 		item.attachments = [];
-		if(!err)
-			item.attachments = response.hits.hits.map(function(attachment) {
+		if (!err) {
+			item.attachments = response.hits.hits.map(function (attachment) {
 				return attachment._source;
-			})
+			});
+		}
 		cb(item);
 	});
 };
@@ -97,7 +102,6 @@ exports.getByEntity = function(req, res) {
 };
 
 exports.create = function(req, res, next) {
-
 	req.body.created = new Date();
 	req.body.updated = new Date();
 	req.body.creator = req.user._id;

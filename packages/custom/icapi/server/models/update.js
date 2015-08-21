@@ -40,6 +40,7 @@ UpdateSchema.statics.load = function(id, cb) {
 		_id: id
 	}).populate('creator', 'name username').exec(cb);
 };
+
 UpdateSchema.statics.task = function(id, cb) {
 	require('./task');
 	var Task = mongoose.model('Task');
@@ -47,6 +48,7 @@ UpdateSchema.statics.task = function(id, cb) {
 		cb(err, {room: task.project ? task.project.room : null, title: task.title});
 	})
 };
+
 UpdateSchema.statics.project = function(id, cb) {
 	require('./project');
 	var Project = mongoose.model('Project');

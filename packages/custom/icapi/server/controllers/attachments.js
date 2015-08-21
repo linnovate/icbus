@@ -26,11 +26,15 @@ exports.read = function(req, res, next) {
 	}).exec(function(err, attachment) {
 		utils.checkAndHandleError(err, res, 'Failed to read attachment');
 
-		Attachment.findById(req.params.id).populate('creator').populate('updater').populate('issueId', null, attachment.issue.charAt(0).toUpperCase() + attachment.issue.slice(1)).exec(function(err, attachment) {
-			utils.checkAndHandleError(err, res, 'Failed to read attachment');
-			res.status(200);
-			return res.json(attachment);
-		});
+    Attachment.findById(req.params.id)
+      .populate('creator')
+      .populate('updater')
+      .populate('issueId', null, attachment.issue.charAt(0).toUpperCase() + attachment.issue.slice(1))
+      .exec(function (err, attachment) {
+        utils.checkAndHandleError(err, res, 'Failed to read attachment');
+        res.status(200);
+        return res.json(attachment);
+      });
 	});
 
 };
@@ -78,7 +82,7 @@ exports.create = function(req, res, next) {
 		req.data.path = attachments[i].path;
 		saveAttachment(req.data, req.user, req.body.discussion, function(attachment) {
 			c++;
-			savedAttachments.push(attachment)
+			savedAttachments.push(attachment);
 			if (c === attachments.length) {
 				res.status(200);
 				return res.json(savedAttachments);
@@ -88,7 +92,6 @@ exports.create = function(req, res, next) {
 };
 
 exports.update = function(req, res, next) {
-
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update attachment without an id');
 	}
@@ -105,7 +108,6 @@ exports.update = function(req, res, next) {
 		}, function(err, attachment) {
 			utils.checkAndHandleError(err, res, 'Failed to update attachment: ' + req.params.id);
 			res.status(200);
-			next();
 			return res.json(attachment);
 		});
 	});
@@ -157,7 +159,7 @@ exports.upload = function(req, res, next) {
 		req.data.attachments.push({
 			name: filename,
 			path: saveTo
-		})
+		});
 		req.file = true;
 	});
 	busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
