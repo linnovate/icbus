@@ -59,6 +59,13 @@ var ProjectSchema = new Schema({
 });
 
 /**
+ * Validations
+ */
+ProjectSchema.path('color').validate(function(color) {
+  return /^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/i.text(color);
+}, 'Invalid HEX color.');
+
+/**
  * Statics
  */
 ProjectSchema.statics.load = function(id, cb) {

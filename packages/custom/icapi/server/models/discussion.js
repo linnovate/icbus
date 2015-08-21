@@ -62,17 +62,6 @@ var DiscussionSchema = new Schema({
 });
 
 /**
- * Validations
- */
-//DiscussionSchema.path('title').validate(function(title) {
-  //return !!title;
-//}, 'Title cannot be blank');
-
-DiscussionSchema.path('content').validate(function(content) {
-  return !!content;
-}, 'Content cannot be blank');
-
-/**
  * Statics
  */
 DiscussionSchema.statics.load = function(id, cb) {

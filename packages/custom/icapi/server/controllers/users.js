@@ -31,6 +31,7 @@ exports.read = function(req, res) {
 		return res.json(user);
 	});
 };
+
 exports.getByEntity = function(req, res) { //It is a temporary function. need to change this function to use elasticsearch!!!!
 	res.status(200);
 	return res.json([]);

@@ -63,20 +63,19 @@ var saveAttachment = function(data, user, discussion, cb) {
 		user: user,
 		discussion: discussion
 	}, function(err, attachment) {
-		console.log(err, attachment)
 		cb(attachment)
 	});
 };
 
 exports.create = function(req, res, next) {
-	console.log('create attachment')
-	console.log(req.data.attachments)
 	var attachments = req.data.attachments;
+	var c = 0;
+	var savedAttachments = [];
+
 	req.data.created = new Date();
 	req.data.updated = new Date();
 	req.data.creator = req.user._id;
-	var c = 0,
-		savedAttachments = [];
+
 	for (var i = 0; i < attachments.length; i++) {
 		req.data.name = attachments[i].name;
 		req.data.path = attachments[i].path;
@@ -127,13 +126,14 @@ exports.readHistory = function(req, res, next) {
 			res.status(200);
 			return res.json(attachments);
 		});
-	} else
-		utils.checkAndHandleError(req.params.id + ' is not a mongoose ObjectId', res, 'Failed to read history for attachment ' + req.params.id);
+	} else {
+		utils.checkAndHandleError(true, res, 'Failed to read history for attachment ' + req.params.id);
+	}
 };
 
-exports.upload = function(req, res, next) {
+exports.upload = function (req, res, next) {
 	console.log('start upload...');
-	Date.prototype.yyyymmdd = function() {
+	Date.prototype.yyyymmdd = function () {
 		var yyyy = this.getFullYear().toString();
 		var mm = (this.getMonth() + 1).toString();
 		var dd = this.getDate().toString();
@@ -149,11 +149,12 @@ exports.upload = function(req, res, next) {
 	var busboy = new Busboy({
 		headers: req.headers
 	});
-	busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+
+	busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
 		var saveTo = path.join(config.attachmentDir, d, new Date().getTime() + '-' + path.basename(filename));
 
-		mkdirp(path.join(config.attachmentDir, d), function(err) {
-			console.log('err:', err);
+		mkdirp(path.join(config.attachmentDir, d), function (err) {
+			console.log('err: ', err);
 			file.pipe(fs.createWriteStream(saveTo));
 		});
 		req.data.attachments.push({
@@ -162,15 +163,17 @@ exports.upload = function(req, res, next) {
 		});
 		req.file = true;
 	});
-	busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
+
+	busboy.on('field', function (fieldname, val, fieldnameTruncated, valTruncated) {
 		req.data[fieldname] = val;
 	});
-	busboy.on('finish', function() {
-		console.log('finish', req.file)
+
+	busboy.on('finish', function () {
+		console.log('finish', req.file);
 		if (req.file)
 			next();
 		else
-			utils.checkAndHandleError('Didn\'t find any attachment to upload', res, 'Didn\'t find any attachment to upload');
+			utils.checkAndHandleError(true, res, 'Didn\'t find any attachment to upload');
 	});
 	return req.pipe(busboy);
 

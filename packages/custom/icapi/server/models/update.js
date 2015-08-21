@@ -33,6 +33,17 @@ var UpdateSchema = new Schema({
 });
 
 /**
+ * Validations
+ */
+UpdateSchema.path('issue').validate(function(issue) {
+	return !!issue;
+}, 'Issue cannot be blank');
+
+UpdateSchema.path('issueId').validate(function(issueId) {
+	return !!issueId;
+}, 'Issue id cannot be blank');
+
+/**
  * Statics
  */
 UpdateSchema.statics.load = function(id, cb) {
