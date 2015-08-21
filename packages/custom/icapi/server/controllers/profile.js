@@ -20,7 +20,7 @@ exports.profile = function(req, res, next) {
         _id: req.user._id
     }).exec(function(err, user) {
         if (err) return next(err);
-        if (!user) return next(new Error('Failed to load user ' + id));
+        if (!user) return next(new Error('Failed to load user'));
         req.profile = user.profile;
         next();
     });
@@ -30,11 +30,14 @@ exports.profile = function(req, res, next) {
  * Update user profile
  */
 exports.update = function(req, res) {
-    var user = _.extend(req.profile, {
-        profile: req.body
-    });
-    user.save(function(err) {
+    var profile = _.extend(req.profile, req.body);
+
+    var user = req.user;
+    user.profile = profile;
+
+    User.update({ _id: user._id }, user, function(err) {
         utils.checkAndHandleError(err, res, 'Cannot update the profile');
+
         res.json(user.profile);
     });
 };
@@ -48,15 +51,13 @@ exports.uploadAvatar = function(req, res, next) {
     });
 
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
-        if (!req.user) {
-            utils.checkAndHandleError(true, res, 'User not found');
-        }
         var saveTo = config.root + '/packages/core/users/public/assets/img/avatar/' + req.user._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
 
         file.pipe(fs.createWriteStream(saveTo));
         req.body.avatar = config.hostname + '/users/assets/img/avatar/' + req.user._id + '.' + path.basename(filename.split('.').slice(-1)[0]).toLowerCase();
         req.file = true;
     });
+
     busboy.on('finish', function() {
         if (req.file)
             next();
@@ -64,5 +65,4 @@ exports.uploadAvatar = function(req, res, next) {
             utils.checkAndHandleError('Didn\'t find any avatar to upload', res, 'Didn\'t find any avatar to upload');
     });
     return req.pipe(busboy);
-
 };

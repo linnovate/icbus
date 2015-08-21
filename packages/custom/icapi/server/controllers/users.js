@@ -57,8 +57,8 @@ exports.update = function (req, res, next) {
 			if (!user) {
 				utils.checkAndHandleError(true, res, 'Cannot find user with id: ' + req.params.id);
 			} else {
-				user = _.extend(user, req.body);
-        user = _.pick(user, ['name', 'username', 'password', 'email', 'profile']);
+        var newData = _.pick(req.body, ['name', 'username', 'password', 'email', 'profile']);
+				_.extend(user, newData);
 
 				user.save(function (err, user) {
 					utils.checkAndHandleError(err, res);
