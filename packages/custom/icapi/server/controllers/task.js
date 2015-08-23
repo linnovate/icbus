@@ -80,7 +80,7 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update task without id');
 	}
 
-	Task.findById(req.params.id, function (err, task) {
+	Task.findById(req.params.id).populate('watchers').populate('project').populate('assign').exec(function (err, task) {
       utils.checkAndHandleError(err, res);
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
 
@@ -90,27 +90,28 @@ exports.update = function(req, res, next) {
 
         task = _.extend(task, req.body);
         task.updated = new Date();
+
         var shouldCreateUpdate = task.description !== req.body.description;
 
-				task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
-					utils.checkAndHandleError(err, res);
+        task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
+            utils.checkAndHandleError(err, res);
 
-          if (shouldCreateUpdate) {
-            new Update({
-              creator: req.user,
-              created: new Date(),
-              type: 'update',
-              issueId: task._id,
-              issue: 'task'
-            }).save({
-              user: req.user,
-              discussion: req.body.discussion
-            }, function(err, update) {});
-          }
+            if (shouldCreateUpdate) {
+                new Update({
+                  creator: req.user,
+                  created: new Date(),
+                  type: 'update',
+                  issueId: task._id,
+                  issue: 'task'
+                }).save({
+                  user: req.user,
+                  discussion: req.body.discussion
+                }, function(err, update) {});
+            }
 
-          res.status(200);
-          return res.json(task);
-				});
+            res.status(200);
+            return res.json(task);
+        });
 	});
 };
 

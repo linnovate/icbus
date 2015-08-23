@@ -70,7 +70,7 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update project without id');
 	}
 
-	Project.findById(req.params.id, function (err, project) {
+	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
 		utils.checkAndHandleError(err, res);
 		utils.checkAndHandleError(!project, res, 'Cannot find project with id: ' + req.params.id);
 
@@ -92,7 +92,6 @@ exports.update = function(req, res, next) {
             discussion: req.body.discussion
           }, function(err, update) {});
         }
-
 				res.status(200);
 				return res.json(project);
 			});
