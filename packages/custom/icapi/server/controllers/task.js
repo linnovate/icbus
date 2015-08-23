@@ -83,10 +83,13 @@ exports.update = function(req, res, next) {
       utils.checkAndHandleError(err, res);
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
 
+        delete req.body.__v;
         if(!req.body.assign && !task.assign) delete req.body.assign;
         if(!req.body.project && !task.project) delete req.body.project;
-
+            console.log(task,"before-------------")
         task = _.extend(task, req.body);
+        console.log(task,"after-------------")
+        console.log(req.body,"req.bodyyyyyyyyyyyyyyy")
         task.updated = new Date();
         var shouldCreateUpdate = task.description !== req.body.description;
 
