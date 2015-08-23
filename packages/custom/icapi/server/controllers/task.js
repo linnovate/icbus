@@ -82,7 +82,7 @@ exports.update = function(req, res, next) {
 	Task.findById(req.params.id, function (err, task) {
       utils.checkAndHandleError(err, res);
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
-        
+
         if(!req.body.assign && !task.assign) delete req.body.assign;
         if(!req.body.project && !task.project) delete req.body.project;
 

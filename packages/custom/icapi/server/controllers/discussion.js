@@ -72,6 +72,8 @@ exports.update = function(req, res, next) {
 
     var shouldCreateUpdate = discussion.description !== req.body.description;
 
+        if(!req.body.assign && !discussion.assign) delete req.body.assign;
+
 		discussion = _.extend(discussion, req.body);
 		discussion.updated = new Date();
 
