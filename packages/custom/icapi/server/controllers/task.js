@@ -25,7 +25,7 @@ exports.read = function (req, res, next) {
 
 exports.all = function (req, res) {
 	var Query = Task.find({});
-	Query.populate('assign').populate('watchers').populate('project');
+	Query.populate('assign' ).populate('watchers').populate('project');
 	Query.exec(function (err, tasks) {
 		utils.checkAndHandleError(err, res, 'Failed to found tasks');
 		res.status(200);
@@ -41,11 +41,12 @@ exports.all = function (req, res) {
 	//	if (err)
 	//		res.status(500).send('Failed to found tasks');
 	//	else {
-     //       res.send(list);
+     //       res.send(response.hits.hits.map(function(item) {return item._source}));
      //   }
     //
 	//});
 };
+
 
 exports.create = function(req, res, next) {
 	var task = {
@@ -83,9 +84,12 @@ exports.update = function(req, res, next) {
       utils.checkAndHandleError(err, res);
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
 
-				task = _.extend(task, req.body);
-				task.updated = new Date();
+        delete req.body.__v;
+        if(!req.body.assign && !task.assign) delete req.body.assign;
+        if(!req.body.project && !task.project) delete req.body.project;
 
+        task = _.extend(task, req.body);
+        task.updated = new Date();
         var shouldCreateUpdate = task.description !== req.body.description;
 
 				task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
@@ -142,7 +146,7 @@ exports.tagsList = function(req, res) {
 exports.getByEntity = function (req, res) {
 	var entities = {projects: 'project', users: 'assign', tags: 'tags', _id: '_id'},
 		entityQuery = {};
-	entityQuery[entities[req.params.entity]] = req.params.id;
+    entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
 
 	var Query = Task.find(entityQuery);
 	Query.populate('assign').populate('watchers').populate('project');
@@ -154,6 +158,7 @@ exports.getByEntity = function (req, res) {
 		return res.json(tasks);
 	});
 
+    //var entity = entities[req.params.entity],
 	//	query = {
 	//		query: {
 	//			filtered: {
