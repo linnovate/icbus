@@ -29,6 +29,7 @@ exports.all = function (req, res) {
 	Query.exec(function (err, tasks) {
 		utils.checkAndHandleError(err, res, 'Failed to found tasks');
 		res.status(200);
+
 		return res.json(tasks);
 	});
 
@@ -86,10 +87,8 @@ exports.update = function(req, res, next) {
         delete req.body.__v;
         if(!req.body.assign && !task.assign) delete req.body.assign;
         if(!req.body.project && !task.project) delete req.body.project;
-            console.log(task,"before-------------")
+
         task = _.extend(task, req.body);
-        console.log(task,"after-------------")
-        console.log(req.body,"req.bodyyyyyyyyyyyyyyy")
         task.updated = new Date();
         var shouldCreateUpdate = task.description !== req.body.description;
 
