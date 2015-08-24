@@ -67,7 +67,7 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update discussion without id');
 	}
-	Discussion.findById(req.params.id, function(err, discussion) {
+	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
 		utils.checkAndHandleError(err, res);
 
     var shouldCreateUpdate = discussion.description !== req.body.description;
