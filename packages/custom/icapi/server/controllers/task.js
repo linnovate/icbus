@@ -142,7 +142,7 @@ exports.tagsList = function(req, res) {
 		}
 	};
 	mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
-		res.send(response.facets.tags.terms)
+		res.send(response.facets ? response.facets.tags.terms : []);
 	});
 };
 

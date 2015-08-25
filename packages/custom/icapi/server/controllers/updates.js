@@ -129,6 +129,7 @@ exports.update = function(req, res, next) {
 		update.updater = req.user._id;
 		update.path = req.data.path;
 		update.name = req.data.name;
+		update.description = req.data.desciption;
 
 		update.save({
 			user: req.user,
