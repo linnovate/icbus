@@ -58,21 +58,21 @@ exports.create = function(req, res, next) {
 	new Task(task).save({
 		user: req.user,
 		discussion: req.body.discussion
-	}, function(err, task) {
+	}, function(err, response) {
 		utils.checkAndHandleError(err, res);
 
 		new Update({
 			creator: req.user,
-			created: task.created,
+			created: response.created,
 			type: 'create',
-			issueId: task._id,
+			issueId: response._id,
 			issue: 'task'
 		}).save({
 			user: req.user,
 			discussion: req.body.discussion
 		});
 
-        req.params.id = task._id;
+        req.params.id = response._id;
         exports.read(req, res, next);
 	});
 };
