@@ -5,6 +5,8 @@ var utils = require('./utils'),
 	ObjectId = require('mongoose').Types.ObjectId,
 	Discussion = mongoose.model('Discussion'),
 	DiscussionArchive = mongoose.model('discussion_archive'),
+	TaskArchive = mongoose.model('task_archive'),
+	Task = mongoose.model('Task'),
 	_ = require('lodash'),
 	elasticsearch = require('./elasticsearch'),
 	mailManager = require('./mailManager'),
@@ -13,7 +15,7 @@ var utils = require('./utils'),
 
 exports.read = function (req, res, next) {
 	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
-		utils.checkAndHandleError(err ? err : !discussion, res, {message: 'Failed to read discussion with id: ' + req.params.id});
+		utils.checkAndHandleError(err ? err : !discussion, res, 'Failed to read discussion with id: ' + req.params.id);
 
 		res.status(200);
 		return res.json(discussion);
@@ -66,44 +68,44 @@ exports.create = function(req, res, next) {
 	});
 };
 
-exports.update = function(req, res, next) {
+exports.update = function (req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update discussion without id');
 	}
 	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
 		utils.checkAndHandleError(err, res);
 
-    var shouldCreateUpdate = discussion.description !== req.body.description;
+		var shouldCreateUpdate = discussion.description !== req.body.description;
 
-        if(!req.body.assign && !discussion.assign) delete req.body.assign;
+		if (!req.body.assign && !discussion.assign) delete req.body.assign;
 
 		discussion = _.extend(discussion, req.body);
 		discussion.updated = new Date();
 
 		discussion.save({
 			user: req.user
-		}, function(err, discussion) {
+		}, function (err, discussion) {
 			utils.checkAndHandleError(err, res, 'Failed to update discussion');
 
-      if (shouldCreateUpdate) {
-        new Update({
-          creator: req.user,
-          created: new Date(),
-          type: 'update',
-          issueId: discussion._id,
-          issue: 'discussion'
-        }).save({
-          user: req.user,
-          discussion: req.body.discussion
-        }, function(err, update) {});
-      }
+			if (shouldCreateUpdate) {
+				new Update({
+					creator: req.user,
+					created: new Date(),
+					type: 'update',
+					issueId: discussion._id,
+					issue: 'discussion'
+				}).save({
+						user: req.user,
+						discussion: req.body.discussion
+					}, function (err, update) {
+					});
+			}
 
 			res.status(200);
 			return res.json(discussion);
 		});
 
 	});
-
 };
 
 exports.destroy = function (req, res, next) {
@@ -112,7 +114,8 @@ exports.destroy = function (req, res, next) {
 	}
 
 	Discussion.findById(req.params.id, function (err, discussion) {
-		utils.checkAndHandleError(err || !discussion, res, 'Cannot find discussion with id: ' + req.params.id);
+		utils.checkAndHandleError(
+			err || !discussion, res, 'Cannot find discussion with id: ' + req.params.id);
 
 		discussion.remove({
 			user: req.user
@@ -137,24 +140,84 @@ exports.readHistory = function(req, res, next) {
 			res.status(200);
 			return res.json(discussions);
 		});
-	} else
-		utils.checkAndHandleError(req.params.id + ' is not a mongoose ObjectId', res, 'Failed to read history for discussion ' + req.params.id);
+	} else {
+		utils.checkAndHandleError(true, res, 'Failed to read history for discussion ' + req.params.id);
+	}
 };
 
-exports.invite = function(req, res) {
+exports.schedule = function (req, res) {
 	Discussion.findOne({
 		_id: req.params.id
-	}).populate('assign').populate('watchers').exec(function(err, discussion) {
-		mailManager.inviteDiscussion(discussion);
-		res.json({});
+	}).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
+		utils.checkAndHandleError(err, res, 'Failed to find discussion ' + req.params.id);
+		utils.checkAndHandleError(!discussion.due, res, 'Due field cannot be empty');
+		utils.checkAndHandleError(!discussion.assign, res, 'Assignee cannot be empty');
+
+		var allowedStatuses = ['New', 'Scheduled', 'Cancelled'];
+		if (allowedStatuses.indexOf(discussion.status) === -1) {
+			utils.checkAndHandleError(true, res, 'Cannot be scheduled for this status');
+		}
+
+		//mailManager.inviteDiscussion(discussion);
+
+		discussion.status = 'Scheduled';
+
+		discussion.save({
+			user: req.user
+		}, function (err, discussion) {
+			utils.checkAndHandleError(err, res, 'Failed to update discussion');
+
+			res.status(200);
+			return res.json(discussion);
+		});
+
 	});
 };
 
-exports.summary = function(req, res) {
+exports.summary = function (req, res) {
 	Discussion.findOne({
 		_id: req.params.id
-	}).populate('assign').populate('watchers').exec(function(err, discussion) {
-		mailManager.summaryDiscussion(discussion);
-		res.json({});
+	}).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
+		utils.checkAndHandleError(err, res, 'Failed to find discussion ' + req.params.id);
+		var allowedStatuses = ['Scheduled'];
+		if (allowedStatuses.indexOf(discussion.status) === -1) {
+			utils.checkAndHandleError(true, res, 'Cannot send summary for this status');
+		}
+
+		//mailManager.summaryDiscussion(discussion);
+
+		discussion.status = 'Done';
+		discussion.save({
+			user: req.user
+		}, function (err, discussion) {
+			utils.checkAndHandleError(err, res, 'Failed to update discussion');
+
+			var Query = TaskArchive.distinct('c._id', {
+				'd': discussion._id
+			});
+			Query.exec(function (err, tasks) {
+				utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + discussion._id);
+
+				var entityQuery = {};
+				entityQuery._id = {$in: tasks};
+
+				var Query = Task.find(entityQuery);
+
+				Query.exec(function (err, tasks) {
+					utils.checkAndHandleError(err, res, 'Failed to read tasks by discussion ' + discussion._id);
+
+					_.map(tasks, function (task) {
+						var index = task.tags.indexOf('Agenda');
+						if (task.discussions.length === 1) {
+							task.tags.splice(index, 1);
+						}
+					});
+
+					res.status(200);
+					return res.json(discussion);
+				});
+			});
+
+		});
 	});
 };
