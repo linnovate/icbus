@@ -59,7 +59,10 @@ exports.create = function(req, res, next) {
 		user: req.user
 	}, function(err, response) {
 		utils.checkAndHandleError(err, res);
-		res.json(response);
+
+        req.params.id = response._id;
+        exports.read(req, res, next);
+		//res.json(response);
 	});
 };
 
