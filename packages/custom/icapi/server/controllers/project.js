@@ -14,7 +14,7 @@ var utils = require('./utils'),
 
 exports.read = function(req, res, next) {
 	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
-		utils.checkAndHandleError(err ? err : !project, res, {message: 'Failed to read project with id: ' + req.params.id});
+		utils.checkAndHandleError(err ? err : !project, res, 'Failed to read project with id: ' + req.params.id);
 
 		res.status(200);
 		return res.json(project);
