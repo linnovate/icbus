@@ -52,7 +52,9 @@ exports.create = function(req, res, next) {
 	var task = {
 		creator: req.user
 	};
+
 	task = _.extend(task, req.body);
+
 	new Task(task).save({
 		user: req.user,
 		discussion: req.body.discussion
@@ -70,8 +72,8 @@ exports.create = function(req, res, next) {
 			discussion: req.body.discussion
 		});
 
-		res.status(200);
-		return res.json(task);
+        req.params.id = task._id;
+        exports.read(req, res, next);
 	});
 };
 
