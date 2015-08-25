@@ -45,6 +45,8 @@ module.exports = function(app, db) {
   // set .html as the default extension
   app.set('view engine', 'html');
 
+  // File delivery
+  app.use('/files', express.static(config.attachmentDir));
 
   // Dynamic helpers
   app.use(helpers(config.app.name));
