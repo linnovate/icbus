@@ -99,10 +99,10 @@ module.exports = function(Icapi, app, auth) {
         .delete(discussionController.destroy);
     app.route('/api/history/discussions/:id')
         .get(discussionController.readHistory);
-    app.route('/api/invite/discussions/:id')
-        .get(discussionController.invite);
-    app.route('/api/summary/discussions/:id')
-        .get(discussionController.summary);
+    app.route('/api/discussions/:id/schedule')
+        .post(discussionController.schedule);
+    app.route('/api/discussions/:id/summary')
+        .post(discussionController.summary);
 
     app.route('/api/updates')
         .post(updatesController.create)

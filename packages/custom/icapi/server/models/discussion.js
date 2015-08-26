@@ -28,7 +28,7 @@ var DiscussionSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
-    due: {
+  due: {
     type: Date
   },
   active: {
@@ -39,8 +39,8 @@ var DiscussionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Set', 'Done', 'Postponed', 'Cancelled', 'Archived'],
-    default: 'Set'
+    enum: ['New', 'Scheduled', 'Done', 'Cancelled', 'Archived'],
+    default: 'New'
   },
   //should we maybe have finer grain control on this
 
