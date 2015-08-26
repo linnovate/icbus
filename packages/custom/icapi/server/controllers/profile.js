@@ -30,6 +30,7 @@ exports.profile = function(req, res, next) {
  * Update user profile
  */
 exports.update = function(req, res) {
+    req.profile = req.profile || {};
     var profile = _.extend(req.profile, req.body);
 
     var user = req.user;
@@ -37,7 +38,6 @@ exports.update = function(req, res) {
 
     User.update({ _id: user._id }, user, function(err) {
         utils.checkAndHandleError(err, res, 'Cannot update the profile');
-
         res.json(user.profile);
     });
 };
