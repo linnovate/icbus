@@ -20,6 +20,10 @@ var AttachmentSchema = new Schema({
 		type: String,
 		required: true
 	},
+	attachmentType: {
+		type: String,
+		required: true
+	},
 	issue: {
 		type: String,
 		required: true

@@ -79,6 +79,8 @@ exports.create = function(req, res, next) {
 	for (var i = 0; i < attachments.length; i++) {
 		req.data.name = attachments[i].name;
 		req.data.path = attachments[i].path;
+		req.data.attachmentType = path.extname(attachments[i].path);
+
 		saveAttachment(req.data, req.user, req.body.discussion, function(attachment) {
 			c++;
 			savedAttachments.push(attachment);
@@ -99,6 +101,7 @@ exports.update = function(req, res, next) {
 		attachment.updated = new Date();
 		attachment.updater = req.user._id;
 		attachment.path = req.data.path;
+		attachment.attachmentType = path.extname(req.data.path);
 		attachment.name = req.data.name;
 
 		attachment.save({
@@ -131,6 +134,29 @@ exports.readHistory = function(req, res, next) {
 	}
 };
 
+exports.getByEntity = function(req, res) {
+	var entities = {projects : 'project',  tasks: 'task', discussions: 'discussion'},
+		entity = entities[req.params.entity],
+		query = {
+			query: {
+				filtered: {
+					filter : {
+						terms: {}
+					}
+				}
+			}
+		};
+	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
+	query.query.filtered.filter.terms[entity] =  req.params.id;
+
+	mean.elasticsearch.search({index:'attachment','body': query, size:3000}, function(err,response) {
+		if(err) {
+			res.status(200).send([]);
+		}
+		else res.send(response.hits.hits.map(function(item) {return item._source}))
+	});
+};
+
 exports.upload = function (req, res, next) {
 	console.log('start upload...');
 	Date.prototype.yyyymmdd = function () {
@@ -152,6 +178,8 @@ exports.upload = function (req, res, next) {
 
 	busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
 		var saveTo = path.join(config.attachmentDir, d, new Date().getTime() + '-' + path.basename(filename));
+		var hostFileLocation = config.hostname + saveTo.substring(saveTo.indexOf('/files'));
+		var fileType = path.extname(filename);
 
 		mkdirp(path.join(config.attachmentDir, d), function (err) {
 			console.log('err: ', err);
@@ -159,7 +187,8 @@ exports.upload = function (req, res, next) {
 		});
 		req.data.attachments.push({
 			name: filename,
-			path: saveTo
+			path: hostFileLocation,
+			attachmentType: fileType
 		});
 		req.file = true;
 	});
