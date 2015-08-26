@@ -91,7 +91,7 @@ exports.models = {
       },
       status: {
         type: 'string',
-        description: 'enum: [\'Received\', \'Completed\']'
+        description: 'enum: [\'New\', \'Assigned\', \'In progress\', \'Review\', \'Rejected\', \'Done\']'
       },
       due: {
         type: 'date',
@@ -151,6 +151,10 @@ exports.models = {
       room: {
         type: 'string',
         description: 'id of letschat room'
+      },
+      status: {
+        type: 'string',
+        description: 'enum: [\'New\', \'Archived\', \'Cancelled\', \'In-Progress\', \'Completed\']'
       }
     }
   },
@@ -228,11 +232,11 @@ exports.models = {
         type: 'string',
         description: 'id of user who created the discussion'
       },
-      manager: {
+      assign: {
         type: 'string',
-        description: 'id of user who manage the discussion'
+        description: 'id of user who owner the discussion'
       },
-      date: {
+      due: {
         type: 'string',
         description: 'date of discussion'
       },
@@ -247,6 +251,10 @@ exports.models = {
       watchers: {
         type: 'array',
         description: 'array of ids of watchers users'
+      },
+      status: {
+        type: 'string',
+        description: 'enum: [\'New\', \'Scheduled\', \'Done\', \'Cancelled\', \'Archived\']'
       }
     }
   },
