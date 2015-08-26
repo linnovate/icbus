@@ -47,7 +47,8 @@ exports.query = function(req, res) {
 
 	mean.elasticsearch.search({
 		index: 'attachment',
-		'body': query
+		'body': query,
+		 size: 3000
 	}, function(err, response) {
 		if (err)
 			res.status(500).send('Failed to find attachments');
@@ -135,7 +136,7 @@ exports.readHistory = function(req, res, next) {
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {projects : 'project',  tasks: 'task', discussions: 'discussion'},
+	var entities = {projects : 'project',  tasks: 'task', discussions: 'discussion', updates: 'update'},
 		entity = entities[req.params.entity],
 		query = {
 			query: {
