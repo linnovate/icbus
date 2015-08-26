@@ -102,9 +102,13 @@ exports.models = {
         description: 'array of ids of watchers users'
       },
       assign: {
+        type: 'string',
+        description: 'id of user who assigned the task'
+      },
+      discussions: {
         type: 'array',
-        description: 'array of ids of assigned users'
-      }
+        description: 'array of ids of discussions'
+     }
 
     }
   },
