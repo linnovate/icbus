@@ -54,7 +54,8 @@ exports.all = function (req, res) {
 
 exports.create = function(req, res, next) {
 	var discussion = {
-		creator: req.user._id
+		creator: req.user._id,
+		created: new Date()
 	};
 	discussion = _.extend(discussion, req.body);
 	new Discussion(discussion).save({
