@@ -52,6 +52,8 @@ exports.create = function(req, res, next) {
 	var task = {
 		creator: req.user
 	};
+    if(req.body.discussion)
+        task.discussions = [req.body.discussion];
 
 	task = _.extend(task, req.body);
 
@@ -89,6 +91,8 @@ exports.update = function(req, res, next) {
         delete req.body.__v;
         if(!req.body.assign && !task.assign) delete req.body.assign;
         if(!req.body.project && !task.project) delete req.body.project;
+
+
 
         task = _.extend(task, req.body);
         task.updated = new Date();
@@ -253,4 +257,19 @@ exports.getStarredTasks = function(req, res) {
 			});
 		}
 	})
+};
+
+
+exports.getZombieTasks = function (req, res) {
+
+    var Query = Task.find({project: {$eq: null}, discussions: {$size: 0}});
+    Query.populate('assign').populate('watchers').populate('project');
+
+    Query.exec(function (err, tasks) {
+        utils.checkAndHandleError(err, res, 'Failed to read tasks.');
+
+        res.status(200);
+        return res.json({lenght: tasks,tasks: tasks});
+    });
+
 };

@@ -52,7 +52,11 @@ var TaskSchema = new Schema({
   },
   description: {
     type: String
-  }
+  },
+  discussions: [{
+      type: Schema.ObjectId,
+      ref: 'Discussion'
+  }]
 });
 
 /**

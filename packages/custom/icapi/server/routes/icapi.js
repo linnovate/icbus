@@ -38,6 +38,8 @@ module.exports = function(Icapi, app, auth) {
         .get(taskController.all);
     app.route('/api/tasks/tags')
         .get(taskController.tagsList);
+    app.route('/api/tasks/zombie')
+        .get(taskController.getZombieTasks);
     app.route('/api/tasks/:id/star')
         .patch(taskController.starTask);
     app.route('/api/tasks/starred')
