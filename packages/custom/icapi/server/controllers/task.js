@@ -269,7 +269,7 @@ exports.getZombieTasks = function (req, res) {
         utils.checkAndHandleError(err, res, 'Failed to read tasks.');
 
         res.status(200);
-        return res.json({lenght: tasks,tasks: tasks});
+        return res.json(tasks);
     });
 
 };
