@@ -79,7 +79,7 @@ exports.create = function(req, res, next) {
 	for (var i = 0; i < attachments.length; i++) {
 		req.data.name = attachments[i].name;
 		req.data.path = attachments[i].path;
-		req.data.attachmentType = path.extname(attachments[i].path);
+		req.data.attachmentType = path.extname(attachments[i].path).substr(1).toLowerCase();
 
 		saveAttachment(req.data, req.user, req.body.discussion, function(attachment) {
 			c++;
@@ -101,7 +101,7 @@ exports.update = function(req, res, next) {
 		attachment.updated = new Date();
 		attachment.updater = req.user._id;
 		attachment.path = req.data.path;
-		attachment.attachmentType = path.extname(req.data.path);
+		attachment.attachmentType = path.extname(req.data.path).substr(1).toLowerCase();
 		attachment.name = req.data.name;
 
 		attachment.save({
@@ -179,7 +179,7 @@ exports.upload = function (req, res, next) {
 	busboy.on('file', function (fieldname, file, filename, encoding, mimetype) {
 		var saveTo = path.join(config.attachmentDir, d, new Date().getTime() + '-' + path.basename(filename));
 		var hostFileLocation = config.hostname + saveTo.substring(saveTo.indexOf('/files'));
-		var fileType = path.extname(filename);
+		var fileType = path.extname(filename).substr(1).toLowerCase();
 
 		mkdirp(path.join(config.attachmentDir, d), function (err) {
 			console.log('err: ', err);
