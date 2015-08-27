@@ -72,31 +72,31 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update project without id');
 	}
 
-	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
+	Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
 		utils.checkAndHandleError(err, res);
 		utils.checkAndHandleError(!project, res, 'Cannot find project with id: ' + req.params.id);
 
-      var shouldCreateUpdate = project.description !== req.body.description;
-		  project = _.extend(project, req.body);
+		var shouldCreateUpdate = project.description !== req.body.description;
+		project = _.extend(project, req.body);
 
-			project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
-				utils.checkAndHandleError(err, res, 'Failed to update project');
+		project.save({user: req.user, discussion: req.body.discussion}, function (err, project) {
+			utils.checkAndHandleError(err, res, 'Failed to update project');
 
-        if (shouldCreateUpdate) {
-          new Update({
-            creator: req.user,
-            created: new Date(),
-            type: 'update',
-            issueId: project._id,
-            issue: 'project'
-          }).save({
-            user: req.user,
-            discussion: req.body.discussion
-          }, function(err, update) {});
-        }
-				res.status(200);
-				return res.json(project);
-			});
+			if (shouldCreateUpdate) {
+				new Update({
+					creator: req.user,
+					created: new Date(),
+					type: 'update',
+					issueId: project._id,
+					issue: 'project'
+				}).save({
+						user: req.user,
+						discussion: req.body.discussion
+					});
+			}
+			res.status(200);
+			return res.json(project);
+		});
 	});
 };
 

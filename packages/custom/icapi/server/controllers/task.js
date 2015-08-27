@@ -55,7 +55,12 @@ exports.create = function(req, res, next) {
     if(req.body.discussion)
         task.discussions = [req.body.discussion];
 
-	task = _.extend(task, req.body);
+	var defaults = {
+		project: undefined,
+		assign: undefined
+	};
+	var newTask = _.defaults(defaults, req.body);
+	task = _.extend(task, newTask);
 
 	new Task(task).save({
 		user: req.user,
@@ -89,17 +94,18 @@ exports.update = function(req, res, next) {
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
 
         delete req.body.__v;
-        if(!req.body.assign && !task.assign) delete req.body.assign;
-        if(!req.body.project && !task.project) delete req.body.project;
 
-
-
-        task = _.extend(task, req.body);
+		var defaults = {
+			project: undefined,
+			assign: undefined
+		};
+		var newTask = _.defaults(defaults, req.body);
+        task = _.extend(task, newTask);
         task.updated = new Date();
 
         var shouldCreateUpdate = task.description !== req.body.description;
 
-        task.save({user: req.user, discussion: req.body.discussion}, function(err, task) {
+        task.save({user: req.user, discussion: req.body.discussion}, function(err, result) {
             utils.checkAndHandleError(err, res);
 
             if (shouldCreateUpdate) {
@@ -107,12 +113,12 @@ exports.update = function(req, res, next) {
                   creator: req.user,
                   created: new Date(),
                   type: 'update',
-                  issueId: task._id,
+                  issueId: result._id,
                   issue: 'task'
                 }).save({
                   user: req.user,
                   discussion: req.body.discussion
-                }, function(err, update) {});
+                });
             }
 
             res.status(200);
@@ -258,7 +264,6 @@ exports.getStarredTasks = function(req, res) {
 		}
 	})
 };
-
 
 exports.getZombieTasks = function (req, res) {
 
