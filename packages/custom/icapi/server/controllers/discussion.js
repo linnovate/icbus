@@ -222,3 +222,29 @@ exports.summary = function (req, res) {
 		});
 	});
 };
+
+
+exports.getByProject = function (req, res) {
+	var Query = Task.find({
+		project : req.params.id,
+		discussions : {$not: {$size: 0}}
+	}, {discussions : 1, _id : 0});
+	Query.populate('discussions');
+
+	Query.exec(function (err, discussions) {
+		utils.checkAndHandleError(err, res, 'Unable to get discussions');
+
+		var array = [];
+		var object = new Object();
+
+		discussions.forEach(function(item) {
+		//	if (!object[item.discussion._id]) {
+				array.push(item);
+			//	object[task.project._id] = true;
+		//	}
+		});
+
+		res.status(200);
+		return res.json(array);
+	});
+};
