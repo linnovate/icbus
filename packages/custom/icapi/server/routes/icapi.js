@@ -124,6 +124,8 @@ module.exports = function(Icapi, app, auth) {
         .get(taskController.all);
     app.route('/api/task/tags')
         .get(taskController.tagsList);
+    app.route('/api/task/zombie')
+        .get(taskController.getZombieTasks);
     app.route('/api/task/:id/star')
         .patch(taskController.starTask);
     app.route('/api/task/starred')

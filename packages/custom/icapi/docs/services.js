@@ -189,7 +189,7 @@ exports.load = function(swagger, parms) {
 
   var getTasksPerEntity = {
     'spec': {
-      description: 'get a list of tasks per user/project',
+      description: 'get a list of tasks per user/project/discussion',
       path: '/:entity/:id/tasks',
       method: 'GET',
       summary: 'get a list of tasks per user/project/...',
@@ -200,6 +200,20 @@ exports.load = function(swagger, parms) {
       params: searchParms
     }
   };
+
+  var zombieTasks = {
+    'spec': {
+      description: 'get a list of zombie tasks',
+      path: '/task/zombie',
+      method: 'GET',
+      summary: 'get zombie tasks list',
+      notes: '',
+      type: 'Task',
+      nickname: 'getZombieTasks',
+      produces: ['application/json'],
+      params: searchParms
+  }
+};
 
   var tasksHistory = {
     'spec': {
@@ -580,6 +594,7 @@ exports.load = function(swagger, parms) {
     .addPut(updateTask)
     .addDelete(deleteTask)
     .addGet(getTasksPerEntity)
+    .addGet(zombieTasks)
     .addGet(tasksHistory)
     .addGet(attachmentsList)
     .addPost(createAttachment)
