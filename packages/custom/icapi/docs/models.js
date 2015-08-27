@@ -182,6 +182,10 @@ exports.models = {
         type: 'string',
         description: 'path direction of attachment'
       },
+      attachmentType: {
+        type: 'string',
+        description: 'the file extension of the attachment'
+      },
       issue: {
         type: 'string',
         description: 'name of issue the attachment related to'
