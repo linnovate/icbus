@@ -292,6 +292,20 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var getAttachmentsPerEntity = {
+    'spec': {
+      description: 'get a list of attachments whose issue is a project/discussion/task/update',
+      path: '/:entity/:id/attachments',
+      method: 'GET',
+      summary: 'get a list of attachments per project/discussion/task/update',
+      notes: '',
+      type: 'Attachment',
+      nickname: 'attachmentByEntity',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
   var createAttachment = {
     'spec': {
       description: 'Attachment creation',
@@ -597,6 +611,7 @@ exports.load = function(swagger, parms) {
     .addGet(zombieTasks)
     .addGet(tasksHistory)
     .addGet(attachmentsList)
+    .addGet(getAttachmentsPerEntity)
     .addPost(createAttachment)
     .addPost(updateAttachment)
     .addGet(attachmentsHistory)
