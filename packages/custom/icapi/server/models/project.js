@@ -14,9 +14,7 @@ var ProjectSchema = new Schema({
     type: Date
   },  
   title: {
-    type: String,
-    required: true,
-    default: 'New Project'
+    type: String
   },
   parent : {
     type: Schema.ObjectId,
@@ -42,6 +40,14 @@ var ProjectSchema = new Schema({
     type: String,
     required: true
   },
+  status: {
+    type: String,
+    enum: ['New', 'Archived', 'Cancelled', 'In-Progress', 'Completed'],
+    default: 'New'
+  },
+  description: {
+    type: String
+  },
   //should we maybe have finer grain control on this
   watchers : [{
     type: Schema.ObjectId,
@@ -55,9 +61,9 @@ var ProjectSchema = new Schema({
 /**
  * Validations
  */
-ProjectSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
+ProjectSchema.path('color').validate(function(color) {
+  return /^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/i.test(color);
+}, 'Invalid HEX color.');
 
 /**
  * Statics

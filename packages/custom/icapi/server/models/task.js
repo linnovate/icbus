@@ -12,18 +12,15 @@ var TaskSchema = new Schema({
   },
   updated: {
     type: Date
-  },  
+  },
   title: {
-    type: String,
-    required: true,
-    default: 'New Task'
+    type: String
   },
-  project : {
+  project: {
     type: Schema.ObjectId,
-    ref: 'Project',
-    required: true
+    ref: 'Project'
   },
-  parent : {
+  parent: {
     type: Schema.ObjectId,
     ref: 'Task'
   },
@@ -35,32 +32,32 @@ var TaskSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
-  tags: [ String],
+  tags: [String],
   status: {
     type: String,
-    enum: ['Received', 'Completed'],
-    default: 'Received'
+    enum: ['New', 'Assigned', 'In progress', 'Review', 'Rejected', 'Done'],
+    default: 'New'
   },
   due: {
-    type: Date,
+    type: Date
   },
   //should we maybe have finer grain control on this
-  watchers : [{
+  watchers: [{
     type: Schema.ObjectId,
     ref: 'User'
   }],
-  assign : [{
+  assign: {
     type: Schema.ObjectId,
     ref: 'User'
+  },
+  description: {
+    type: String
+  },
+  discussions: [{
+      type: Schema.ObjectId,
+      ref: 'Discussion'
   }]
 });
-
-/**
- * Validations
- */
-TaskSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
 
 /**
  * Statics
@@ -71,31 +68,35 @@ TaskSchema.statics.load = function(id, cb) {
   }).populate('creator', 'name username')
     .populate('assign', 'name username').exec(cb);
 };
-TaskSchema.statics.project = function(id, cb){
+TaskSchema.statics.project = function(id, cb) {
   require('./project');
   var Project = mongoose.model('Project');
-  Project.findById(id, function(err, project){
-    cb(err,project || {});
+  Project.findById(id, function(err, project) {
+    cb(err, project || {});
   })
 };
 /**
  * Post middleware
  */
-var elasticsearch  = require('../controllers/elasticsearch');
-TaskSchema.post('save', function (req, next) {
+var elasticsearch = require('../controllers/elasticsearch');
+TaskSchema.post('save', function(req, next) {
   var task = this;
   TaskSchema.statics.project(this.project, function(err, project) {
-    if (err){return err}
+    if (err) {
+      return err
+    }
 
     elasticsearch.save(task, 'task', project.room);
   });
   next();
 });
 
-TaskSchema.pre('remove', function (next) {
+TaskSchema.pre('remove', function(next) {
   var task = this;
   TaskSchema.statics.project(this.project, function(err, project) {
-    if (err){return err}
+    if (err) {
+      return err
+    }
     elasticsearch.delete(task, 'task', project.room, next);
   });
   next();

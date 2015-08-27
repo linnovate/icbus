@@ -9,13 +9,15 @@ exports.save = function(doc, docType, room, title) {
         id: doc._id.toString(),
         body: doc
     }, function(error, response){
+
+       // utils.checkAndHandleError(error, res);
         if (error)
-            return error;
-        if (room)
-            if (docType === 'attachment')
-                notifications.sendFile({entityType: docType, title: title, room:room, method: 'uploaded', path: doc.path, issue:doc.issue});
-            else
-                notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: (response.created ? 'created' : 'updated')});
+        return error;
+        //if (room)
+        //    if (docType === 'attachment')
+        //        notifications.sendFile({entityType: docType, title: title, room:room, method: 'uploaded', path: doc.path, issue:doc.issue});
+        //    else
+        //        notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: (response.created ? 'created' : 'updated')});
         return doc;
     });
 };
@@ -28,6 +30,8 @@ exports.delete = function(doc, docType, room, next) {
     }, function(error, response){
         if (error)
             return error;
+
+        // utils.checkAndHandleError(error, res);
         if (room)
             notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: 'deleted'});
         return next();
@@ -39,9 +43,9 @@ exports.search = function (req, res) {
         var query = {
             query: {
                 'multi_match' : {
-                    'query':    req.query.term.replace(',', ' '),
+                    'query': req.query.term.replace(',', ' '),
                     'type' : 'cross_fields',
-                    'fields': [ 'title^3', 'color', 'name', 'tags'],
+                    'fields': ['title^3', 'color', 'name', 'tags'],
                     'operator': 'or'
                 }
             },
@@ -53,11 +57,6 @@ exports.search = function (req, res) {
                     aggs: {
                         top: {
                             top_hits: {
-                                    _source: {
-                                    include: [
-                                        '_id', 'title', 'color', 'name', 'tags'
-                                    ]
-                                }
                             }
                         }
                     }
@@ -65,7 +64,7 @@ exports.search = function (req, res) {
             }
     };
     var options = {
-        index: ['project', 'task', 'discussion', 'user'],
+        index: req.query.index ? req.query.index.split(',') : ['project', 'task', 'discussion', 'user', 'attachment'],
         ignore_unavailable: true,
         from: 0,
         size: 3000,

@@ -60,10 +60,18 @@ exports.load = function(swagger, parms) {
       path: '/avatar',
       method: 'POST',
       summary: 'upload user\'s avatar',
-      notes: '<p>Request URL: host/api/avatar.</p> <p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p><p>------------------------there is a problem to create via swagger, because you can\'t upload file------------------</p>',
+      notes: '<p>Request URL: host/api/avatar.</p> <p>You can use it with html file upload, for example: https://github.com/danialfarid/ng-file-upload.</p>',
       type: '{}',
       nickname: 'uploadAvatar',
-      produces: ['multipart/form-data']
+      produces: ['multipart/form-data'],
+      parameters: [{
+        name: 'body',
+        dataType: 'file',
+        description: 'avatar',
+        required: true,
+        paramType: 'body',
+        allowMultiple: false
+      }]
     }
   };
 
@@ -121,7 +129,7 @@ exports.load = function(swagger, parms) {
       produces: ['application/json'],
       parameters: [{
         name: 'body',
-        description: 'task to create (into \'data\' main key)',
+        description: 'task to create',
         required: true,
         type: 'Task',
         paramType: 'body',
@@ -130,7 +138,7 @@ exports.load = function(swagger, parms) {
     }
   };
 
-  var getTask ={
+  var getTask = {
     'spec': {
       description: 'get a single task',
       path: '/task/:id',
@@ -157,7 +165,7 @@ exports.load = function(swagger, parms) {
       params: searchParms,
       parameters: [{
         name: 'body',
-        description: 'task to update (into \'data\' main key)',
+        description: 'task to update',
         required: true,
         type: 'Task',
         paramType: 'body',
@@ -181,7 +189,7 @@ exports.load = function(swagger, parms) {
 
   var getTasksPerEntity = {
     'spec': {
-      description: 'get a list of tasks per user/project',
+      description: 'get a list of tasks per user/project/discussion',
       path: '/:entity/:id/tasks',
       method: 'GET',
       summary: 'get a list of tasks per user/project/...',
@@ -192,6 +200,20 @@ exports.load = function(swagger, parms) {
       params: searchParms
     }
   };
+
+  var zombieTasks = {
+    'spec': {
+      description: 'get a list of zombie tasks',
+      path: '/task/zombie',
+      method: 'GET',
+      summary: 'get zombie tasks list',
+      notes: '',
+      type: 'Task',
+      nickname: 'getZombieTasks',
+      produces: ['application/json'],
+      params: searchParms
+  }
+};
 
   var tasksHistory = {
     'spec': {
@@ -237,6 +259,20 @@ exports.load = function(swagger, parms) {
       notes: '',
       type: 'Project',
       nickname: 'GetTasks',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var projectsHistory = {
+    'spec': {
+      description: 'get all updates history for a single project',
+      path: '/history/projects/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single project',
+      notes: '',
+      type: 'Project',
+      nickname: 'GetProjectHistory',
       produces: ['application/json'],
       params: searchParms
     }
@@ -329,7 +365,7 @@ exports.load = function(swagger, parms) {
       path: '/search',
       method: 'GET',
       summary: 'search a term in whole data',
-      type: [ 'Task', 'Project', 'User'],
+      type: ['Task', 'Project', 'User'],
       nickname: 'search',
       produces: ['application/json'],
       parameters: [{
@@ -337,33 +373,246 @@ exports.load = function(swagger, parms) {
         required: false,
         type: 'string',
         paramType: 'query',
-        allowMultiple: false
+        allowMultiple: false,
+        description: 'what to search'
+      }, {
+        name: 'index',
+        required: false,
+        type: 'string',
+        paramType: 'query',
+        allowMultiple: false,
+        description: 'index to search'
       }],
       notes: 'get the search results grouped by type (task, project...)'
     }
   };
 
-  swagger
-      .addGet(usersList)
-      .addGet(showProfile)
-      .addGet(tasksList)
-      .addPost(createTask)
-      .addPut(updateProfile)
-      .addPost(uploadAvatar)
-      .addGet(projectsList)
-      .addPost(createProject)
-      .addGet(tagsList)
-      .addGet(getTask)
-      .addPut(updateTask)
-      .addDelete(deleteTask)
-      .addGet(getTasksPerEntity)
-      .addGet(tasksHistory)
-      .addGet(attachmentsList)
-      .addPost(createAttachment)
-      .addPost(updateAttachment)
-      .addGet(attachmentsHistory)
-      .addGet(starredTasks)
-      .addPatch(starTask)
-      .addGet(generalSearch)
+  var commentsList = {
+    'spec': {
+      description: 'comment operations',
+      path: '/comments',
+      method: 'GET',
+      summary: 'Get comments list',
+      notes: '',
+      type: 'Comment',
+      nickname: 'GetComments',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
 
+  var commentShow = {
+    'spec': {
+      description: 'comment operations',
+      path: '/comments/:id',
+      method: 'GET',
+      summary: 'Get one comment by _id',
+      notes: '',
+      type: 'Comment',
+      nickname: 'commentShow',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var commentCreate = {
+    'spec': {
+      description: 'comment creation',
+      path: '/comments',
+      method: 'POST',
+      summary: 'create a comment',
+      notes: '------------------------there is a problem to create via swagger, because you don\'t have req.user------------------',
+      type: 'Comment',
+      nickname: 'commentCreate',
+      produces: ['application/json'],
+      parameters: [{
+        name: 'body',
+        description: 'comment to create',
+        required: true,
+        type: 'Comment',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var commentUpdate = {
+    'spec': {
+      description: 'Update a comment',
+      path: '/comments/:id',
+      method: 'PUT',
+      summary: 'Update a comment',
+      type: 'Comment',
+      nickname: 'commentUpdate',
+      produces: ['application/json'],
+      params: searchParms,
+      parameters: [{
+        name: 'body',
+        description: 'comment to update',
+        required: true,
+        type: 'Comment',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var commentDelete = {
+    'spec': {
+      description: 'Delete a comment',
+      path: '/comments/:id',
+      method: 'DELETE',
+      summary: 'delete a comment',
+      type: 'Comment',
+      nickname: 'commentDelete',
+      produces: ['application/json'],
+    }
+  };
+
+  var commentHistory = {
+    'spec': {
+      description: 'get all updates history for a single comment',
+      path: '/history/comments/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single comment',
+      notes: '',
+      type: 'Comment',
+      nickname: 'GetCommentHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var discussionsList = {
+    'spec': {
+      description: 'discussion operations',
+      path: '/discussions',
+      method: 'GET',
+      summary: 'Get discussions list',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'GetDiscussions',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var discussionShow = {
+    'spec': {
+      description: 'discussion operations',
+      path: '/discussions/:id',
+      method: 'GET',
+      summary: 'Get one discussion by _id',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'discussionShow',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  var discussionCreate = {
+    'spec': {
+      description: 'discussion creation',
+      path: '/discussions',
+      method: 'POST',
+      summary: 'create a discussion',
+      notes: '------------------------there is a problem to create via swagger, because you don\'t have req.user------------------',
+      type: 'Discussion',
+      nickname: 'discussionCreate',
+      produces: ['application/json'],
+      parameters: [{
+        name: 'body',
+        description: 'discussion to create',
+        required: true,
+        type: 'Discussion',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var discussionUpdate = {
+    'spec': {
+      description: 'Update a discussion',
+      path: '/discussions/:id',
+      method: 'PUT',
+      summary: 'Update a discussion',
+      type: 'Discussion',
+      nickname: 'discussionUpdate',
+      produces: ['application/json'],
+      params: searchParms,
+      parameters: [{
+        name: 'body',
+        description: 'discussion to update',
+        required: true,
+        type: 'Discussion',
+        paramType: 'body',
+        allowMultiple: false
+      }]
+    }
+  };
+
+  var discussionDelete = {
+    'spec': {
+      description: 'Delete a discussion',
+      path: '/discussions/:id',
+      method: 'DELETE',
+      summary: 'delete a discussion',
+      type: 'Discussion',
+      nickname: 'discussionDelete',
+      produces: ['application/json'],
+    }
+  };
+
+  var discussionHistory = {
+    'spec': {
+      description: 'get all updates history for a single discussion',
+      path: '/history/discussions/:id',
+      method: 'GET',
+      summary: 'get all updates history for a single discussion',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'GetDiscussionHistory',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
+
+  swagger
+    .addGet(usersList)
+    .addGet(showProfile)
+    .addGet(tasksList)
+    .addPost(createTask)
+    .addPut(updateProfile)
+    .addPost(uploadAvatar)
+    .addGet(projectsList)
+    .addGet(projectsHistory)
+    .addPost(createProject)
+    .addGet(tagsList)
+    .addGet(getTask)
+    .addPut(updateTask)
+    .addDelete(deleteTask)
+    .addGet(getTasksPerEntity)
+    .addGet(zombieTasks)
+    .addGet(tasksHistory)
+    .addGet(attachmentsList)
+    .addPost(createAttachment)
+    .addPost(updateAttachment)
+    .addGet(attachmentsHistory)
+    .addGet(starredTasks)
+    .addPatch(starTask)
+    .addGet(commentsList)
+    .addGet(commentShow)
+    .addPost(commentCreate)
+    .addPut(commentUpdate)
+    .addDelete(commentDelete)
+    .addGet(commentHistory)
+    .addGet(generalSearch)
+    .addGet(discussionsList)
+    .addGet(discussionShow)
+    .addPost(discussionCreate)
+    .addPut(discussionUpdate)
+    .addDelete(discussionDelete)
+    .addGet(discussionHistory)
 };

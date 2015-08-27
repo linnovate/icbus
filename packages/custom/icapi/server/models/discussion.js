@@ -11,24 +11,37 @@ var DiscussionSchema = new Schema({
   },
   updated: {
     type: Date
-  },  
+  },
   title: {
-    type: String,
-    required: true    
+    type: String
+    //required: true
   },
   content: {
-    type: String,
-    required: true    
+    type: String
   },
   creator: {
     type: Schema.ObjectId,
     ref: 'User'
   },
-  manager: {
+  //manager
+  assign: {
     type: Schema.ObjectId,
     ref: 'User'
   },
-
+  due: {
+    type: Date
+  },
+  active: {
+    type: Boolean
+  },
+  description: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ['New', 'Scheduled', 'Done', 'Cancelled', 'Archived'],
+    default: 'New'
+  },
   //should we maybe have finer grain control on this
 
   /*
@@ -37,27 +50,16 @@ var DiscussionSchema = new Schema({
   Should eg membership/watchers be separate and and stored in user or in the model itself of the issue etc
 
   */
-  members : [{
+  members: [{
     type: Schema.ObjectId,
     ref: 'User'
   }],
   //should we maybe have finer grain control on this
-  watchers : [{
+  watchers: [{
     type: Schema.ObjectId,
     ref: 'User'
   }]
 });
-
-/**
- * Validations
- */
-DiscussionSchema.path('title').validate(function(title) {
-  return !!title;
-}, 'Title cannot be blank');
-
-DiscussionSchema.path('content').validate(function(content) {
-  return !!content;
-}, 'Content cannot be blank');
 
 /**
  * Statics
@@ -70,12 +72,12 @@ DiscussionSchema.statics.load = function(id, cb) {
 /**
  * Post middleware
  */
-var elasticsearch  = require('../controllers/elasticsearch');
-DiscussionSchema.post('save', function () {
+var elasticsearch = require('../controllers/elasticsearch');
+DiscussionSchema.post('save', function() {
   elasticsearch.save(this, 'discussion');
 });
-DiscussionSchema.pre('remove', function (next) {
-  elasticsearch.delete(this, 'discussion', next);
+DiscussionSchema.pre('remove', function(next) {
+  elasticsearch.delete(this, 'discussion', null, next);
 });
 
 DiscussionSchema.plugin(archive, 'discussion');

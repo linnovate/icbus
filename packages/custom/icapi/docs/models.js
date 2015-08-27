@@ -30,6 +30,33 @@ exports.models = {
       }
     }
   },
+  Comment: {
+    id: 'Comment',
+    required: ['title', 'task', 'text'],
+    properties: {
+      id: {
+        type: 'string',
+        description: 'Unique identifier for the comment'
+      },
+      title: {
+        type: 'string',
+        description: 'title of comment'
+      },
+      text: {
+        type: 'string',
+        description: 'text of comment'
+      },
+      task: {
+        type: 'string',
+        description: 'id of task'
+      },
+      creator: {
+        type: 'string',
+        description: 'id of user who created the comment'
+      }
+
+    }
+  },
   Task: {
     id: 'Task',
     required: ['title', 'project'],
@@ -64,7 +91,7 @@ exports.models = {
       },
       status: {
         type: 'string',
-        description: 'enum: [\'Received\', \'Completed\']'
+        description: 'enum: [\'New\', \'Assigned\', \'In progress\', \'Review\', \'Rejected\', \'Done\']'
       },
       due: {
         type: 'date',
@@ -75,9 +102,13 @@ exports.models = {
         description: 'array of ids of watchers users'
       },
       assign: {
+        type: 'string',
+        description: 'id of user who assigned the task'
+      },
+      discussions: {
         type: 'array',
-        description: 'array of ids of assigned users'
-      }
+        description: 'array of ids of discussions'
+     }
 
     }
   },
@@ -120,6 +151,10 @@ exports.models = {
       room: {
         type: 'string',
         description: 'id of letschat room'
+      },
+      status: {
+        type: 'string',
+        description: 'enum: [\'New\', \'Archived\', \'Cancelled\', \'In-Progress\', \'Completed\']'
       }
     }
   },
@@ -166,6 +201,60 @@ exports.models = {
       room: {
         type: 'string',
         description: 'id of letschat room'
+      }
+    }
+  },
+  Discussion: {
+    id: 'Discussion',
+    required: ['name'],
+    properties: {
+      id: {
+        type: 'string',
+        description: 'Unique identifier for the discussion'
+      },
+      created: {
+        type: 'string',
+        description: 'created date of discussion'
+      },
+      updated: {
+        type: 'string',
+        description: 'last updated date of discussion'
+      },
+      name: {
+        type: 'string',
+        description: 'name of discussion'
+      },
+      content: {
+        type: 'string',
+        description: 'content of discussion (short description)'
+      },
+      creator: {
+        type: 'string',
+        description: 'id of user who created the discussion'
+      },
+      assign: {
+        type: 'string',
+        description: 'id of user who owner the discussion'
+      },
+      due: {
+        type: 'string',
+        description: 'date of discussion'
+      },
+      active: {
+        type: 'string',
+        description: 'active of discussion'
+      },
+      members: {
+        type: 'array',
+        description: 'array of ids of members'
+      },
+      watchers: {
+        type: 'array',
+        description: 'array of ids of watchers users'
+      },
+      status: {
+        type: 'string',
+        description: 'enum: [\'New\', \'Scheduled\', \'Done\', \'Cancelled\', \'Archived\']'
       }
     }
   },

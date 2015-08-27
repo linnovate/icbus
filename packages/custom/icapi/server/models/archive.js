@@ -14,21 +14,25 @@ am.ArchiveModel = function(collectionName, name) {
 
   if (!(collectionName in am.archiveModels)) {
     var schema = new Schema({
-      t: {
+      t: {//time
         type: Date,
         required: true
       },
-      o: {
+      o: {//operation
         type: String,
         required: true
       },
-      d: {
+      c: {//content
         type: Schema.Types.Mixed,
         required: true
       },
-      u: {
+      u: {//user
         type: Schema.ObjectId,
         ref: 'User'
+      },
+      d: {//discussion
+        type: Schema.ObjectId,
+        ref: 'Discussion'
       }
     }, {
       id: true,
@@ -63,14 +67,15 @@ module.exports = function archivePlugin(schema, collectionName) {
 
   // Create a copy when insert or update
   schema.pre('save', function(next, req, callback) {
-    var d = this.toObject();
-    d.__v = undefined;
+    var c = this.toObject();
+    c.__v = undefined;
 
     var archiveDoc = {};
     archiveDoc['t'] = new Date();
     archiveDoc['o'] = this.isNew ? 'i' : 'u';
-    archiveDoc['d'] = d;
+    archiveDoc['c'] = c;
     archiveDoc['u'] = req.user;
+    archiveDoc['d'] = req.discussion;
 
     var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);
@@ -79,14 +84,15 @@ module.exports = function archivePlugin(schema, collectionName) {
 
   // Create a copy when remove
   schema.pre('remove', function(next, req, callback) {
-    var d = this.toObject();
-    d.__v = undefined;
+    var c = this.toObject();
+    c.__v = undefined;
 
     var archiveDoc = {};
     archiveDoc['t'] = new Date();
     archiveDoc['o'] = 'r';
-    archiveDoc['d'] = d;
+    archiveDoc['c'] = c;
     archiveDoc['u'] = req.user;
+    archiveDoc['d'] = req.discussion;
 
     var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);

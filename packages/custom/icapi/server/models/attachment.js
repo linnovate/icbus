@@ -20,6 +20,10 @@ var AttachmentSchema = new Schema({
 		type: String,
 		required: true
 	},
+	attachmentType: {
+		type: String,
+		required: true
+	},
 	issue: {
 		type: String,
 		required: true
@@ -45,6 +49,14 @@ AttachmentSchema.path('name').validate(function(name) {
 	return !!name;
 }, 'Name cannot be blank');
 
+AttachmentSchema.path('issue').validate(function(issue) {
+	return !!issue;
+}, 'Issue cannot be blank');
+
+AttachmentSchema.path('issueId').validate(function(issueId) {
+	return !!issueId;
+}, 'Issue id cannot be blank');
+
 /**
  * Statics
  */
@@ -66,6 +78,9 @@ AttachmentSchema.statics.project = function(id, cb) {
 	Project.findById(id, function(err, project) {
 		cb(err, {room: project.room, title: project.title});
 	})
+};
+AttachmentSchema.statics.update = function(id, cb) {
+	cb(null, {});
 };
 
 /**
