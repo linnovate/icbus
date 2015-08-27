@@ -136,19 +136,22 @@ exports.readHistory = function(req, res, next) {
 };
 
 exports.getByEntity = function(req, res) {
+
 	var entities = {projects : 'project',  tasks: 'task', discussions: 'discussion', updates: 'update'},
-		entity = entities[req.params.entity],
-		query = {
-			query: {
-				filtered: {
-					filter : {
-						terms: {}
+		entity = entities[req.params.entity];
+
+	var query = {
+		query: {
+			filtered: {
+				filter : {
+					term: {
+						issue: entity,
+						issueId: req.params.id
 					}
 				}
 			}
-		};
-	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
-	query.query.filtered.filter.terms[entity] =  req.params.id;
+		}
+	};
 
 	mean.elasticsearch.search({index:'attachment','body': query, size:3000}, function(err,response) {
 		if(err) {
