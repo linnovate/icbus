@@ -83,7 +83,8 @@ exports.update = function (req, res, next) {
 		utils.checkAndHandleError(err, res);
 
 		var shouldCreateUpdate = discussion.description !== req.body.description;
-
+		if (!req.body.assign && !discussion.assign) delete req.body.assign;
+		
 		var defaults = {
 			assign: undefined
 		};

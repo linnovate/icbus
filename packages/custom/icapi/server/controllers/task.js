@@ -94,6 +94,8 @@ exports.update = function(req, res, next) {
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
 
         delete req.body.__v;
+		if(!req.body.assign && !task.assign) delete req.body.assign;
+		if(!req.body.project && !task.project) delete req.body.project;
 
 		var defaults = {
 			project: undefined,
