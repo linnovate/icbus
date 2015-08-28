@@ -57,7 +57,13 @@ exports.create = function(req, res, next) {
 		creator: req.user._id,
 		created: new Date()
 	};
-	discussion = _.extend(discussion, req.body);
+
+	var defaults = {
+		assign: undefined
+	};
+	var newDiscussion = _.defaults(defaults, req.body);
+	discussion = _.extend(discussion, newDiscussion);
+
 	new Discussion(discussion).save({
 		user: req.user
 	}, function(err, response) {
@@ -77,10 +83,13 @@ exports.update = function (req, res, next) {
 		utils.checkAndHandleError(err, res);
 
 		var shouldCreateUpdate = discussion.description !== req.body.description;
-
 		if (!req.body.assign && !discussion.assign) delete req.body.assign;
-
-		discussion = _.extend(discussion, req.body);
+		
+		var defaults = {
+			assign: undefined
+		};
+		var newDiscussion = _.defaults(defaults, req.body);
+		discussion = _.extend(discussion, newDiscussion);
 		discussion.updated = new Date();
 
 		discussion.save({
