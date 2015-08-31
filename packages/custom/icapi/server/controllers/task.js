@@ -50,10 +50,13 @@ exports.all = function (req, res) {
 
 exports.create = function(req, res, next) {
 	var task = {
-		creator: req.user
+		creator: req.user,
+    tags: []
 	};
-    if(req.body.discussion)
+    if(req.body.discussion) {
         task.discussions = [req.body.discussion];
+        task.tags.push('Agenda');
+    }
 
 	var defaults = {
 		project: undefined,

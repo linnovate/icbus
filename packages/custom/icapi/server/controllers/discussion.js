@@ -168,7 +168,31 @@ exports.schedule = function (req, res) {
 			utils.checkAndHandleError(true, res, 'Cannot be scheduled for this status');
 		}
 
-		//mailManager.inviteDiscussion(discussion);
+    var Query = TaskArchive.distinct('c._id' ,{
+      'd': req.params.id
+    });
+
+    Query.exec(function(err, tasks) {
+      utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+
+      var entityQuery = {};
+      entityQuery._id = {$in: tasks};
+      var Query = Task.find(entityQuery);
+
+      Query.exec(function (err, tasks) {
+        utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+
+        var groupedTasks = _.groupBy(tasks, function(task) {
+          return _.contains(task.tags, 'Agenda');
+        });
+
+        mailManager.sendEx('discussionSchedule', {
+          discussion: discussion,
+          agendaTasks: groupedTasks['true'] || [],
+          additionalTasks: groupedTasks['false'] || []
+        });
+      });
+    });
 
 		discussion.status = 'Scheduled';
 

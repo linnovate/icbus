@@ -5,19 +5,65 @@
  */
 var mongoose = require('mongoose'),
 	User = mongoose.model('User'),
+  _ = require('lodash'),
 	config = require('meanio').loadConfig(),
 	templates = require('../template'),
-	nodemailer = require('nodemailer');
+	nodemailer = require('nodemailer'),
+  smtpTransport = require('nodemailer-smtp-transport');
+
 
 
 function sendMail(mailOptions) {
-	var transport = nodemailer.createTransport(config.mailer);
+  var options = config.mailer;
+
+  if (config.mailer.service === 'SMTP') {
+    options = smtpTransport(options);
+  }
+
+  var transport = nodemailer.createTransport(options);
+
 	transport.sendMail(mailOptions, function(err, response) {
 		console.log(err, response);
 		if (err) return err;
 		return response;
 	});
 }
+
+//temporary function
+//send should be deleted latter and use this function
+//as sole interface to main manager
+exports.sendEx = function(type, data) {
+  if (type === 'comment_email') {
+    //template format does not compatible yet
+    //use send function
+    return;
+  }
+
+  var template = templates[type];
+  if (!template) {
+    return;
+  }
+
+  data.uriRoot = config.icu.uri;
+
+  var compiledSubject = _.template(template.subject);
+  var subject = compiledSubject(data);
+
+  var compiledBody = _.template(template.body);
+  var body = compiledBody(data);
+
+  data.discussion.watchers.forEach(function(watcher) {
+    var mailOptions = {
+      to: watcher.email,
+      from: config.emailFrom,
+      subject: subject,
+      html: body,
+      forceEmbeddedImages: true
+    };
+
+    sendMail(mailOptions);
+  });
+};
 
 exports.send = function(doc, task) {
 	var arr = doc.text.match(/@([^ :]*)*/g);

@@ -22,5 +22,49 @@ module.exports = {
     mailOptions.subject = from.name + ' mentioned you on the task ' + task.title + ' on ' + task.project.title + ' at ' + dateFormat(0);
     mailOptions.forceEmbeddedImages = true;
     return mailOptions;
+  },
+  discussionSchedule: {
+    subject: 'Discussion was scheduled',
+    body: [
+      '<div style="display:block;margin:0 auto;max-width:580px;padding:12px 16px;background-color:orange">',
+      '<div style="margin:0 auto;max-height:37px;max-width:122px;text-align: center;">ICU</div></div>',
+      '<div style="display:block;margin:0 auto;max-width:580px;padding:12px 16px;background-color:#FCFBF6">',
+      '<p>Date: <%= new Date().toLocaleString() %></p>',
+      '<h2><%= discussion.title %>, <%= discussion.due.toLocaleString() %></h2>',
+      '<img style="appearance: none;border: none;height: calc(30px * 2);border-radius: 30px;width: calc(30px * 2);background-color: #b8e77f;width: 45px;height: 44px;margin: 0 7.5px;"/>',
+
+      '<p>Attendees: <%= discussion.watchers.map(function(w) { return w.name; }).join(",") %></p>',
+
+      '<div style="background-color:#fff;border:1px solid #dbdbdb;border-radius:3px;display:block;margin:6px 60px;padding:10px 12px">',
+      '<% print(discussion.description) %>',
+      '</div>',
+      '<h3>Agenda tasks: </h3>',
+      '<ol><% agendaTasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
+      '<h3>Additional tasks: </h3>',
+      '<ol><% additionalTasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
+    ].join('\n\n')
+  },
+  discussionSummary: {
+    subject: 'Discussion summary',
+    body: [
+      '<div style="display:block;margin:0 auto;max-width:580px;padding:12px 16px;background-color:orange">',
+      '<div style="margin:0 auto;max-height:37px;max-width:122px;text-align: center;">ICU</div></div>',
+      '<div style="display:block;margin:0 auto;max-width:580px;padding:12px 16px;background-color:#FCFBF6">',
+      '<p>Date: <%= new Date().toLocaleString() %></p>',
+      '<h2><%= discussion.title %>, <%= discussion.due.toLocaleString() %></h2>',
+      '<img style="appearance: none;border: none;height: calc(30px * 2);border-radius: 30px;width: calc(30px * 2);background-color: #b8e77f;width: 45px;height: 44px;margin: 0 7.5px;"/>',
+
+      '<p>Attendees: <%= discussion.watchers.map(function(w) { return w.name; }).join(",") %></p>',
+
+      '<div style="background-color:#fff;border:1px solid #dbdbdb;border-radius:3px;display:block;margin:6px 60px;padding:10px 12px">',
+      '<% print(discussion.description) %>',
+      '</div>',
+
+      '<h3>Task discussed: </h3>',
+      '<h4>Agenda tasks: </h4>',
+      '<ol><% agendaTasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
+      '<h4>Additional tasks: </h4>',
+      '<ol><% additionalTasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
+    ].join('\n\n')
   }
 };
