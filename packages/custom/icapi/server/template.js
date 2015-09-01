@@ -61,8 +61,12 @@ module.exports = {
       '</div>',
 
       '<h3>Task discussed: </h3>',
-      '<h4>Agenda tasks: </h4>',
-      '<ol><% agendaTasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
+      '<% projects.forEach(function(project) { %>',
+      '<ol>',
+        '<li><%- project.title %>',
+        '<ol type="a"><% project.tasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
+      '</li></ol>',
+      '<% }); %>',
       '<h4>Additional tasks: </h4>',
       '<ol><% additionalTasks.forEach(function(task) { %><li><a href="<%= uriRoot %>/tasks/by-discussion/<%= discussion._id %>/<%= task._id %>"><%- task.title %></a></li><% }); %></ol>',
     ].join('\n\n')
