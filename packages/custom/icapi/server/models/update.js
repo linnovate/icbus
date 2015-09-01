@@ -83,6 +83,8 @@ UpdateSchema.post('save', function(req, next) {
       elasticsearch.save(update, 'update', result.room, result.title);
       next();
     });
+  } else {
+      elasticsearch.save(update, 'update');
   }
 });
 

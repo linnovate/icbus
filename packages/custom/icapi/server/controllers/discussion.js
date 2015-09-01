@@ -69,8 +69,19 @@ exports.create = function(req, res, next) {
 	}, function(err, response) {
 		utils.checkAndHandleError(err, res);
 
-        req.params.id = response._id;
-        exports.read(req, res, next);
+    new Update({
+      creator: req.user,
+      created: response.created,
+      type: 'create',
+      issueId: response._id,
+      issue: 'discussion'
+    }).save({
+      user: req.user,
+      discussion: req.body.discussion
+    });
+
+    req.params.id = response._id;
+    exports.read(req, res, next);
 		//res.json(response);
 	});
 };
