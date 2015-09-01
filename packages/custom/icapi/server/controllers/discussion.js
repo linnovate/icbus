@@ -179,6 +179,8 @@ exports.schedule = function (req, res) {
       entityQuery._id = {$in: tasks};
       var Query = Task.find(entityQuery);
 
+      Query.populate('project');
+
       Query.exec(function (err, tasks) {
         utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
 
@@ -218,7 +220,39 @@ exports.summary = function (req, res) {
 			utils.checkAndHandleError(true, res, 'Cannot send summary for this status');
 		}
 
-		//mailManager.summaryDiscussion(discussion);
+    var Query = TaskArchive.distinct('c._id' ,{
+      'd': req.params.id
+    });
+
+    Query.exec(function(err, tasks) {
+      utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+
+      var entityQuery = {};
+      entityQuery._id = {$in: tasks};
+      var Query = Task.find(entityQuery);
+
+      Query.populate('project');
+      Query.exec(function (err, tasks) {
+        utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+
+        var projects = _.chain(tasks).pluck('project').compact().value();
+        _.each(projects, function(project) {
+          project.tasks = _.select(tasks, function(task) {
+            return task.project === project;
+          });
+        });
+
+        var additionalTasks = _.select(tasks, function(task) {
+          return !task.project;
+        });
+
+        mailManager.sendEx('discussionSummary', {
+          discussion: discussion,
+          projects: projects,
+          additionalTasks: additionalTasks
+        });
+      });
+    });
 
 		discussion.status = 'Done';
 		discussion.save({
