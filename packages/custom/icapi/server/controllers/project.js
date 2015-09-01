@@ -60,9 +60,20 @@ exports.create = function (req, res, next) {
 		.done(function () {
 			new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
 				utils.checkAndHandleError(err, res);
+
+        new Update({
+          creator: req.user,
+          created: response.created,
+          type: 'create',
+          issueId: response._id,
+          issue: 'project'
+        }).save({
+          user: req.user,
+          discussion: req.body.discussion
+        });
                 
-                req.params.id = response._id;
-                exports.read(req, res, next);
+        req.params.id = response._id;
+        exports.read(req, res, next);
 			});
 		});
 };
