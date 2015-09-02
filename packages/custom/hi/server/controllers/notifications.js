@@ -1,43 +1,47 @@
 var request = require('request'),
     lcconfig = require('meanio').loadConfig().letschat,
     Q = require('q'),
-    fs = require('fs');
+    fs = require('fs'),
+    rooms = require('./rooms');
 
 exports.send = function(req, res) {
-    var options = {
-        url: lcconfig.host + ':' + lcconfig.port + '/rooms/' + req.params.room + '/messages',
-        headers: {
-            "Authorization": "Bearer " + lcconfig.token
-        },
-        json: {
-            "text": req.params.text
-        },
-        method: "POST"
-    };
-
-    request(options, function(error, body, response) {
-        res.send(response);
-    });
+    rooms.getUsername(req.user.email)
+        .then(function(userId){
+            var params = {
+                message: req.body.message,
+                room: req.params.room,
+                owner: userId
+            };
+            exports.sendMessage(params)
+                .then(function(response){
+                    res.send(response);
+                });
+        });
 };
 
-exports.sendFromApi = function(params) {
+exports.sendMessage = function(params) {
     var deferred = Q.defer();
     var options = {
-        url: lcconfig.host + ':' + lcconfig.port + '/rooms/' + params.room + '/messages',
+        url: lcconfig.uri + '/rooms/' + params.room + '/messages',
         headers: {
             "Authorization": "Bearer " + lcconfig.token
         },
         json: {
-            "text": params.entityType + ' ' + params.title + ' was ' + params.method
+            text: params.message,
+            owner: params.owner
         },
         method: "POST"
     };
+
     request(options, function(error, response, body) {
+
         if (response.body.errors || error)
             deferred.reject(response.body.errors || error);
-        else
-            deferred.resolve(response);
+        else {
+            deferred.resolve(response.body);
+        }
     });
+
     return deferred.promise;
 };
 
@@ -46,7 +50,7 @@ exports.sendFile = function(params) {
 
     var deferred = Q.defer();
     var fileOptions = {
-        url: lcconfig.host + ':' + lcconfig.port + '/rooms/' + params.room + '/files',
+        url: lcconfig.uri + '/rooms/' + params.room + '/files',
         headers: {
             "Authorization": "Bearer " + lcconfig.token,
             'Content-Type': 'multipart/form-data'
@@ -55,7 +59,7 @@ exports.sendFile = function(params) {
     };
 
     var messageOptions = {
-        url: lcconfig.host + ':' + lcconfig.port + '/rooms/' + params.room + '/messages',
+        url: lcconfig.uri + '/rooms/' + params.room + '/messages',
         headers: {
             "Authorization": "Bearer " + lcconfig.token
         },
@@ -92,4 +96,4 @@ exports.sendFile = function(params) {
     });
 
     return deferred.promise;
-}
+};

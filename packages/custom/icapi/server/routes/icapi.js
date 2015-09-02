@@ -8,7 +8,8 @@ var projectController = require('../controllers/project'),
     usersController = require('../controllers/users'),
     elasticsearchController = require('../controllers/elasticsearch'),
     attachmentsController = require('../controllers/attachments'),
-    updatesController = require('../controllers/updates');
+    updatesController = require('../controllers/updates'),
+    roomsController = require('../../../hi/server/controllers/rooms');
 
 //var permissionController = require('../controllers/permission');
 
@@ -118,12 +119,8 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/history/updates/:id')
         .get(updatesController.readHistory);
 
-
     //temporary -because of swagger bug with 'tasks' word
 
-    app.route('/api/task')
-        .post(taskController.create)
-        .get(taskController.all);
     app.route('/api/task/tags')
         .get(taskController.tagsList);
     app.route('/api/task/zombie')

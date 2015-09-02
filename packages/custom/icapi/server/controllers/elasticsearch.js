@@ -9,6 +9,7 @@ exports.save = function(doc, docType, room, title) {
         id: doc._id.toString(),
         body: doc
     }, function(error, response){
+
        // utils.checkAndHandleError(error, res);
         if (error)
         return error;
@@ -27,6 +28,9 @@ exports.delete = function(doc, docType, room, next) {
         type: docType,
         id: doc._id.toString()
     }, function(error, response){
+        if (error)
+            return error;
+
         // utils.checkAndHandleError(error, res);
         if (room)
             notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: 'deleted'});

@@ -21,6 +21,7 @@ exports.read = function(req, res, next) {
 	});
 };
 
+
 exports.all = function (req, res) {
 	var Query = Project.find({});
 	Query.populate('watchers');
@@ -51,13 +52,13 @@ exports.create = function (req, res, next) {
 		creator: req.user._id
 	};
 	project = _.extend(project, req.body);
-	rooms.createForProject(project)
-		.then(function (roomId) {
-			project.room = roomId;
-		}, function (error) {
-			console.log('cannot create a room in lets-chat ' + error);
-		})
-		.done(function () {
+	//rooms.createForProject(req, project)
+	//	.then(function (roomId) {
+	//		project.room = roomId;
+	//	}, function (error) {
+	//		console.log('cannot create a room in lets-chat ' + error);
+	//	})
+	//	.done(function () {
 			new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
 				utils.checkAndHandleError(err, res);
 
@@ -75,8 +76,9 @@ exports.create = function (req, res, next) {
         req.params.id = response._id;
         exports.read(req, res, next);
 			});
-		});
+		//});
 };
+
 
 exports.update = function(req, res, next) {
 	if (!req.params.id) {
