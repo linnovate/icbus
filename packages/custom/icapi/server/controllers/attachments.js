@@ -145,8 +145,8 @@ exports.getByEntity = function(req, res) {
 			filtered: {
 				filter : {
 					term: {
-						issue: entity,
-						issueId: req.params.id
+						entity: entity,
+						entityId: req.params.id
 					}
 				}
 			}

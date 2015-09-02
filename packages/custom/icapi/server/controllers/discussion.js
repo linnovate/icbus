@@ -57,14 +57,31 @@ exports.create = function(req, res, next) {
 		creator: req.user._id,
 		created: new Date()
 	};
-	discussion = _.extend(discussion, req.body);
+
+	var defaults = {
+		assign: undefined
+	};
+	var newDiscussion = _.defaults(defaults, req.body);
+	discussion = _.extend(discussion, newDiscussion);
+
 	new Discussion(discussion).save({
 		user: req.user
 	}, function(err, response) {
 		utils.checkAndHandleError(err, res);
 
-        req.params.id = response._id;
-        exports.read(req, res, next);
+    new Update({
+      creator: req.user,
+      created: response.created,
+      type: 'create',
+      issueId: response._id,
+      issue: 'discussion'
+    }).save({
+      user: req.user,
+      discussion: req.body.discussion
+    });
+
+    req.params.id = response._id;
+    exports.read(req, res, next);
 		//res.json(response);
 	});
 };
@@ -77,10 +94,13 @@ exports.update = function (req, res, next) {
 		utils.checkAndHandleError(err, res);
 
 		var shouldCreateUpdate = discussion.description !== req.body.description;
-
 		if (!req.body.assign && !discussion.assign) delete req.body.assign;
-
-		discussion = _.extend(discussion, req.body);
+		
+		var defaults = {
+			assign: undefined
+		};
+		var newDiscussion = _.defaults(defaults, req.body);
+		discussion = _.extend(discussion, newDiscussion);
 		discussion.updated = new Date();
 
 		discussion.save({
@@ -159,7 +179,33 @@ exports.schedule = function (req, res) {
 			utils.checkAndHandleError(true, res, 'Cannot be scheduled for this status');
 		}
 
-		//mailManager.inviteDiscussion(discussion);
+    var Query = TaskArchive.distinct('c._id' ,{
+      'd': req.params.id
+    });
+
+    Query.exec(function(err, tasks) {
+      utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+
+      var entityQuery = {};
+      entityQuery._id = {$in: tasks};
+      var Query = Task.find(entityQuery);
+
+      Query.populate('project');
+
+      Query.exec(function (err, tasks) {
+        utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+
+        var groupedTasks = _.groupBy(tasks, function(task) {
+          return _.contains(task.tags, 'Agenda');
+        });
+
+        mailManager.sendEx('discussionSchedule', {
+          discussion: discussion,
+          agendaTasks: groupedTasks['true'] || [],
+          additionalTasks: groupedTasks['false'] || []
+        });
+      });
+    });
 
 		discussion.status = 'Scheduled';
 
@@ -185,7 +231,39 @@ exports.summary = function (req, res) {
 			utils.checkAndHandleError(true, res, 'Cannot send summary for this status');
 		}
 
-		//mailManager.summaryDiscussion(discussion);
+    var Query = TaskArchive.distinct('c._id' ,{
+      'd': req.params.id
+    });
+
+    Query.exec(function(err, tasks) {
+      utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+
+      var entityQuery = {};
+      entityQuery._id = {$in: tasks};
+      var Query = Task.find(entityQuery);
+
+      Query.populate('project');
+      Query.exec(function (err, tasks) {
+        utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+
+        var projects = _.chain(tasks).pluck('project').compact().value();
+        _.each(projects, function(project) {
+          project.tasks = _.select(tasks, function(task) {
+            return task.project === project;
+          });
+        });
+
+        var additionalTasks = _.select(tasks, function(task) {
+          return !task.project;
+        });
+
+        mailManager.sendEx('discussionSummary', {
+          discussion: discussion,
+          projects: projects,
+          additionalTasks: additionalTasks
+        });
+      });
+    });
 
 		discussion.status = 'Done';
 		discussion.save({

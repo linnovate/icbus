@@ -106,6 +106,8 @@ exports.create = function(req, res, next) {
 	req.body.updated = new Date();
 	req.body.creator = req.user._id;
 
+  console.log(req.body);
+
 	new Update(req.body).save({
 		user: req.user,
 		discussion: req.body.discussion

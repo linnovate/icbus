@@ -61,9 +61,20 @@ exports.create = function (req, res, next) {
 	//	.done(function () {
 			new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
 				utils.checkAndHandleError(err, res);
+
+        new Update({
+          creator: req.user,
+          created: response.created,
+          type: 'create',
+          issueId: response._id,
+          issue: 'project'
+        }).save({
+          user: req.user,
+          discussion: req.body.discussion
+        });
                 
-                req.params.id = response._id;
-                exports.read(req, res, next);
+        req.params.id = response._id;
+        exports.read(req, res, next);
 			});
 		//});
 };
@@ -74,42 +85,31 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update project without id');
 	}
 
-	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
+	Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
 		utils.checkAndHandleError(err, res);
 		utils.checkAndHandleError(!project, res, 'Cannot find project with id: ' + req.params.id);
 
-      var shouldCreateUpdate = project.description !== req.body.description;
-		  project = _.extend(project, req.body);
+		var shouldCreateUpdate = project.description !== req.body.description;
+		project = _.extend(project, req.body);
 
-		project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
+		project.save({user: req.user, discussion: req.body.discussion}, function (err, project) {
 			utils.checkAndHandleError(err, res, 'Failed to update project');
 
-            //if we have some changes in watchers field
-            if (req.body.watchers && !(_.isEqual(req.body.watchers.sort(), project.watchers.sort()))) {
-			    rooms.updateParticipants(req.user, project.room, project.title, req.body.watchers)
-                    .then(function () {
-                        return res.status(200).json(project);
-                    },
-                    function (error) {
-                        utils.checkAndHandleError(error, res, 'Failed to update room');
-                    });
-		}
-
-        if (shouldCreateUpdate) {
-          new Update({
-            creator: req.user,
-            created: new Date(),
-            type: 'update',
-            issueId: project._id,
-            issue: 'project'
-          }).save({
-            user: req.user,
-            discussion: req.body.discussion
-          }, function(err, update) {});
-        }
-				res.status(200);
-				return res.json(project);
-			});
+			if (shouldCreateUpdate) {
+				new Update({
+					creator: req.user,
+					created: new Date(),
+					type: 'update',
+					issueId: project._id,
+					issue: 'project'
+				}).save({
+						user: req.user,
+						discussion: req.body.discussion
+					});
+			}
+			res.status(200);
+			return res.json(project);
+		});
 	});
 };
 

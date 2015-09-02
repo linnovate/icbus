@@ -32,6 +32,14 @@ var AttachmentSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		required: true
 	},
+	entity: {
+		type: String,
+		required: true
+	},
+	entityId: {
+		type: Schema.Types.ObjectId,
+		required: true
+	},
 	creator: {
 		type: Schema.ObjectId,
 		ref: 'User'

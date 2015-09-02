@@ -10,6 +10,8 @@
     "node": "0.10.x",
     "npm": "1.4.x"
   },
-  "dependencies": {},
+  "dependencies": {
+    "nodemailer-smtp-transport": "^1.0.3"
+  },
   "license": "MIT"
 }

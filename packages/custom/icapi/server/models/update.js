@@ -75,14 +75,17 @@ var elasticsearch = require('../controllers/elasticsearch');
 
 UpdateSchema.post('save', function(req, next) {
 	var update = this;
-	UpdateSchema.statics[update.issue](update.issueId, function(err, result) {
-		if (err) {
-			return err
-		}
-		elasticsearch.save(update, 'update', result.room, result.title);
-		next();
-	});
-
+  if (UpdateSchema.statics[update.issue]) {
+    UpdateSchema.statics[update.issue](update.issueId, function(err, result) {
+      if (err) {
+        return err;
+      }
+      elasticsearch.save(update, 'update', result.room, result.title);
+      next();
+    });
+  } else {
+      elasticsearch.save(update, 'update');
+  }
 });
 
 UpdateSchema.pre('remove', function(next) {
