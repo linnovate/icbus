@@ -52,20 +52,20 @@ exports.create = function (req, res, next) {
 		creator: req.user._id
 	};
 	project = _.extend(project, req.body);
-	rooms.createForProject(req, res, project)
-		.then(function (roomId) {
-			project.room = roomId;
-		}, function (error) {
-			console.log('cannot create a room in lets-chat ' + error);
-		})
-		.done(function () {
+	//rooms.createForProject(req, project)
+	//	.then(function (roomId) {
+	//		project.room = roomId;
+	//	}, function (error) {
+	//		console.log('cannot create a room in lets-chat ' + error);
+	//	})
+	//	.done(function () {
 			new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
 				utils.checkAndHandleError(err, res);
                 
                 req.params.id = response._id;
                 exports.read(req, res, next);
 			});
-		});
+		//});
 };
 
 
@@ -83,14 +83,16 @@ exports.update = function(req, res, next) {
 
 		project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
 			utils.checkAndHandleError(err, res, 'Failed to update project');
-						if (req.body.watchers && !(_.isEqual(req.body.watchers.sort(), project.watchers.sort()))) {//if we have some changes in watchers field
-			rooms.updateParticipants(project.room, project.title, req.body.watchers)
-				.then(function () {
-					return res.status(200).json(project);
-				},
-				function (error) {
-					utils.checkAndHandleError(error, res, 'Failed to update room');
-				});
+
+            //if we have some changes in watchers field
+            if (req.body.watchers && !(_.isEqual(req.body.watchers.sort(), project.watchers.sort()))) {
+			    rooms.updateParticipants(req.user, project.room, project.title, req.body.watchers)
+                    .then(function () {
+                        return res.status(200).json(project);
+                    },
+                    function (error) {
+                        utils.checkAndHandleError(error, res, 'Failed to update room');
+                    });
 		}
 
         if (shouldCreateUpdate) {
