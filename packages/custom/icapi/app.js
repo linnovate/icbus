@@ -8,8 +8,6 @@ var Module = require('meanio').Module;
 var Icapi = new Module('icapi');
 
 Icapi.register(function(app, auth, database, swagger) {
-  //app.use(connectDomain());
-
   //We enable routing. By default the Package Object is passed to the routes
   Icapi.routes(app, auth, database);
 
