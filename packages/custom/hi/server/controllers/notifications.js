@@ -6,11 +6,11 @@ var request = require('request'),
 
 exports.send = function(req, res) {
     rooms.getUsername(req.user.email)
-        .then(function(userId){
+        .then(function(user){
             var params = {
                 message: req.body.message,
                 room: req.params.room,
-                owner: userId
+                owner: user.id
             };
             exports.sendMessage(params)
                 .then(function(response){
