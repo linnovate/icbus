@@ -33,8 +33,8 @@ exports.createForProject  = function(req, project) {
             // get owner
             function (cb) {
                 exports.getUsername(req.user.email)
-                    .then(function(userId){
-                        room.owner = userId;
+                    .then(function(user){
+                        room.owner = user.id;
                         cb(null, 'owner')
                     }, function(err){
                         cb(err, null)
@@ -77,9 +77,7 @@ function createRoom (project) {
             name: project.title,
             slug: (project.title + '_' + dt).toLowerCase().replace(/[^a-z0-9 ]/gi,'').trim().replace(/ /g, '_'),
             owner: room.owner,
-            isExternal: true,
-            private: true,
-            participants: room.participants
+            participants: []//room.participants
         },
         method: "POST"
     };
@@ -103,7 +101,7 @@ function createRoom (project) {
 function getWatchersUsername(usersArray) {
     var deferred = Q.defer();
     if (!usersArray || usersArray.length == 0) {
-        room.participants = [];
+        room.participants = '';
         deferred.resolve();
     }
     else{
@@ -124,12 +122,12 @@ function getWatchersUsername(usersArray) {
 
 function getParticipants(users) {
     var promises = [];
-    room.participants = [];
+    room.participants = '';
     users.forEach(function(item){
         var deferred = Q.defer();
         exports.getUsername(item.email)
-            .then(function(userId){
-                room.participants.push(userId);
+            .then(function(user){
+                room.participants += user.username   + ',';
                 deferred.resolve();
             });
 
@@ -152,47 +150,53 @@ exports.getUsername = function (userEmail) {
             deferred.reject(error || response.body.errors || 'Unauthorized');
         else{
             var user = JSON.parse(body);
-            deferred.resolve(user.id);
+            deferred.resolve(user);
 
         }
     });
     return deferred.promise;
 }
 
-exports.updateParticipants = function(user, roomId, title, watchers) {
-    var deferred = Q.defer();
+exports.update = function(req, res) {
+    //var deferred = Q.defer();
     room = {};
-    exports.getUsername(user.email)
-        .then(function(userId){
-            room.owner = userId;
-            getWatchersUsername(watchers)
+    exports.getUsername(req.user.email)
+        .then(function(user){
+            room.owner = user.id;
+            getWatchersUsername(req.body.watchers)
                 .then(function() {
                     var options = {
-                        url : lcconfig.uri +'/rooms/' + roomId ,
+                        url : lcconfig.uri +'/rooms/' + req.params.room ,
                         headers : {
                             "Authorization":"Bearer " + lcconfig.token
                         },
                         json: {
                             participants: room.participants,
-                            name: title
+                            name: req.body.title,
+                            owner: room.owner
                         },
                         method: "PUT"
                     };
 
+                    console.log(options)
                     request(options, function(error, response, body) {
                         if (error || response.body.errors || body == 'Unauthorized'){
-                            deferred.reject(error || response.body.errors || 'Unauthorized');
+                            return res.send(500, 'cannot update a room: ' + req.body.title + ' ' + error);
+
+                            //deferred.reject(error || response.body.errors || 'Unauthorized');
+
                         }
                         else{
-                            deferred.resolve(body.id);
-                            notifications.sendMessage({message:'Users was added', room: roomId, owner: room.owner});
+                            res.send({room: body.id});
+                            //deferred.resolve(body.id);
+                            notifications.sendMessage({message: req.body.message, room: req.params.room, owner: room.owner});
                         }
 
                     });
                 })
         });
 
-    return deferred.promise;
+    //return deferred.promise;
 };
 
 
