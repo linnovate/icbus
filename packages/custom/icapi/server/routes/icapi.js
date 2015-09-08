@@ -9,7 +9,8 @@ var projectController = require('../controllers/project'),
     elasticsearchController = require('../controllers/elasticsearch'),
     attachmentsController = require('../controllers/attachments'),
     updatesController = require('../controllers/updates'),
-    roomsController = require('../../../hi/server/controllers/rooms');
+    roomsController = require('../../../hi/server/controllers/rooms'),
+    utils = require('../controllers/utils.js');
 
 //var permissionController = require('../controllers/permission');
 
@@ -133,4 +134,6 @@ module.exports = function(Icapi, app, auth) {
         .get(taskController.read)
         .put(taskController.update)
         .delete(taskController.destroy);
+
+    app.use(utils.errorHandler);
 };
