@@ -125,8 +125,10 @@ exports.update = function(req, res, next) {
                 });
             }
 
-            res.status(200);
-            return res.json(task);
+            req.params.id = task._id;
+            exports.read(req, res, next);
+            //res.status(200);
+            //return res.json(task);
         });
 	});
 };

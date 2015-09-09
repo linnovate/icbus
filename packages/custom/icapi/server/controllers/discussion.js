@@ -122,8 +122,10 @@ exports.update = function (req, res, next) {
 					});
 			}
 
-			res.status(200);
-			return res.json(discussion);
+			//res.status(200);
+			//return res.json(discussion);
+            req.params.id = discussion._id;
+            exports.read(req, res, next);
 		});
 
 	});
