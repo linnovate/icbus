@@ -91,7 +91,7 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update task without id');
 	}
-	Task.findById(req.params.id).populate('watchers').populate('project').populate('assign').exec(function (err, task) {
+	Task.findById(req.params.id).exec(function (err, task) {
       utils.checkAndHandleError(err, res);
       utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
 
