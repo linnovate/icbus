@@ -15,19 +15,19 @@ var utils = require('./utils'),
 
 exports.read = function (req, res, next) {
 	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
-		utils.checkAndHandleError(err ? err : !discussion, res, 'Failed to read discussion with id: ' + req.params.id);
+		utils.checkAndHandleError(err ? err : !discussion, 'Failed to read discussion with id: ' + req.params.id, next);
 
 		res.status(200);
 		return res.json(discussion);
 	});
 };
 
-exports.all = function (req, res) {
+exports.all = function (req, res, next) {
 	var Query = Discussion.find({});
 	Query.populate('assign').populate('watchers');
 
 	Query.exec(function (err, tasks) {
-		utils.checkAndHandleError(err, res, 'Failed to found discussion');
+		utils.checkAndHandleError(err, 'Failed to found discussion', next);
 
 		res.status(200);
 		return res.json(tasks);
@@ -67,7 +67,7 @@ exports.create = function(req, res, next) {
 	new Discussion(discussion).save({
 		user: req.user
 	}, function(err, response) {
-		utils.checkAndHandleError(err, res);
+		utils.checkAndHandleError(err, 'Failed to create discussion', next);
 
     new Update({
       creator: req.user,
@@ -90,8 +90,9 @@ exports.update = function (req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update discussion without id');
 	}
+
 	Discussion.findById(req.params.id).exec(function (err, discussion) {
-		utils.checkAndHandleError(err, res);
+		utils.checkAndHandleError(err, 'Failed to find discussion: ' + req.params.id);
 
 		var shouldCreateUpdate = discussion.description !== req.body.description;
 		if (!req.body.assign && !discussion.assign) delete req.body.assign;
@@ -106,7 +107,7 @@ exports.update = function (req, res, next) {
 		discussion.save({
 			user: req.user
 		}, function (err, discussion) {
-			utils.checkAndHandleError(err, res, 'Failed to update discussion');
+			utils.checkAndHandleError(err, 'Failed to update discussion', next);
 
 			if (shouldCreateUpdate) {
 				new Update({
@@ -138,12 +139,12 @@ exports.destroy = function (req, res, next) {
 
 	Discussion.findById(req.params.id, function (err, discussion) {
 		utils.checkAndHandleError(
-			err || !discussion, res, 'Cannot find discussion with id: ' + req.params.id);
+        err || !discussion, 'Cannot find discussion with id: ' + req.params.id, next);
 
 		discussion.remove({
 			user: req.user
 		}, function (err, success) {
-			utils.checkAndHandleError(err, res, 'Failed to destroy discussion');
+			utils.checkAndHandleError(err, 'Failed to destroy discussion', next);
 
 			res.status(200);
 			return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
@@ -158,27 +159,27 @@ exports.readHistory = function(req, res, next) {
 		});
 		Query.populate('u');
 		Query.exec(function(err, discussions) {
-			utils.checkAndHandleError(err, res, 'Failed to read history for discussion ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to read history for discussion ' + req.params.id, next);
 
 			res.status(200);
 			return res.json(discussions);
 		});
 	} else {
-		utils.checkAndHandleError(true, res, 'Failed to read history for discussion ' + req.params.id);
+		utils.checkAndHandleError(true, 'Failed to read history for discussion ' + req.params.id, next);
 	}
 };
 
-exports.schedule = function (req, res) {
+exports.schedule = function (req, res, next) {
 	Discussion.findOne({
 		_id: req.params.id
 	}).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
-		utils.checkAndHandleError(err, res, 'Failed to find discussion ' + req.params.id);
-		utils.checkAndHandleError(!discussion.due, res, 'Due field cannot be empty');
-		utils.checkAndHandleError(!discussion.assign, res, 'Assignee cannot be empty');
+		utils.checkAndHandleError(err, 'Failed to find discussion ' + req.params.id, next);
+		utils.checkAndHandleError(!discussion.due, 'Due field cannot be empty', next);
+		utils.checkAndHandleError(!discussion.assign, 'Assignee cannot be empty', next);
 
 		var allowedStatuses = ['New', 'Scheduled', 'Cancelled'];
 		if (allowedStatuses.indexOf(discussion.status) === -1) {
-			utils.checkAndHandleError(true, res, 'Cannot be scheduled for this status');
+			utils.checkAndHandleError(true, 'Cannot be scheduled for this status', next);
 		}
 
     var Query = TaskArchive.distinct('c._id' ,{
@@ -186,7 +187,7 @@ exports.schedule = function (req, res) {
     });
 
     Query.exec(function(err, tasks) {
-      utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+      utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
 
       var entityQuery = {};
       entityQuery._id = {$in: tasks};
@@ -195,7 +196,7 @@ exports.schedule = function (req, res) {
       Query.populate('project');
 
       Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+        utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
 
         var groupedTasks = _.groupBy(tasks, function(task) {
           return _.contains(task.tags, 'Agenda');
@@ -214,7 +215,7 @@ exports.schedule = function (req, res) {
 		discussion.save({
 			user: req.user
 		}, function (err, discussion) {
-			utils.checkAndHandleError(err, res, 'Failed to update discussion');
+			utils.checkAndHandleError(err, 'Failed to update discussion', next);
 
 			res.status(200);
 			return res.json(discussion);
@@ -223,14 +224,14 @@ exports.schedule = function (req, res) {
 	});
 };
 
-exports.summary = function (req, res) {
+exports.summary = function (req, res, next) {
 	Discussion.findOne({
 		_id: req.params.id
 	}).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
-		utils.checkAndHandleError(err, res, 'Failed to find discussion ' + req.params.id);
+		utils.checkAndHandleError(err, 'Failed to find discussion ' + req.params.id, next);
 		var allowedStatuses = ['Scheduled'];
 		if (allowedStatuses.indexOf(discussion.status) === -1) {
-			utils.checkAndHandleError(true, res, 'Cannot send summary for this status');
+			utils.checkAndHandleError(true, 'Cannot send summary for this status', next);
 		}
 
     var Query = TaskArchive.distinct('c._id' ,{
@@ -238,7 +239,7 @@ exports.summary = function (req, res) {
     });
 
     Query.exec(function(err, tasks) {
-      utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+      utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
 
       var entityQuery = {};
       entityQuery._id = {$in: tasks};
@@ -246,7 +247,7 @@ exports.summary = function (req, res) {
 
       Query.populate('project');
       Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+        utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
 
         var projects = _.chain(tasks).pluck('project').compact().value();
         _.each(projects, function(project) {
@@ -271,13 +272,13 @@ exports.summary = function (req, res) {
 		discussion.save({
 			user: req.user
 		}, function (err, discussion) {
-			utils.checkAndHandleError(err, res, 'Failed to update discussion');
+			utils.checkAndHandleError(err, 'Failed to update discussion', next);
 
 			var Query = TaskArchive.distinct('c._id', {
 				'd': discussion._id
 			});
 			Query.exec(function (err, tasks) {
-				utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + discussion._id);
+				utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + discussion._id, next);
 
 				var entityQuery = {};
 				entityQuery._id = {$in: tasks};
@@ -285,7 +286,7 @@ exports.summary = function (req, res) {
 				var Query = Task.find(entityQuery);
 
 				Query.exec(function (err, tasks) {
-					utils.checkAndHandleError(err, res, 'Failed to read tasks by discussion ' + discussion._id);
+					utils.checkAndHandleError(err, 'Failed to read tasks by discussion ' + discussion._id, next);
 
 					_.map(tasks, function (task) {
 						var index = task.tags.indexOf('Agenda');

@@ -9,9 +9,9 @@ var mongoose = require('mongoose'),
 	config = require('meanio').loadConfig(),
 	templates = require('../template'),
 	nodemailer = require('nodemailer'),
-  smtpTransport = require('nodemailer-smtp-transport');
-
-
+  smtpTransport = require('nodemailer-smtp-transport'),
+  EmailTemplate = require('../../../mail-templates/node_modules/email-templates').EmailTemplate,
+  path = require('path');
 
 function sendMail(mailOptions) {
   var options = config.mailer;
@@ -39,29 +39,35 @@ exports.sendEx = function(type, data) {
     return;
   }
 
-  var template = templates[type];
-  if (!template) {
-    return;
-  }
-
   data.uriRoot = config.icu.uri;
+  data.date = new Date();
+  data.attendees = _(data.discussion.watchers).map(function(w) {
+    return w.name;
+  }).join(', ');
 
-  var compiledSubject = _.template(template.subject);
-  var subject = compiledSubject(data);
+  var templateDir = path.join(__dirname, '..', 'templates', type);
+  var template = new EmailTemplate(templateDir);
 
-  var compiledBody = _.template(template.body);
-  var body = compiledBody(data);
+  template.render(data, function(err, results) {
+    if (err) {
+      console.log(err.message);
+      console.log(err.stack);
+    } else {
+      console.log(results.html);
+    }
 
-  data.discussion.watchers.forEach(function(watcher) {
-    var mailOptions = {
-      to: watcher.email,
-      from: config.emailFrom,
-      subject: subject,
-      html: body,
-      forceEmbeddedImages: true
-    };
+    data.discussion.watchers.forEach(function(watcher) {
+      var mailOptions = {
+        to: watcher.email,
+        from: config.emailFrom,
+        subject: 'subject',
+        html: results.html,
+        text: results.text,
+        forceEmbeddedImages: true
+      };
 
-    sendMail(mailOptions);
+      sendMail(mailOptions);
+    });
   });
 };
 
@@ -79,7 +85,7 @@ exports.send = function(doc, task) {
 			}
 		}).exec(function(err, users) {
 
-			for (var i = 0; i < users.length; i++) {
+			for (var i = 0; i < users.length; i+=1) {
 				var user = users[i];
 				var mailOptions = {
 					to: user.email,

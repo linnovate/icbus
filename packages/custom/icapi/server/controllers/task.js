@@ -16,18 +16,18 @@ var Task = mongoose.model('Task'),
 
 exports.read = function (req, res, next) {
 	Task.findById(req.params.id).populate('assign').populate('watchers').populate('project').exec(function (err, task) {
-		utils.checkAndHandleError(err ? err : !task, res, 'Failed to read task with id: ' + req.params.id);
+		utils.checkAndHandleError(err ? err : !task, 'Failed to read task with id: ' + req.params.id, next);
 
 		res.status(200);
 		return res.json(task);
 	});
 };
 
-exports.all = function (req, res) {
+exports.all = function (req, res, next) {
 	var Query = Task.find({});
 	Query.populate('assign' ).populate('watchers').populate('project');
 	Query.exec(function (err, tasks) {
-		utils.checkAndHandleError(err, res, 'Failed to found tasks');
+		utils.checkAndHandleError(err, 'Failed to found tasks', next);
 		res.status(200);
 
 		return res.json(tasks);
@@ -69,7 +69,7 @@ exports.create = function(req, res, next) {
 		user: req.user,
 		discussion: req.body.discussion
 	}, function(err, response) {
-		utils.checkAndHandleError(err, res);
+		utils.checkAndHandleError(err, 'Failed to create task', next);
 
 		new Update({
 			creator: req.user,
@@ -91,9 +91,10 @@ exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update task without id');
 	}
+
 	Task.findById(req.params.id).exec(function (err, task) {
-      utils.checkAndHandleError(err, res);
-      utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
+      utils.checkAndHandleError(err, 'Failed to find task: ' + req.params.id, next);
+      utils.checkAndHandleError(!task, 'Cannot find task with id: ' + req.params.id, next);
 
         delete req.body.__v;
 		if(!req.body.assign && !task.assign) delete req.body.assign;
@@ -110,7 +111,7 @@ exports.update = function(req, res, next) {
         var shouldCreateUpdate = task.description !== req.body.description;
 
         task.save({user: req.user, discussion: req.body.discussion}, function(err, result) {
-            utils.checkAndHandleError(err, res);
+            utils.checkAndHandleError(err, 'Failed to save task', next);
 
             if (shouldCreateUpdate) {
                 new Update({
@@ -139,11 +140,11 @@ exports.destroy = function (req, res, next) {
 	}
 
 	Task.findById(req.params.id, function (err, task) {
-		utils.checkAndHandleError(err, res);
-		utils.checkAndHandleError(!task, res, 'Cannot find task with id: ' + req.params.id);
+		utils.checkAndHandleError(err, 'Cannot find task with id: ' + req.params.id, next);
+		utils.checkAndHandleError(!task, 'Cannot find task with id: ' + req.params.id, next);
 
 		task.remove({user: req.user, discussion: req.body.discussion}, function (err, success) {
-			utils.checkAndHandleError(err, res, 'Failed to destroy task');
+			utils.checkAndHandleError(err, 'Failed to destroy task', next);
 			res.status(200);
 			return res.send({message: (success ? 'Task deleted' : 'Failed to delete task')});
 		});
@@ -162,7 +163,7 @@ exports.tagsList = function(req, res) {
 	});
 };
 
-exports.getByEntity = function (req, res) {
+exports.getByEntity = function (req, res, next) {
 	var entities = {projects: 'project', users: 'assign', tags: 'tags', _id: '_id'},
 		entityQuery = {};
     entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
@@ -171,7 +172,7 @@ exports.getByEntity = function (req, res) {
 	Query.populate('assign').populate('watchers').populate('project');
 
 	Query.exec(function (err, tasks) {
-		utils.checkAndHandleError(err, res, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id);
+		utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
 
 		res.status(200);
 		return res.json(tasks);
@@ -204,7 +205,7 @@ exports.getByDiscussion = function(req, res, next) {
 		'd': req.params.id
 	});
 	Query.exec(function(err, tasks) {
-		utils.checkAndHandleError(err, res, 'Failed to read tasks for discussion ' + req.params.id);
+		utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
 
 		req.params.id = tasks;
 		req.params.entity = '_id';
@@ -220,19 +221,19 @@ exports.readHistory = function(req, res, next) {
 		Query.populate('u');
 		Query.populate('d');
 		Query.exec(function(err, tasks) {
-			utils.checkAndHandleError(err, res, 'Failed to read history for task ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to read history for task ' + req.params.id, next);
 
 			res.status(200);
 			return res.json(tasks);
 		});
 	} else {
-		utils.checkAndHandleError(true, res, 'Failed to read history for task ' + req.params.id);
+		utils.checkAndHandleError(true, 'Failed to read history for task ' + req.params.id, next);
 	}
 };
 
-exports.starTask = function(req, res) {
+exports.starTask = function(req, res, next) {
 	User.findById(req.user._id, function(err, user) {
-		utils.checkAndHandleError(err, res, 'Failed to load user');
+		utils.checkAndHandleError(err, 'Failed to load user', next);
 
 		var query;
 		if (!user.profile || !user.profile.starredTasks) {
@@ -244,16 +245,16 @@ exports.starTask = function(req, res) {
 				query = {$push: {'profile.starredTasks': req.params.id}};
 		}
 		user.update(query, function(err, updated) {
-			utils.checkAndHandleError(err, res,'Cannot update the starred tasks');
+			utils.checkAndHandleError(err, 'Cannot update the starred tasks', next);
 			res.json(updated);
 		});
 	})
 };
 
 
-exports.getStarredTasks = function(req, res) {
+exports.getStarredTasks = function(req, res, next) {
 	User.findById(req.user._id, function(err, user) {
-		utils.checkAndHandleError(err, res, 'Failed to load user');
+		utils.checkAndHandleError(err, 'Failed to load user', next);
 
 		if (!user.profile || !user.profile.starredTasks || user.profile.starredTasks.length === 0) {
 			res.json([]);
@@ -263,7 +264,7 @@ exports.getStarredTasks = function(req, res) {
 					$in: user.profile.starredTasks
 				}
 			}, function(err, tasks) {
-				utils.checkAndHandleError(err, res, 'Failed to read tasks');
+				utils.checkAndHandleError(err, 'Failed to read tasks', next);
 
 				res.status(200);
 				return res.json(tasks);
@@ -272,13 +273,13 @@ exports.getStarredTasks = function(req, res) {
 	})
 };
 
-exports.getZombieTasks = function (req, res) {
+exports.getZombieTasks = function (req, res, next) {
 
     var Query = Task.find({project: {$eq: null}, discussions: {$size: 0}});
     Query.populate('assign').populate('watchers').populate('project');
 
     Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, res, 'Failed to read tasks.');
+        utils.checkAndHandleError(err, 'Failed to read tasks.', next);
 
         res.status(200);
         return res.json(tasks);
