@@ -37,7 +37,7 @@ exports.read = function(req, res, next) {
 
 };
 
-exports.all = function(req, res) {
+exports.all = function(req, res, next) {
 	var query = {};
 	if (!(_.isEmpty(req.query))) {
 		query = elasticsearch.advancedSearch(req.query);

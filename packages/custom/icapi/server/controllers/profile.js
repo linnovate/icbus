@@ -29,7 +29,7 @@ exports.profile = function(req, res, next) {
 /**
  * Update user profile
  */
-exports.update = function(req, res) {
+exports.update = function(req, res, next) {
     req.profile = req.profile || {};
     var profile = _.extend(req.profile, req.body);
 
