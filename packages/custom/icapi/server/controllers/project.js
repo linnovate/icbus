@@ -52,13 +52,7 @@ exports.create = function (req, res, next) {
 		creator: req.user._id
 	};
 	project = _.extend(project, req.body);
-	//rooms.createForProject(req, project)
-	//	.then(function (roomId) {
-	//		project.room = roomId;
-	//	}, function (error) {
-	//		console.log('cannot create a room in lets-chat ' + error);
-	//	})
-	//	.done(function () {
+
 			new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
 				utils.checkAndHandleError(err, 'Failed to create project', next);
 
@@ -76,7 +70,6 @@ exports.create = function (req, res, next) {
         req.params.id = response._id;
         exports.read(req, res, next);
 			});
-		//});
 };
 
 
@@ -85,13 +78,13 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update project without id');
 	}
 
-	Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
+	Project.findById(req.params.id).exec(function (err, project) {
 		utils.checkAndHandleError(err, 'Cannot find project with id: ' + req.params.id, next);
 		utils.checkAndHandleError(!project, 'Cannot find project with id: ' + req.params.id, next);
 
+
 		var shouldCreateUpdate = project.description !== req.body.description;
 		project = _.extend(project, req.body);
-
 		project.save({user: req.user, discussion: req.body.discussion}, function (err, project) {
 			utils.checkAndHandleError(err, 'Failed to update project', next);
 
@@ -107,8 +100,11 @@ exports.update = function(req, res, next) {
 						discussion: req.body.discussion
 					});
 			}
-			res.status(200);
-			return res.json(project);
+
+            req.params.id = project._id;
+            exports.read(req, res, next);
+			//res.status(200);
+			//return res.json(project);
 		});
 	});
 };

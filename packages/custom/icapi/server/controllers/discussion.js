@@ -90,7 +90,8 @@ exports.update = function (req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update discussion without id');
 	}
-	Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
+
+	Discussion.findById(req.params.id).exec(function (err, discussion) {
 		utils.checkAndHandleError(err, 'Failed to find discussion: ' + req.params.id);
 
 		var shouldCreateUpdate = discussion.description !== req.body.description;
@@ -122,8 +123,10 @@ exports.update = function (req, res, next) {
 					});
 			}
 
-			res.status(200);
-			return res.json(discussion);
+			//res.status(200);
+			//return res.json(discussion);
+            req.params.id = discussion._id;
+            exports.read(req, res, next);
 		});
 
 	});
