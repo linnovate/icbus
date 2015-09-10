@@ -102,9 +102,11 @@ exports.update = function(req, res, next) {
 
 		var defaults = {
 			project: undefined,
-			assign: undefined
+			assign: undefined,
+      watchers: []
 		};
-		var newTask = _.defaults(defaults, req.body);
+
+		var newTask = _.defaults(req.body, defaults);
         task = _.extend(task, newTask);
         task.updated = new Date();
 
