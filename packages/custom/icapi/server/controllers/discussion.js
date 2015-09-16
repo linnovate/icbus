@@ -315,17 +315,14 @@ exports.getByProject = function (req, res) {
 	Query.exec(function (err, discussions) {
 		utils.checkAndHandleError(err, res, 'Unable to get discussions');
 
-		var array = [];
-		var object = new Object();
+        //remove duplicates
+        discussions = _.reduce(discussions, function(flattened, other) {
+            return flattened.concat(other.discussions);
+        }, []);
 
-		discussions.forEach(function(item) {
-		//	if (!object[item.discussion._id]) {
-				array.push(item);
-			//	object[task.project._id] = true;
-		//	}
-		});
+        discussions = _.uniq(discussions, '_id');
 
 		res.status(200);
-		return res.json(array);
+		return res.json(discussions);
 	});
 };

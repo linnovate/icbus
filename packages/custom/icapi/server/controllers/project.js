@@ -169,8 +169,8 @@ exports.getByDiscussion = function (req, res, next) {
 	if (req.params.entity !== 'discussions') return next();
 
 	var Query = Task.find({
-		discussions : req.params.id
-		//project : {$exists: true}   // {$exists: true, $not: {$size: 0}}
+		discussions : req.params.id,
+        project : {$ne : null}
 	}, {project : 1, _id : 0});
 	Query.populate('project');
 
@@ -178,18 +178,12 @@ exports.getByDiscussion = function (req, res, next) {
 		utils.checkAndHandleError(err, res, 'Unable to get projects');
 
 		// remove duplicates
-		var array = [];
-		var object = new Object();
+        projects = _.uniq(projects, 'project._id');
+        projects = _.map(projects, function(item) {return item.project;} );
 
-		projects.forEach(function(item) {
-			if (!object[item.project._id]) {
-				array.push(item);
-				object[item.project._id] = true;
-			}
-		});
 
 		res.status(200);
-		return res.json(array);
+		return res.json(projects);
 	});
 };
 
