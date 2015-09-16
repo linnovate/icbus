@@ -4,6 +4,7 @@ var utils = require('./utils'),
 	mongoose = require('mongoose'),
 	ObjectId = require('mongoose').Types.ObjectId,
 	Project = mongoose.model('Project'),
+	Task = mongoose.model('Task'),
 	User = mongoose.model('User'),
 	ProjectArchive = mongoose.model('project_archive'),
 	rooms = require('../../../hi/server/controllers/rooms'),
@@ -163,6 +164,29 @@ exports.getByEntity = function (req, res, next) {
 	//	res.send(response.hits.hits.map(function(item) {return item._source}))
 	//});
 };
+
+exports.getByDiscussion = function (req, res, next) {
+	if (req.params.entity !== 'discussions') return next();
+
+	var Query = Task.find({
+		discussions : req.params.id,
+        project : {$ne : null}
+	}, {project : 1, _id : 0});
+	Query.populate('project');
+
+	Query.exec(function (err, projects) {
+		utils.checkAndHandleError(err, res, 'Unable to get projects');
+
+		// remove duplicates
+        projects = _.uniq(projects, 'project._id');
+        projects = _.map(projects, function(item) {return item.project;} );
+
+
+		res.status(200);
+		return res.json(projects);
+	});
+};
+
 
 exports.readHistory = function(req, res, next) {
 	if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {

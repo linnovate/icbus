@@ -303,3 +303,26 @@ exports.summary = function (req, res, next) {
 		});
 	});
 };
+
+
+exports.getByProject = function (req, res) {
+	var Query = Task.find({
+		project : req.params.id,
+		discussions : {$not: {$size: 0}}
+	}, {discussions : 1, _id : 0});
+	Query.populate('discussions');
+
+	Query.exec(function (err, discussions) {
+		utils.checkAndHandleError(err, res, 'Unable to get discussions');
+
+        //remove duplicates
+        discussions = _.reduce(discussions, function(flattened, other) {
+            return flattened.concat(other.discussions);
+        }, []);
+
+        discussions = _.uniq(discussions, '_id');
+
+		res.status(200);
+		return res.json(discussions);
+	});
+};

@@ -27,7 +27,7 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/history/projects/:id')
         .get(projectController.readHistory);
     app.route('/api/:entity/:id/projects')
-        .get(projectController.getByEntity);
+        .get(projectController.getByDiscussion, projectController.getByEntity);
 
     app.route('/api/tasks')
         .post(auth.requiresLogin, taskController.create)
@@ -107,6 +107,8 @@ module.exports = function(Icapi, app, auth) {
         .post(discussionController.schedule);
     app.route('/api/discussions/:id/summary')
         .post(discussionController.summary);
+    app.route('/api/:entity/:id/discussions')
+        .get(discussionController.getByProject); //, discussionController.getByEntity);
 
     app.route('/api/updates')
         .post(updatesController.create)
