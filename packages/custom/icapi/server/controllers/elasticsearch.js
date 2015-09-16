@@ -1,3 +1,5 @@
+'use strict';
+
 var mean  = require('meanio');
 var notifications = require('../../../hi/server/controllers/notifications'),
     utils = require('./utils');
@@ -9,6 +11,7 @@ exports.save = function(doc, docType, room, title) {
         id: doc._id.toString(),
         body: doc
     }, function(error, response){
+
        // utils.checkAndHandleError(error, res);
         if (error)
         return error;
@@ -27,6 +30,9 @@ exports.delete = function(doc, docType, room, next) {
         type: docType,
         id: doc._id.toString()
     }, function(error, response){
+        if (error)
+            return error;
+
         // utils.checkAndHandleError(error, res);
         if (room)
             notifications.sendFromApi({entityType: docType, title: doc.title, room:room, method: 'deleted'});
@@ -34,31 +40,35 @@ exports.delete = function(doc, docType, room, next) {
     });
 };
 
-exports.search = function (req, res) {
-    if (req.query.term)
-        var query = {
-            query: {
-                'multi_match' : {
-                    'query': req.query.term.replace(',', ' '),
-                    'type' : 'cross_fields',
-                    'fields': ['title^3', 'color', 'name', 'tags'],
-                    'operator': 'or'
-                }
-            },
-            aggs: {
-                group_by_index: {
-                    terms: {
-                        field: '_index'
-                    },
-                    aggs: {
-                        top: {
-                            top_hits: {
-                            }
-                        }
-                    }
-                }
+exports.search = function (req, res, next) {
+    if (!req.query.term) {
+      return;
+    }
+
+    var query = {
+      query: {
+        'multi_match' : {
+          'query': req.query.term.replace(',', ' '),
+          'type' : 'cross_fields',
+          'fields': ['title^3', 'color', 'name', 'tags'],
+          'operator': 'or'
+        }
+      },
+      aggs: {
+        group_by_index: {
+          terms: {
+            field: '_index'
+          },
+          aggs: {
+            top: {
+              top_hits: {
+              }
             }
+          }
+        }
+      }
     };
+
     var options = {
         index: req.query.index ? req.query.index.split(',') : ['project', 'task', 'discussion', 'user', 'attachment'],
         ignore_unavailable: true,
@@ -66,18 +76,19 @@ exports.search = function (req, res) {
         size: 3000,
         body: query
     };
+
     mean.elasticsearch.search(options, function (err, result) {
-        utils.checkAndHandleError(err, res);
+        utils.checkAndHandleError(err, 'Failed to find entities', next);
         if (req.query.term)
             res.send(buildSearchResponse('aggs', result.aggregations.group_by_index.buckets))
         else
             res.send(buildSearchResponse('simple', result.hits.hits))
     })
-};
+}
 
 function buildSearchResponse(type, obj) {
     var groups = {};
-    if (type == 'aggs') {
+    if (type === 'aggs') {
         obj.forEach(function (i) {
             groups[i.key] =
                 i.top.hits.hits.map(function (j) {

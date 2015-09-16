@@ -8,7 +8,9 @@ var projectController = require('../controllers/project'),
     usersController = require('../controllers/users'),
     elasticsearchController = require('../controllers/elasticsearch'),
     attachmentsController = require('../controllers/attachments'),
-    updatesController = require('../controllers/updates');
+    updatesController = require('../controllers/updates'),
+    roomsController = require('../../../hi/server/controllers/rooms'),
+    utils = require('../controllers/utils.js');
 
 //var permissionController = require('../controllers/permission');
 
@@ -85,6 +87,8 @@ module.exports = function(Icapi, app, auth) {
         .post(auth.requiresLogin, attachmentsController.update, attachmentsController.upload);
     app.route('/api/history/attachments/:id')
         .get(attachmentsController.readHistory);
+    app.route('/api/:entity/:id/attachments')
+        .get(attachmentsController.getByEntity);
     app.route('/api/attachments/upload')
         .post(auth.requiresLogin, attachmentsController.upload);
     app.route('/api/search')
@@ -118,12 +122,8 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/history/updates/:id')
         .get(updatesController.readHistory);
 
-
     //temporary -because of swagger bug with 'tasks' word
 
-    app.route('/api/task')
-        .post(taskController.create)
-        .get(taskController.all);
     app.route('/api/task/tags')
         .get(taskController.tagsList);
     app.route('/api/task/zombie')
@@ -136,4 +136,6 @@ module.exports = function(Icapi, app, auth) {
         .get(taskController.read)
         .put(taskController.update)
         .delete(taskController.destroy);
+
+    app.use(utils.errorHandler);
 };

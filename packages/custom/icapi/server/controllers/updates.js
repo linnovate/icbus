@@ -5,6 +5,8 @@ var utils = require('./utils');
 var mongoose = require('mongoose'),
 	ObjectId = require('mongoose').Types.ObjectId;
 
+var UpdateService = require('../services/updates.js');
+
 require('../models/update');
 var Update = mongoose.model('Update'),
 	UpdateArchive = mongoose.model('update_archive'),
@@ -19,14 +21,14 @@ exports.read = function(req, res, next) {
 		issue: 1,
 		issueId: 1
 	}).exec(function(err, update) {
-		utils.checkAndHandleError(err, res, 'Failed to read update');
+		utils.checkAndHandleError(err, 'Failed to read update', next);
 
 		Update.findById(req.params.id)
 			.populate('creator', 'name')
 			.populate('updater', 'name')
 			.populate('issueId', null, update.issue.charAt(0).toUpperCase() + update.issue.slice(1))
 			.exec(function (err, update) {
-				utils.checkAndHandleError(err, res, 'Failed to read update');
+				utils.checkAndHandleError(err, 'Failed to read update', next);
 
 				res.status(200);
 				return res.json(update);
@@ -35,7 +37,7 @@ exports.read = function(req, res, next) {
 
 };
 
-exports.all = function(req, res) {
+exports.all = function(req, res, next) {
 	var query = {};
 	if (!(_.isEmpty(req.query))) {
 		query = elasticsearch.advancedSearch(req.query);
@@ -45,7 +47,7 @@ exports.all = function(req, res) {
 		index: 'update',
 		body: query
 	}, function(err, response) {
-		utils.checkAndHandleError(err, res, 'Failed to find updates');
+		utils.checkAndHandleError(err, 'Failed to find updates', next);
 
 		res.send(response.hits.hits.map(function(item) {
 			return item._source
@@ -67,7 +69,7 @@ var getAttachmentsForUpdate = function (item, query, cb) {
 	});
 };
 
-exports.getByEntity = function(req, res) {
+exports.getByEntity = function(req, res, next) {
 	var entities = {projects : 'project', users: 'assign', tasks: 'task', discussions: 'discussion'},
 		entity = entities[req.params.entity],
 		query = {
@@ -84,7 +86,7 @@ exports.getByEntity = function(req, res) {
 	};
 
 	mean.elasticsearch.search({index: 'update', 'body': query, size: 3000}, function (err, response) {
-		utils.checkAndHandleError(err, res);
+		utils.checkAndHandleError(err, 'Failed to find entities', next);
 
 		var items = [],
 			length = response.hits.hits.length;
@@ -106,11 +108,12 @@ exports.create = function(req, res, next) {
 	req.body.updated = new Date();
 	req.body.creator = req.user._id;
 
-	new Update(req.body).save({
-		user: req.user,
-		discussion: req.body.discussion
-	}, function(err, update) {
-		utils.checkAndHandleError(err, res, 'Failed to save update');
+  var update = req.body;
+  update.user = req.user;
+  update.discussion = req.body.discussion;
+
+	UpdateService.create(update, function(err, update) {
+		utils.checkAndHandleError(err, 'Failed to save update', next);
 
 		res.status(200);
 		return res.json(update);
@@ -123,7 +126,7 @@ exports.update = function(req, res, next) {
 	}
 
 	Update.findById(req.params.id, function(err, update) {
-		utils.checkAndHandleError(err, res);
+		utils.checkAndHandleError(err, 'Failed to find update: ' + req.params.id, next);
 
 		update.updated = new Date();
 		update.updater = req.user._id;
@@ -135,7 +138,7 @@ exports.update = function(req, res, next) {
 			user: req.user,
 			discussion: req.body.discussion
 		}, function(err, update) {
-			utils.checkAndHandleError(err, res, 'Failed to update update: ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to update update: ' + req.params.id, next);
 
 			res.status(200);
 			return res.json(update);
@@ -152,12 +155,12 @@ exports.readHistory = function(req, res, next) {
 		Query.populate('u');
 		Query.populate('d');
 		Query.exec(function(err, updates) {
-			utils.checkAndHandleError(err, res, 'Failed to read history for update: ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to read history for update: ' + req.params.id, next);
 
 			res.status(200);
 			return res.json(updates);
 		});
 	} else {
-		utils.checkAndHandleError(true, res, 'Failed to read history for update ' + req.params.id);
+		utils.checkAndHandleError(true, 'Failed to read history for update ' + req.params.id, next);
 	}
 };

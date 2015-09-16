@@ -24,14 +24,14 @@ exports.read = function(req, res, next) {
 		issue: 1,
 		issueId: 1
 	}).exec(function(err, attachment) {
-		utils.checkAndHandleError(err, res, 'Failed to read attachment');
+		utils.checkAndHandleError(err, 'Failed to read attachment', next);
 
     Attachment.findById(req.params.id)
       .populate('creator')
       .populate('updater')
       .populate('issueId', null, attachment.issue.charAt(0).toUpperCase() + attachment.issue.slice(1))
       .exec(function (err, attachment) {
-        utils.checkAndHandleError(err, res, 'Failed to read attachment');
+        utils.checkAndHandleError(err, 'Failed to read attachment', next);
         res.status(200);
         return res.json(attachment);
       });
@@ -47,7 +47,8 @@ exports.query = function(req, res) {
 
 	mean.elasticsearch.search({
 		index: 'attachment',
-		'body': query
+		'body': query,
+		 size: 3000
 	}, function(err, response) {
 		if (err)
 			res.status(500).send('Failed to find attachments');
@@ -97,7 +98,7 @@ exports.update = function(req, res, next) {
 		return res.send(404, 'Cannot update attachment without an id');
 	}
 	Attachment.findById(req.params.id, function(err, attachment) {
-		utils.checkAndHandleError(err, res);
+		utils.checkAndHandleError(err, 'Failed to find attacment: ' + req.params.id, next);
 		attachment.updated = new Date();
 		attachment.updater = req.user._id;
 		attachment.path = req.data.path;
@@ -108,7 +109,7 @@ exports.update = function(req, res, next) {
 			user: req.user,
 			discussion: req.body.discussion
 		}, function(err, attachment) {
-			utils.checkAndHandleError(err, res, 'Failed to update attachment: ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to update attachment: ' + req.params.id, next);
 			res.status(200);
 			return res.json(attachment);
 		});
@@ -124,30 +125,33 @@ exports.readHistory = function(req, res, next) {
 		Query.populate('u');
 		Query.populate('d');
 		Query.exec(function(err, attachments) {
-			utils.checkAndHandleError(err, res, 'Failed to read history for attachment: ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to read history for attachment: ' + req.params.id, next);
 
 			res.status(200);
 			return res.json(attachments);
 		});
 	} else {
-		utils.checkAndHandleError(true, res, 'Failed to read history for attachment ' + req.params.id);
+		utils.checkAndHandleError(true, 'Failed to read history for attachment ' + req.params.id, next);
 	}
 };
 
 exports.getByEntity = function(req, res) {
-	var entities = {projects : 'project',  tasks: 'task', discussions: 'discussion'},
-		entity = entities[req.params.entity],
-		query = {
-			query: {
-				filtered: {
-					filter : {
-						terms: {}
+
+	var entities = {projects : 'project',  tasks: 'task', discussions: 'discussion', updates: 'update'},
+		entity = entities[req.params.entity];
+
+	var query = {
+		query: {
+			filtered: {
+				filter : {
+					term: {
+						entity: entity,
+						entityId: req.params.id
 					}
 				}
 			}
-		};
-	if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
-	query.query.filtered.filter.terms[entity] =  req.params.id;
+		}
+	};
 
 	mean.elasticsearch.search({index:'attachment','body': query, size:3000}, function(err,response) {
 		if(err) {
@@ -202,7 +206,7 @@ exports.upload = function (req, res, next) {
 		if (req.file)
 			next();
 		else
-			utils.checkAndHandleError(true, res, 'Didn\'t find any attachment to upload');
+			utils.checkAndHandleError(true, 'Didn\'t find any attachment to upload', next);
 	});
 	return req.pipe(busboy);
 

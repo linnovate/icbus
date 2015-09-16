@@ -7,9 +7,8 @@ module.exports = {
     format: 'tiny'
   },
   letschat:{
-    host: 'http://localhost',
-    port: '5000',
-    token: 'NTU0OWRjNTkwODAzMjE0NTVlZmQ0MWY5OjUyZTRlMTdmODhhNGIwNTA4Zjg0NGY0MWJkMmEwYjY2ZjJlMGQ4NzFkYjA4YTQwZQ=='
+    uri: 'http://localhost:5000',
+    token: 'NTViZjNkMjJlNjA0NTMwMjc0N2M0ZTc5OmMyNWE4YTQzNzc3ZGFkZDFlMDg3YmJjMDQwODVhM2MzMzhmOWViMDc5NWY0YmIyZg=='
   },
   //  aggregate: 'whatever that is not false, because boolean false value turns aggregation off', //false
   aggregate: false,
@@ -47,7 +46,10 @@ module.exports = {
   },
   emailFrom: 'SENDER EMAIL ADDRESS', // sender address like ABC <abc@example.com>
   mailer: {
-    service: 'SERVICE_PROVIDER', // Gmail, SMTP
+    service: 'SMTP', // Gmail, SMTP
+    host: 'smtp.gmail.com', //in case of SMTP
+    port: 465, // in case of SMTP
+    secure: true, // in case of SMTP
     auth: {
       user: 'EMAIL_ID',
       pass: 'PASSWORD'

@@ -15,19 +15,20 @@ var utils = require('./utils'),
 
 exports.read = function(req, res, next) {
 	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
-		utils.checkAndHandleError(err ? err : !project, res, 'Failed to read project with id: ' + req.params.id);
+		utils.checkAndHandleError(err ? err : !project, 'Failed to read project with id: ' + req.params.id, next);
 
 		res.status(200);
 		return res.json(project);
 	});
 };
 
-exports.all = function (req, res) {
+
+exports.all = function (req, res, next) {
 	var Query = Project.find({});
 	Query.populate('watchers');
 
 	Query.exec(function (err, tasks) {
-		utils.checkAndHandleError(err, res, 'Failed to found projects');
+		utils.checkAndHandleError(err, 'Failed to found projects', next);
 
 		res.status(200);
 		return res.json(tasks);
@@ -52,52 +53,60 @@ exports.create = function (req, res, next) {
 		creator: req.user._id
 	};
 	project = _.extend(project, req.body);
-	rooms.createForProject(project)
-		.then(function (roomId) {
-			project.room = roomId;
-		}, function (error) {
-			console.log('cannot create a room in lets-chat ' + error);
-		})
-		.done(function () {
+
 			new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
-				utils.checkAndHandleError(err, res);
+				utils.checkAndHandleError(err, 'Failed to create project', next);
+
+        new Update({
+          creator: req.user,
+          created: response.created,
+          type: 'create',
+          issueId: response._id,
+          issue: 'project'
+        }).save({
+          user: req.user,
+          discussion: req.body.discussion
+        });
                 
-                req.params.id = response._id;
-                exports.read(req, res, next);
+        req.params.id = response._id;
+        exports.read(req, res, next);
 			});
-		});
 };
+
 
 exports.update = function(req, res, next) {
 	if (!req.params.id) {
 		return res.send(404, 'Cannot update project without id');
 	}
 
-	Project.findById(req.params.id).populate('watchers').exec(function(err, project) {
-		utils.checkAndHandleError(err, res);
-		utils.checkAndHandleError(!project, res, 'Cannot find project with id: ' + req.params.id);
+	Project.findById(req.params.id).exec(function (err, project) {
+		utils.checkAndHandleError(err, 'Cannot find project with id: ' + req.params.id, next);
+		utils.checkAndHandleError(!project, 'Cannot find project with id: ' + req.params.id, next);
 
-      var shouldCreateUpdate = project.description !== req.body.description;
-		  project = _.extend(project, req.body);
 
-			project.save({user: req.user, discussion: req.body.discussion}, function(err, project) {
-				utils.checkAndHandleError(err, res, 'Failed to update project');
+		var shouldCreateUpdate = project.description !== req.body.description;
+		project = _.extend(project, req.body);
+		project.save({user: req.user, discussion: req.body.discussion}, function (err, project) {
+			utils.checkAndHandleError(err, 'Failed to update project', next);
 
-        if (shouldCreateUpdate) {
-          new Update({
-            creator: req.user,
-            created: new Date(),
-            type: 'update',
-            issueId: project._id,
-            issue: 'project'
-          }).save({
-            user: req.user,
-            discussion: req.body.discussion
-          }, function(err, update) {});
-        }
-				res.status(200);
-				return res.json(project);
-			});
+			if (shouldCreateUpdate) {
+				new Update({
+					creator: req.user,
+					created: new Date(),
+					type: 'update',
+					issueId: project._id,
+					issue: 'project'
+				}).save({
+						user: req.user,
+						discussion: req.body.discussion
+					});
+			}
+
+            req.params.id = project._id;
+            exports.read(req, res, next);
+			//res.status(200);
+			//return res.json(project);
+		});
 	});
 };
 
@@ -107,13 +116,13 @@ exports.destroy = function(req, res, next) {
 	}
 
 	Project.findById(req.params.id, function(err, project) {
-		utils.checkAndHandleError(err, res);
-		utils.checkAndHandleError(!project, res, 'Cannot find project with id: ' + req.params.id);
+		utils.checkAndHandleError(err, 'Cannot find project with id: ' + req.params.id, next);
+		utils.checkAndHandleError(!project, 'Cannot find project with id: ' + req.params.id, next);
 
 		project.remove({
 			user: req.user, discussion: req.body.discussion
 		}, function (err, success) {
-			utils.checkAndHandleError(err, res, 'Failed to destroy project');
+			utils.checkAndHandleError(err, 'Failed to destroy project', next);
 
 			res.status(200);
 			return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
@@ -121,7 +130,7 @@ exports.destroy = function(req, res, next) {
 	});
 };
 
-exports.getByEntity = function (req, res) {
+exports.getByEntity = function (req, res, next) {
 	var entities = {users: 'creator', _id: '_id'},
 		entityQuery = {};
 
@@ -132,7 +141,7 @@ exports.getByEntity = function (req, res) {
 	Query.populate('watchers');
 
 	Query.exec(function (err, projects) {
-		utils.checkAndHandleError(err, res, 'Failed to read projects by' + req.params.entity + ' ' + req.params.id);
+		utils.checkAndHandleError(err, 'Failed to read projects by' + req.params.entity + ' ' + req.params.id, next);
 
 		res.status(200);
 		return res.json(projects);
@@ -192,19 +201,19 @@ exports.readHistory = function(req, res, next) {
 		});
 		Query.populate('u');
 		Query.exec(function(err, projects) {
-			utils.checkAndHandleError(err, res, 'Failed to read history for project ' + req.params.id);
+			utils.checkAndHandleError(err, 'Failed to read history for project ' + req.params.id, next);
 
 			res.status(200);
 			return res.json(projects);
 		});
 	} else {
-		utils.checkAndHandleError(true, res, 'Failed to read history for project ' + req.params.id);
+		utils.checkAndHandleError(true, 'Failed to read history for project ' + req.params.id, next);
 	}
 };
 
-exports.starProject = function(req, res){
+exports.starProject = function(req, res, next){
 	User.findById(req.user._id, function(err, user){
-		utils.checkAndHandleError(err, res, 'Failed to load user');
+		utils.checkAndHandleError(err, 'Failed to load user', next);
 		var query;
 		if (!user.profile || !user.profile.starredProjects) {
 			query = {'profile.starredProjects': [req.params.id]};
@@ -216,15 +225,15 @@ exports.starProject = function(req, res){
 				query = {$push: {'profile.starredProjects': req.params.id}};
 		}
 		user.update(query, function(err, updated) {
-			utils.checkAndHandleError(err, res,'Cannot update the starred projects');
+			utils.checkAndHandleError(err,'Cannot update the starred projects', next);
 			res.json(updated);
 		});
 	})
 };
 
-exports.getStarredProjects = function(req, res) {
+exports.getStarredProjects = function(req, res, next) {
 	User.findById(req.user._id, function(err, user) {
-		utils.checkAndHandleError(err, res, 'Failed to load user');
+		utils.checkAndHandleError(err, 'Failed to load user', next);
 		if (!user.profile || !user.profile.starredProjects || user.profile.starredProjects.length === 0) {
 			res.json([]);
 		} else {
@@ -233,7 +242,7 @@ exports.getStarredProjects = function(req, res) {
 					$in: user.profile.starredProjects
 				}
 			}, function(err, projects) {
-				utils.checkAndHandleError(err, res, 'Failed to read projects');
+				utils.checkAndHandleError(err, 'Failed to read projects', next);
 
 				res.status(200);
 				return res.json(projects);

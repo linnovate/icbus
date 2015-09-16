@@ -29,7 +29,7 @@ exports.profile = function(req, res, next) {
 /**
  * Update user profile
  */
-exports.update = function(req, res) {
+exports.update = function(req, res, next) {
     req.profile = req.profile || {};
     var profile = _.extend(req.profile, req.body);
 
@@ -37,7 +37,7 @@ exports.update = function(req, res) {
     user.profile = profile;
 
     User.update({ _id: user._id }, user, function(err) {
-        utils.checkAndHandleError(err, res, 'Cannot update the profile');
+        utils.checkAndHandleError(err, 'Cannot update the profile', next);
         res.json(user.profile);
     });
 };
@@ -62,7 +62,7 @@ exports.uploadAvatar = function(req, res, next) {
         if (req.file)
             next();
         else
-            utils.checkAndHandleError('Didn\'t find any avatar to upload', res, 'Didn\'t find any avatar to upload');
+            utils.checkAndHandleError('Didn\'t find any avatar to upload', 'Didn\'t find any avatar to upload', next);
     });
     return req.pipe(busboy);
 };
