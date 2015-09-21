@@ -495,19 +495,19 @@ exports.load = function(swagger, parms) {
     }
   };
 
-  //var discussionsList = {
-  //  'spec': {
-  //    description: 'discussion operations',
-  //    path: '/discussions',
-  //    method: 'GET',
-  //    summary: 'Get discussions list',
-  //    notes: '',
-  //    type: 'Discussion',
-  //    nickname: 'GetDiscussions',
-  //    produces: ['application/json'],
-  //    params: searchParms
-  //  }
-  //};
+  var discussionsList = {
+    'spec': {
+      description: 'discussion operations',
+      path: '/discussions',
+      method: 'GET',
+      summary: 'Get discussions list',
+      notes: '',
+      type: 'Discussion',
+      nickname: 'GetDiscussions',
+      produces: ['application/json'],
+      params: searchParms
+    }
+  };
 
   var discussionShow = {
     'spec': {
@@ -636,7 +636,7 @@ exports.load = function(swagger, parms) {
     .addDelete(commentDelete)
     .addGet(commentHistory)
     .addGet(generalSearch)
-    //.addGet(discussionsList)
+    .addGet(discussionsList)
     .addGet(discussionShow)
     .addPost(discussionCreate)
     .addPut(discussionUpdate)
