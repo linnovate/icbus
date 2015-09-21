@@ -305,15 +305,18 @@ exports.summary = function (req, res, next) {
 };
 
 
-exports.getByProject = function (req, res) {
-	var Query = Task.find({
-		project : req.params.id,
-		discussions : {$not: {$size: 0}}
-	}, {discussions : 1, _id : 0});
+exports.getByProject = function (req, res, next) {
+    var entities = {projects: 'project'},
+        entityQuery = {discussions : {$not: {$size: 0}}};
+
+    entityQuery[entities[req.params.entity]] = req.params.id;
+
+    var Query = Task.find(entityQuery, {discussions : 1, _id : 0});
 	Query.populate('discussions');
 
 	Query.exec(function (err, discussions) {
-		utils.checkAndHandleError(err, res, 'Unable to get discussions');
+        console.log(err,'err')
+		utils.checkAndHandleError(err, 'Unable to get discussions', next);
 
         //remove duplicates
         discussions = _.reduce(discussions, function(flattened, other) {

@@ -7,7 +7,6 @@ var mongoose = require('mongoose'),
 
 require('../models/task');
 var Task = mongoose.model('Task'),
-	User = mongoose.model('User'),
 	TaskArchive = mongoose.model('task_archive'),
 	mean = require('meanio'),
 	_ = require('lodash'),
@@ -231,48 +230,6 @@ exports.readHistory = function(req, res, next) {
 	} else {
 		utils.checkAndHandleError(true, 'Failed to read history for task ' + req.params.id, next);
 	}
-};
-
-exports.starTask = function(req, res, next) {
-	User.findById(req.user._id, function(err, user) {
-		utils.checkAndHandleError(err, 'Failed to load user', next);
-
-		var query;
-		if (!user.profile || !user.profile.starredTasks) {
-			query = {'profile.starredTasks': [req.params.id]};
-		} else {
-			if (user.profile.starredTasks.indexOf(req.params.id) > -1)
-				query = {$pull: {'profile.starredTasks': req.params.id}};
-			else
-				query = {$push: {'profile.starredTasks': req.params.id}};
-		}
-		user.update(query, function(err, updated) {
-			utils.checkAndHandleError(err, 'Cannot update the starred tasks', next);
-			res.json(updated);
-		});
-	})
-};
-
-
-exports.getStarredTasks = function(req, res, next) {
-	User.findById(req.user._id, function(err, user) {
-		utils.checkAndHandleError(err, 'Failed to load user', next);
-
-		if (!user.profile || !user.profile.starredTasks || user.profile.starredTasks.length === 0) {
-			res.json([]);
-		} else {
-			Task.find({
-				'_id': {
-					$in: user.profile.starredTasks
-				}
-			}, function(err, tasks) {
-				utils.checkAndHandleError(err, 'Failed to read tasks', next);
-
-				res.status(200);
-				return res.json(tasks);
-			});
-		}
-	})
 };
 
 exports.getZombieTasks = function (req, res, next) {
