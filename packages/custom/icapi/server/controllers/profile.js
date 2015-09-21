@@ -73,7 +73,9 @@ exports.uploadAvatar = function(req, res, next) {
 
 //star entity
 exports.starEntity = function(req, res, next) {
-    User.findOne(req.user._id, function(err, user) {
+    User.findOne({
+        _id: req.user._id
+    }, function(err, user) {
         utils.checkAndHandleError(err, 'Failed to load user', next);
         var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
 
@@ -97,7 +99,9 @@ exports.starEntity = function(req, res, next) {
 
 //get starred entity list
 exports.getStarredEntity = function(req, res, next) {
-    User.findOne(req.user._id, function(err, user) {
+    User.findOne({
+        _id: req.user._id
+    }, function(err, user) {
         utils.checkAndHandleError(err, 'Failed to load user', next);
 
         var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
