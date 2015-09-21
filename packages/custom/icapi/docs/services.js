@@ -346,30 +346,28 @@ exports.load = function(swagger, parms) {
     }
   };
 
-  var starredTasks = {
+  var starredEntities = {
     'spec': {
-      description: 'get all starred tasks of user',
-      path: '/task/starred',
+      description: 'get all starred entities of user',
+      path: '/:entity/starred',
       method: 'GET',
-      summary: 'get all starred tasks of user',
-      type: 'Task',
-      nickname: 'starredTasks',
+      summary: 'get all starred entities of user',
+      type: ['Task', 'Project', 'Discussion'],
+      nickname: 'starredEntities',
       produces: ['application/json'],
-      params: searchParms,
-      notes: 'The really path is \'/tasks/starred\''
+      params: searchParms
     }
   };
 
-  var starTask = {
+  var starEntity = {
     'spec': {
-      description: 'star or unstar a task',
-      path: '/task/:id/star',
+      description: 'star or unstar a entity',
+      path: '/:entity/:id/star',
       method: 'PATCH',
-      summary: 'star or unstar a task',
-      type: 'Task',
-      nickname: 'starTask',
-      produces: ['application/json'],
-      notes: 'The really path is \'/tasks/:id/star\''
+      summary: 'star or unstar a entity',
+      type: ['Task', 'Project', 'Discussion'],
+      nickname: 'starEntity',
+      produces: ['application/json']
     }
   };
 
@@ -593,6 +591,20 @@ exports.load = function(swagger, parms) {
     }
   };
 
+  var getDiscussionsPerEntity = {
+    'spec': {
+        description: 'get a list of attachments whose issue is a project/discussion/task/update',
+        path: '/:entity/:id/discussions',
+        method: 'GET',
+        summary: 'get a list of discussions per project',
+        notes: '',
+        type: 'Discussion',
+        nickname: 'discussionByEntity',
+        produces: ['application/json'],
+        params: searchParms
+    }
+  };
+
   swagger
     .addGet(usersList)
     .addGet(showProfile)
@@ -615,8 +627,8 @@ exports.load = function(swagger, parms) {
     .addPost(createAttachment)
     .addPost(updateAttachment)
     .addGet(attachmentsHistory)
-    .addGet(starredTasks)
-    .addPatch(starTask)
+    .addGet(starredEntities)
+    .addPatch(starEntity)
     .addGet(commentsList)
     .addGet(commentShow)
     .addPost(commentCreate)
@@ -630,4 +642,5 @@ exports.load = function(swagger, parms) {
     .addPut(discussionUpdate)
     .addDelete(discussionDelete)
     .addGet(discussionHistory)
+    .addGet(getDiscussionsPerEntity)
 };

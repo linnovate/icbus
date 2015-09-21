@@ -131,7 +131,7 @@ exports.destroy = function(req, res, next) {
 };
 
 exports.getByEntity = function (req, res, next) {
-	var entities = {users: 'creator', _id: '_id'},
+    var entities = {users: 'creator', _id: '_id'},
 		entityQuery = {};
 
 	entityQuery[entities[req.params.entity]] = req.params.id;

@@ -16,6 +16,12 @@ var projectController = require('../controllers/project'),
 
 module.exports = function(Icapi, app, auth) {
 
+    //star & get starred list
+    app.route('/api/:entity/:id/star')
+        .patch(auth.requiresLogin, profileController.starEntity);
+    app.route('/api/:entity/starred')
+        .get(auth.requiresLogin, profileController.getStarredEntity);
+
     app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
         .post(projectController.create)
@@ -42,10 +48,6 @@ module.exports = function(Icapi, app, auth) {
         .get(taskController.tagsList);
     app.route('/api/tasks/zombie')
         .get(taskController.getZombieTasks);
-    app.route('/api/tasks/:id/star')
-        .patch(taskController.starTask);
-    app.route('/api/tasks/starred')
-        .get(taskController.getStarredTasks);
     app.route('/api/tasks/:id')
         .get(taskController.read)
         .put(auth.requiresLogin, taskController.update)
@@ -97,12 +99,12 @@ module.exports = function(Icapi, app, auth) {
     app.route('/api/discussions')
         .post(discussionController.create)
         .get(discussionController.all);
+    app.route('/api/history/discussions/:id')
+        .get(discussionController.readHistory);
     app.route('/api/discussions/:id')
         .get(discussionController.read)
         .put(discussionController.update)
         .delete(discussionController.destroy);
-    app.route('/api/history/discussions/:id')
-        .get(discussionController.readHistory);
     app.route('/api/discussions/:id/schedule')
         .post(discussionController.schedule);
     app.route('/api/discussions/:id/summary')
@@ -128,10 +130,6 @@ module.exports = function(Icapi, app, auth) {
         .get(taskController.tagsList);
     app.route('/api/task/zombie')
         .get(taskController.getZombieTasks);
-    app.route('/api/task/:id/star')
-        .patch(taskController.starTask);
-    app.route('/api/task/starred')
-        .get(taskController.getStarredTasks);
     app.route('/api/task/:id')
         .get(taskController.read)
         .put(taskController.update)
