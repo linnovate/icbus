@@ -24,14 +24,25 @@ exports.read = function(req, res, next) {
 		utils.checkAndHandleError(err, 'Failed to read update', next);
 
 		Update.findById(req.params.id)
-			.populate('creator', 'name')
-			.populate('updater', 'name')
-			.populate('issueId', null, update.issue.charAt(0).toUpperCase() + update.issue.slice(1))
 			.exec(function (err, update) {
 				utils.checkAndHandleError(err, 'Failed to read update', next);
 
-				res.status(200);
-				return res.json(update);
+        var query = {
+          query: {
+            filtered: {
+              filter : {
+                term: {}
+              }
+            }
+          }
+        };
+
+        update = JSON.parse(JSON.stringify(update));
+
+        getAttachmentsForUpdate(update, query, function (updateWithAttachments) {
+          res.status(200);
+          return res.json(updateWithAttachments);
+        });
 			});
 	});
 
@@ -60,12 +71,14 @@ var getAttachmentsForUpdate = function (item, query, cb) {
 	query.query.filtered.filter.term.issueId = item._id;
 	mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function (err, response) {
 		item.attachments = [];
+
 		if (!err) {
 			item.attachments = response.hits.hits.map(function (attachment) {
 				return attachment._source;
 			});
 		}
-		cb(item);
+
+    cb(item);
 	});
 };
 
