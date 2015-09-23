@@ -9,7 +9,6 @@ var projectController = require('../controllers/project'),
   elasticsearchController = require('../controllers/elasticsearch'),
   attachmentsController = require('../controllers/attachments'),
   updatesController = require('../controllers/updates'),
-  roomsController = require('../../../hi/server/controllers/rooms'),
   utils = require('../controllers/utils.js');
 
 //var permissionController = require('../controllers/permission');

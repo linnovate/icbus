@@ -10,7 +10,6 @@ var Task = mongoose.model('Task'),
   TaskArchive = mongoose.model('task_archive'),
   mean = require('meanio'),
   _ = require('lodash'),
-  elasticsearch = require('./elasticsearch'),
   Update = mongoose.model('Update');
 
 exports.read = function (req, res, next) {

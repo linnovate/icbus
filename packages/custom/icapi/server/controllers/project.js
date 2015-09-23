@@ -1,5 +1,7 @@
 'use strict';
-require('../models/project')
+
+require('../models/project');
+
 var utils = require('./utils'),
   mongoose = require('mongoose'),
   ObjectId = require('mongoose').Types.ObjectId,
@@ -7,11 +9,8 @@ var utils = require('./utils'),
   Task = mongoose.model('Task'),
   User = mongoose.model('User'),
   ProjectArchive = mongoose.model('project_archive'),
-  rooms = require('../../../hi/server/controllers/rooms'),
   _ = require('lodash'),
-  Update = mongoose.model('Update'),
-  elasticsearch = require('./elasticsearch'),
-  mean = require('meanio');
+  Update = mongoose.model('Update');
 
 exports.read = function (req, res, next) {
   Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
@@ -21,7 +20,6 @@ exports.read = function (req, res, next) {
     return res.json(project);
   });
 };
-
 
 exports.all = function (req, res, next) {
   var Query = Project.find({});
@@ -72,7 +70,6 @@ exports.create = function (req, res, next) {
     exports.read(req, res, next);
   });
 };
-
 
 exports.update = function (req, res, next) {
   if (!req.params.id) {
@@ -188,7 +185,6 @@ exports.getByDiscussion = function (req, res, next) {
     return res.json(projects);
   });
 };
-
 
 exports.readHistory = function (req, res, next) {
   if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {

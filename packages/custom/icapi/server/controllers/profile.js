@@ -80,7 +80,9 @@ exports.starEntity = function (req, res, next) {
     var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
 
     var query;
-    if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].indexOf(req.params.id) == -1) {
+    if (!user.profile ||
+        !user.profile[starredEntities] ||
+        user.profile[starredEntities].indexOf(req.params.id) === -1) {
       query = {$push: {}};
       query.$push['profile.' + starredEntities] = req.params.id;
     }

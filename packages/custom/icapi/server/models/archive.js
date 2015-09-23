@@ -70,11 +70,11 @@ module.exports = function archivePlugin(schema, collectionName) {
     c.__v = undefined;
 
     var archiveDoc = {};
-    archiveDoc['t'] = new Date();
-    archiveDoc['o'] = this.isNew ? 'i' : 'u';
-    archiveDoc['c'] = c;
-    archiveDoc['u'] = req.user;
-    archiveDoc['d'] = req.discussion;
+    archiveDoc.t = new Date();
+    archiveDoc.o = this.isNew ? 'i' : 'u';
+    archiveDoc.c = c;
+    archiveDoc.u = req.user;
+    archiveDoc.d = req.discussion;
 
     var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);
@@ -87,11 +87,11 @@ module.exports = function archivePlugin(schema, collectionName) {
     c.__v = undefined;
 
     var archiveDoc = {};
-    archiveDoc['t'] = new Date();
-    archiveDoc['o'] = 'r';
-    archiveDoc['c'] = c;
-    archiveDoc['u'] = req.user;
-    archiveDoc['d'] = req.discussion;
+    archiveDoc.t = new Date();
+    archiveDoc.o = 'r';
+    archiveDoc.c = c;
+    archiveDoc.u = req.user;
+    archiveDoc.d = req.discussion;
 
     var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);

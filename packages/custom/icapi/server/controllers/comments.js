@@ -8,7 +8,6 @@ var mongoose = require('mongoose'),
 
 require('../models/comment');
 var Comment = mongoose.model('Comment'),
-  User = mongoose.model('User'),
   CommentArchive = mongoose.model('comment_archive'),
   mean = require('meanio'),
   _ = require('lodash'),

@@ -14,6 +14,22 @@ var Update = mongoose.model('Update'),
   mean = require('meanio'),
   _ = require('lodash');
 
+var getAttachmentsForUpdate = function (item, query, cb) {
+  query.query.filtered.filter.term.issue = 'update';
+  query.query.filtered.filter.term.issueId = item._id;
+  mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function (err, response) {
+    item.attachments = [];
+
+    if (!err) {
+      item.attachments = response.hits.hits.map(function (attachment) {
+        return attachment._source;
+      });
+    }
+
+    cb(item);
+  });
+};
+
 exports.read = function (req, res, next) {
   Update.findOne({
     _id: req.params.id
@@ -66,22 +82,6 @@ exports.all = function (req, res, next) {
   });
 };
 
-var getAttachmentsForUpdate = function (item, query, cb) {
-  query.query.filtered.filter.term.issue = 'update';
-  query.query.filtered.filter.term.issueId = item._id;
-  mean.elasticsearch.search({index: 'attachment', 'body': query, size: 3000}, function (err, response) {
-    item.attachments = [];
-
-    if (!err) {
-      item.attachments = response.hits.hits.map(function (attachment) {
-        return attachment._source;
-      });
-    }
-
-    cb(item);
-  });
-};
-
 exports.getByEntity = function (req, res, next) {
   var entities = {projects: 'project', users: 'assign', tasks: 'task', discussions: 'discussion'},
     entity = entities[req.params.entity],
@@ -107,11 +107,14 @@ exports.getByEntity = function (req, res, next) {
       res.status(200);
       return res.json([]);
     }
-    for (var i = 0; i < response.hits.hits.length; i++) {
-      getAttachmentsForUpdate(response.hits.hits[i]._source, query, function (item) {
-        items.push(item);
-        if (items.length === length) res.send(items);
-      });
+
+    function attachmentCb(item) {
+      items.push(item);
+      if (items.length === length) res.send(items);
+    }
+
+    for (var i = 0; i < response.hits.hits.length; i += 1) {
+      getAttachmentsForUpdate(response.hits.hits[i]._source, query, attachmentCb);
     }
   })
 };

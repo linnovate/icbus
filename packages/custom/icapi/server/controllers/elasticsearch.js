@@ -40,6 +40,26 @@ exports.delete = function (doc, docType, room, next) {
   });
 };
 
+function buildSearchResponse(type, obj) {
+  var groups = {};
+  if (type === 'aggs') {
+    obj.forEach(function (i) {
+      groups[i.key] =
+        i.top.hits.hits.map(function (j) {
+          return j._source;
+        });
+    });
+  }
+  else {
+    obj.map(function (i) {
+      if (!groups.hasOwnProperty(i._index))
+        groups[i._index] = [];
+      groups[i._index].push(i._source);
+    })
+  }
+  return groups;
+}
+
 exports.search = function (req, res, next) {
   if (!req.query.term) {
     return;
@@ -83,28 +103,7 @@ exports.search = function (req, res, next) {
     else
       res.send(buildSearchResponse('simple', result.hits.hits))
   })
-}
-
-function buildSearchResponse(type, obj) {
-  var groups = {};
-  if (type === 'aggs') {
-    obj.forEach(function (i) {
-      groups[i.key] =
-        i.top.hits.hits.map(function (j) {
-          return j._source;
-        });
-    });
-  }
-  else {
-    obj.map(function (i) {
-      if (!groups.hasOwnProperty(i._index))
-        groups[i._index] = [];
-      groups[i._index].push(i._source);
-    })
-  }
-  return groups;
-}
-
+};
 
 exports.advancedSearch = function (query) {
   var queries = [], jsonQuery;

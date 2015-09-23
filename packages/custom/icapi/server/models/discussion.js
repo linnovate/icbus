@@ -2,9 +2,7 @@
 
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
-  _ = require('lodash'),
   archive = require('./archive.js');
-
 
 var DiscussionSchema = new Schema({
   created: {

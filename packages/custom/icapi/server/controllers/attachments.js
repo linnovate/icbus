@@ -77,19 +77,21 @@ exports.create = function (req, res, next) {
   req.data.updated = new Date();
   req.data.creator = req.user._id;
 
-  for (var i = 0; i < attachments.length; i++) {
+  function attachmentCb(attachment) {
+    c += 1;
+    savedAttachments.push(attachment);
+    if (c === attachments.length) {
+      res.status(200);
+      return res.json(savedAttachments);
+    }
+  }
+
+  for (var i = 0; i < attachments.length; i += 1) {
     req.data.name = attachments[i].name;
     req.data.path = attachments[i].path;
     req.data.attachmentType = path.extname(attachments[i].path).substr(1).toLowerCase();
 
-    saveAttachment(req.data, req.user, req.body.discussion, function (attachment) {
-      c++;
-      savedAttachments.push(attachment);
-      if (c === attachments.length) {
-        res.status(200);
-        return res.json(savedAttachments);
-      }
-    })
+    saveAttachment(req.data, req.user, req.body.discussion, attachmentCb);
   }
 };
 

@@ -8,9 +8,7 @@ var utils = require('./utils'),
   TaskArchive = mongoose.model('task_archive'),
   Task = mongoose.model('Task'),
   _ = require('lodash'),
-  elasticsearch = require('./elasticsearch'),
   mailManager = require('./mailManager'),
-  mean = require('meanio'),
   Update = mongoose.model('Update');
 
 exports.read = function (req, res, next) {
