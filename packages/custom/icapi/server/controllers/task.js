@@ -102,10 +102,16 @@ exports.update = function(req, res, next) {
 		var defaults = {
 			project: undefined,
 			assign: undefined,
-      watchers: []
+      watchers: [],
+			discussions: []
 		};
 
 		var newTask = _.defaults(req.body, defaults);
+
+		if (req.body.discussion) {
+			newTask.discussions = _.union(newTask.discussions, [req.body.discussion]);
+		}
+
         task = _.extend(task, newTask);
         task.updated = new Date();
 

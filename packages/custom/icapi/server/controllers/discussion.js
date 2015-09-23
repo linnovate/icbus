@@ -289,9 +289,13 @@ exports.summary = function (req, res, next) {
 					utils.checkAndHandleError(err, 'Failed to read tasks by discussion ' + discussion._id, next);
 
 					_.map(tasks, function (task) {
-						var index = task.tags.indexOf('Agenda');
 						if (task.discussions.length === 1) {
-							task.tags.splice(index, 1);
+							var tagIndex = task.tags.indexOf('Agenda');
+
+							if (tagIndex !== -1) {
+								task.tags.splice(tagIndex, 1);
+								task.save({user: req.user});
+							}
 						}
 					});
 
@@ -303,7 +307,6 @@ exports.summary = function (req, res, next) {
 		});
 	});
 };
-
 
 exports.getByProject = function (req, res, next) {
     var entities = {projects: 'project'},
