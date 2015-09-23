@@ -4,11 +4,11 @@
  * Module dependencies.
  */
 var mongoose = require('mongoose'),
-	User = mongoose.model('User'),
+  User = mongoose.model('User'),
   _ = require('lodash'),
-	config = require('meanio').loadConfig(),
-	templates = require('../template'),
-	nodemailer = require('nodemailer'),
+  config = require('meanio').loadConfig(),
+  templates = require('../template'),
+  nodemailer = require('nodemailer'),
   smtpTransport = require('nodemailer-smtp-transport'),
   EmailTemplate = require('../../../mail-templates/node_modules/email-templates').EmailTemplate,
   path = require('path');
@@ -22,17 +22,17 @@ function sendMail(mailOptions) {
 
   var transport = nodemailer.createTransport(options);
 
-	transport.sendMail(mailOptions, function(err, response) {
-		console.log(err, response);
-		if (err) return err;
-		return response;
-	});
+  transport.sendMail(mailOptions, function (err, response) {
+    console.log(err, response);
+    if (err) return err;
+    return response;
+  });
 }
 
 //temporary function
 //send should be deleted latter and use this function
 //as sole interface to main manager
-exports.sendEx = function(type, data) {
+exports.sendEx = function (type, data) {
   if (type === 'comment_email') {
     //template format does not compatible yet
     //use send function
@@ -41,14 +41,14 @@ exports.sendEx = function(type, data) {
 
   data.uriRoot = config.icu.uri;
   data.date = new Date();
-  data.attendees = _(data.discussion.watchers).map(function(w) {
+  data.attendees = _(data.discussion.watchers).map(function (w) {
     return w.name;
   }).join(', ');
 
   var templateDir = path.join(__dirname, '..', 'templates', type);
   var template = new EmailTemplate(templateDir);
 
-  template.render(data, function(err, results) {
+  template.render(data, function (err, results) {
     if (err) {
       console.log(err.message);
       console.log(err.stack);
@@ -56,7 +56,7 @@ exports.sendEx = function(type, data) {
       console.log(results.html);
     }
 
-    data.discussion.watchers.forEach(function(watcher) {
+    data.discussion.watchers.forEach(function (watcher) {
       var mailOptions = {
         to: watcher.email,
         from: config.emailFrom,
@@ -71,29 +71,29 @@ exports.sendEx = function(type, data) {
   });
 };
 
-exports.send = function(doc, task) {
-	var arr = doc.text.match(/@([^ :]*)*/g);
-	arr = arr.map(function(item) {
-		return item.slice(1)
-	});
-	User.findOne({
-		_id: doc.creator
-	}).exec(function(err, from) {
-		User.find({
-			username: {
-				$in: arr
-			}
-		}).exec(function(err, users) {
+exports.send = function (doc, task) {
+  var arr = doc.text.match(/@([^ :]*)*/g);
+  arr = arr.map(function (item) {
+    return item.slice(1)
+  });
+  User.findOne({
+    _id: doc.creator
+  }).exec(function (err, from) {
+    User.find({
+      username: {
+        $in: arr
+      }
+    }).exec(function (err, users) {
 
-			for (var i = 0; i < users.length; i+=1) {
-				var user = users[i];
-				var mailOptions = {
-					to: user.email,
-					from: config.emailFrom
-				};
-				mailOptions = templates.comment_email(user, doc.text, from, task, config.icu.uri, mailOptions);
-				sendMail(mailOptions);
-			}
-		});
-	});
+      for (var i = 0; i < users.length; i += 1) {
+        var user = users[i];
+        var mailOptions = {
+          to: user.email,
+          from: config.emailFrom
+        };
+        mailOptions = templates.comment_email(user, doc.text, from, task, config.icu.uri, mailOptions);
+        sendMail(mailOptions);
+      }
+    });
+  });
 };

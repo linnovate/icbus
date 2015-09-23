@@ -2,9 +2,7 @@
 
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
-  _ = require('lodash'),
   archive = require('./archive.js');
-
 
 var DiscussionSchema = new Schema({
   created: {
@@ -46,11 +44,11 @@ var DiscussionSchema = new Schema({
   //should we maybe have finer grain control on this
 
   /*
-  Should we do roles or have set structure - how do we grow this
+   Should we do roles or have set structure - how do we grow this
 
-  Should eg membership/watchers be separate and and stored in user or in the model itself of the issue etc
+   Should eg membership/watchers be separate and and stored in user or in the model itself of the issue etc
 
-  */
+   */
   members: [{
     type: Schema.ObjectId,
     ref: 'User'
@@ -65,7 +63,7 @@ var DiscussionSchema = new Schema({
 /**
  * Statics
  */
-DiscussionSchema.statics.load = function(id, cb) {
+DiscussionSchema.statics.load = function (id, cb) {
   this.findOne({
     _id: id
   }).populate('creator', 'name username').exec(cb);
@@ -74,10 +72,10 @@ DiscussionSchema.statics.load = function(id, cb) {
  * Post middleware
  */
 var elasticsearch = require('../controllers/elasticsearch');
-DiscussionSchema.post('save', function() {
+DiscussionSchema.post('save', function () {
   elasticsearch.save(this, 'discussion');
 });
-DiscussionSchema.pre('remove', function(next) {
+DiscussionSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'discussion', null, next);
 });
 
