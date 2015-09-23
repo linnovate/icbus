@@ -12,18 +12,18 @@ var ProjectSchema = new Schema({
   },
   updated: {
     type: Date
-  },  
+  },
   title: {
     type: String
   },
-  parent : {
+  parent: {
     type: Schema.ObjectId,
     ref: 'Project'
   },
-  discussion : {
+  discussion: {
     type: Schema.ObjectId,
     ref: 'Discussion'
-  },  
+  },
   creator: {
     type: Schema.ObjectId,
     ref: 'User'
@@ -32,8 +32,8 @@ var ProjectSchema = new Schema({
     type: Schema.ObjectId,
     ref: 'User'
   },
-  signature : {
-    circles : {},
+  signature: {
+    circles: {},
     codes: {}
   },
   color: {
@@ -49,7 +49,7 @@ var ProjectSchema = new Schema({
     type: String
   },
   //should we maybe have finer grain control on this
-  watchers : [{
+  watchers: [{
     type: Schema.ObjectId,
     ref: 'User'
   }],
@@ -61,14 +61,14 @@ var ProjectSchema = new Schema({
 /**
  * Validations
  */
-ProjectSchema.path('color').validate(function(color) {
+ProjectSchema.path('color').validate(function (color) {
   return /^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/i.test(color);
 }, 'Invalid HEX color.');
 
 /**
  * Statics
  */
-ProjectSchema.statics.load = function(id, cb) {
+ProjectSchema.statics.load = function (id, cb) {
   this.findOne({
     _id: id
   }).populate('creator', 'name username').exec(cb);
@@ -77,7 +77,7 @@ ProjectSchema.statics.load = function(id, cb) {
 /**
  * Post middleware
  */
-var elasticsearch  = require('../controllers/elasticsearch');
+var elasticsearch = require('../controllers/elasticsearch');
 
 ProjectSchema.post('save', function (req, next) {
   elasticsearch.save(this, 'project', this.room);
@@ -85,7 +85,7 @@ ProjectSchema.post('save', function (req, next) {
 });
 
 ProjectSchema.pre('remove', function (next) {
-  elasticsearch.delete(this, 'project',this.room, next);
+  elasticsearch.delete(this, 'project', this.room, next);
   next();
 });
 

@@ -35,15 +35,15 @@ var CommentSchema = new Schema({
 /**
  * Statics
  */
-CommentSchema.statics.load = function(id, cb) {
+CommentSchema.statics.load = function (id, cb) {
   this.findOne({
     _id: id
   }).populate('creator', 'name username').exec(cb);
 };
-CommentSchema.statics.task = function(id, cb) {
+CommentSchema.statics.task = function (id, cb) {
   require('./task');
   var Task = mongoose.model('Task');
-  Task.findById(id).populate('project').exec(function(err, task) {
+  Task.findById(id).populate('project').exec(function (err, task) {
     if (!task) return cb(err, {})
     cb(err, task || {});
   })
@@ -54,9 +54,9 @@ CommentSchema.statics.task = function(id, cb) {
 var elasticsearch = require('../controllers/elasticsearch');
 var mailManager = require('../controllers/mailManager');
 
-CommentSchema.post('save', function(req, next) {
+CommentSchema.post('save', function (req, next) {
   var comment = this;
-  CommentSchema.statics.task(this.task, function(err, task) {
+  CommentSchema.statics.task(this.task, function (err, task) {
     if (err) {
       return err
     }
@@ -66,9 +66,9 @@ CommentSchema.post('save', function(req, next) {
   next();
 });
 
-CommentSchema.pre('remove', function(next) {
+CommentSchema.pre('remove', function (next) {
   var comment = this;
-  CommentSchema.statics.project(this.task, function(err, project) {
+  CommentSchema.statics.project(this.task, function (err, project) {
     if (err) {
       return err
     }

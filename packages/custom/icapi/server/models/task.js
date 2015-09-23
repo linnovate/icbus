@@ -54,24 +54,24 @@ var TaskSchema = new Schema({
     type: String
   },
   discussions: [{
-      type: Schema.ObjectId,
-      ref: 'Discussion'
+    type: Schema.ObjectId,
+    ref: 'Discussion'
   }]
 });
 
 /**
  * Statics
  */
-TaskSchema.statics.load = function(id, cb) {
+TaskSchema.statics.load = function (id, cb) {
   this.findOne({
     _id: id
   }).populate('creator', 'name username')
     .populate('assign', 'name username').exec(cb);
 };
-TaskSchema.statics.project = function(id, cb) {
+TaskSchema.statics.project = function (id, cb) {
   require('./project');
   var Project = mongoose.model('Project');
-  Project.findById(id, function(err, project) {
+  Project.findById(id, function (err, project) {
     cb(err, project || {});
   })
 };
@@ -79,9 +79,9 @@ TaskSchema.statics.project = function(id, cb) {
  * Post middleware
  */
 var elasticsearch = require('../controllers/elasticsearch');
-TaskSchema.post('save', function(req, next) {
+TaskSchema.post('save', function (req, next) {
   var task = this;
-  TaskSchema.statics.project(this.project, function(err, project) {
+  TaskSchema.statics.project(this.project, function (err, project) {
     if (err) {
       return err
     }
@@ -91,9 +91,9 @@ TaskSchema.post('save', function(req, next) {
   next();
 });
 
-TaskSchema.pre('remove', function(next) {
+TaskSchema.pre('remove', function (next) {
   var task = this;
-  TaskSchema.statics.project(this.project, function(err, project) {
+  TaskSchema.statics.project(this.project, function (err, project) {
     if (err) {
       return err
     }
