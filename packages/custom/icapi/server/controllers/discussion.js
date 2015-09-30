@@ -8,9 +8,8 @@ var utils = require('./utils'),
   TaskArchive = mongoose.model('task_archive'),
   Task = mongoose.model('Task'),
   _ = require('lodash'),
-  mailManager = require('./mailManager'),
-  Update = mongoose.model('Update'),
-  tasksCntrl = require('./task');
+  mailService = require('../services/mail'),
+  Update = mongoose.model('Update');
 
 exports.read = function (req, res, next) {
   Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
@@ -145,17 +144,6 @@ exports.destroy = function (req, res, next) {
     }, function (err, success) {
       utils.checkAndHandleError(err, 'Failed to destroy discussion', next);
 
-      //remove tasks from this project
-      var query = {
-        project: null,
-        discussions: [req.params.id]
-      };
-      tasksCntrl.removeTaskByProject(req, query, next)
-        .then(function(){
-          res.status(200);
-          return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
-        });
-
       res.status(200);
       return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
     });
@@ -212,7 +200,7 @@ exports.schedule = function (req, res, next) {
           return _.contains(task.tags, 'Agenda');
         });
 
-        mailManager.sendEx('discussionSchedule', {
+        mailService.send('discussionSchedule', {
           discussion: discussion,
           agendaTasks: groupedTasks['true'] || [],
           additionalTasks: groupedTasks['false'] || []
@@ -270,7 +258,7 @@ exports.summary = function (req, res, next) {
           return !task.project;
         });
 
-        mailManager.sendEx('discussionSummary', {
+        mailService.send('discussionSummary', {
           discussion: discussion,
           projects: projects,
           additionalTasks: additionalTasks
