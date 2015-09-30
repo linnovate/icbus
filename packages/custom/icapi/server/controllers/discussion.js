@@ -8,7 +8,7 @@ var utils = require('./utils'),
   TaskArchive = mongoose.model('task_archive'),
   Task = mongoose.model('Task'),
   _ = require('lodash'),
-  mailManager = require('./mailManager'),
+  mailService = require('../services/mail'),
   Update = mongoose.model('Update');
 
 exports.read = function (req, res, next) {
@@ -200,7 +200,7 @@ exports.schedule = function (req, res, next) {
           return _.contains(task.tags, 'Agenda');
         });
 
-        mailManager.sendEx('discussionSchedule', {
+        mailService.send('discussionSchedule', {
           discussion: discussion,
           agendaTasks: groupedTasks['true'] || [],
           additionalTasks: groupedTasks['false'] || []
@@ -258,7 +258,7 @@ exports.summary = function (req, res, next) {
           return !task.project;
         });
 
-        mailManager.sendEx('discussionSummary', {
+        mailService.send('discussionSummary', {
           discussion: discussion,
           projects: projects,
           additionalTasks: additionalTasks
