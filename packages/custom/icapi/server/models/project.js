@@ -91,4 +91,4 @@ ProjectSchema.pre('remove', function (next) {
 
 ProjectSchema.plugin(archive, 'project');
 
-mongoose.model('Project', ProjectSchema);
+module.exports = mongoose.model('Project', ProjectSchema);

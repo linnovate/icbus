@@ -4,7 +4,6 @@ var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
   archive = require('./archive.js');
 
-
 var TaskSchema = new Schema({
   created: {
     type: Date,
@@ -104,4 +103,4 @@ TaskSchema.pre('remove', function (next) {
 
 TaskSchema.plugin(archive, 'task');
 
-mongoose.model('Task', TaskSchema);
+module.exports = mongoose.model('Task', TaskSchema);
