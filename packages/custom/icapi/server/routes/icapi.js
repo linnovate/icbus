@@ -11,15 +11,22 @@ var projectController = require('../controllers/project'),
   updatesController = require('../controllers/updates'),
   utils = require('../controllers/utils.js');
 
+var authorization = require('../middlewares/auth.js');
+var locals = require('../middlewares/locals.js');
+var response = require('../middlewares/response.js');
+var error = require('../middlewares/error.js');
+
 //var permissionController = require('../controllers/permission');
 
 module.exports = function (Icapi, app, auth) {
+  app.route('/api/*').all(locals);
+  app.route('/api/*').all(authorization);
 
   //star & get starred list
   app.route('/api/:entity/:id/star')
-    .patch(auth.requiresLogin, profileController.starEntity);
+    .patch(profileController.starEntity);
   app.route('/api/:entity/starred')
-    .get(auth.requiresLogin, profileController.getStarredEntity);
+    .get(profileController.getStarredEntity);
 
   app.route('/api/projects')
     //.all(auth.requiresLogin, permissionController.echo)
@@ -35,13 +42,7 @@ module.exports = function (Icapi, app, auth) {
     .get(projectController.getByDiscussion, projectController.getByEntity);
 
   app.route('/api/tasks')
-    .post(auth.requiresLogin, taskController.create)
-    .options(function (req, res) {
-      res.header('Access-Control-Allow-Methods', 'POST');
-      res.header('Access-Control-Allow-Headers', 'accept, content-type, authorization');
-      res.header('Access-Control-Max-Age', '1728000');
-      res.send(200);
-    })
+    .post(taskController.create)
     .get(taskController.all);
   app.route('/api/tasks/tags')
     .get(taskController.tagsList);
@@ -49,7 +50,7 @@ module.exports = function (Icapi, app, auth) {
     .get(taskController.getZombieTasks);
   app.route('/api/tasks/:id')
     .get(taskController.read)
-    .put(auth.requiresLogin, taskController.update)
+    .put(taskController.update)
     .delete(taskController.destroy);
 
   app.route('/api/:entity/:id/tasks')
@@ -58,40 +59,40 @@ module.exports = function (Icapi, app, auth) {
     .get(taskController.readHistory);
 
   app.route('/api/comments')
-    .post(auth.requiresLogin, commentController.create)
+    .post(commentController.create)
     .get(commentController.all);
   app.route('/api/comments/:id')
     .get(commentController.read)
-    .put(auth.requiresLogin, commentController.update)
+    .put(commentController.update)
     .delete(commentController.destroy);
   app.route('/api/history/comments/:id')
     .get(commentController.readHistory);
 
   app.route('/api/avatar')
-    .post(auth.requiresLogin, profileController.profile, profileController.uploadAvatar, profileController.update);
+    .post(profileController.profile, profileController.uploadAvatar, profileController.update);
 
   app.route('/api/users')
     .post(usersController.create)
     .get(usersController.all);
   app.route('/api/users/:id')
     .get(usersController.read)
-    .put(auth.requiresLogin, usersController.update)
+    .put(usersController.update)
     .delete(usersController.destroy);
   app.route('/api/:entity/:id/users')
     .get(usersController.getByEntity);
 
   app.route('/api/attachments')
-    .post(auth.requiresLogin, attachmentsController.upload, attachmentsController.create)
-    .get(auth.requiresLogin, attachmentsController.query);
+    .post(attachmentsController.upload, attachmentsController.create)
+    .get(attachmentsController.query);
   app.route('/api/attachments/:id')
     .get(attachmentsController.read)
-    .post(auth.requiresLogin, attachmentsController.update, attachmentsController.upload);
+    .post(attachmentsController.update, attachmentsController.upload);
   app.route('/api/history/attachments/:id')
     .get(attachmentsController.readHistory);
   app.route('/api/:entity/:id/attachments')
     .get(attachmentsController.getByEntity);
   app.route('/api/attachments/upload')
-    .post(auth.requiresLogin, attachmentsController.upload);
+    .post(attachmentsController.upload);
   app.route('/api/search')
     .get(elasticsearchController.search);
 
@@ -134,5 +135,8 @@ module.exports = function (Icapi, app, auth) {
     .put(taskController.update)
     .delete(taskController.destroy);
 
-  app.use(utils.errorHandler);
+  app.route('/api/*').all(response);
+  app.route('/api/*').all(error);
+
+  //app.use(utils.errorHandler);
 };

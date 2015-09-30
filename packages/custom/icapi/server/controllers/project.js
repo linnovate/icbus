@@ -10,51 +10,68 @@ var utils = require('./utils'),
   User = mongoose.model('User'),
   ProjectArchive = mongoose.model('project_archive'),
   _ = require('lodash'),
-  Update = mongoose.model('Update'),
-  tasksCntrl = require('./task');
+  Update = mongoose.model('Update');
 
 exports.read = function (req, res, next) {
-  Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
-    utils.checkAndHandleError(err ? err : !project, 'Failed to read project with id: ' + req.params.id, next);
+  if (req.locals.error) {
+    return next();
+  }
 
-    res.status(200);
-    return res.json(project);
+  Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
+    if (err || !project) {
+      req.locals.error = {
+        status: 404,
+        message: 'Can\'t find project'
+      };
+    } else {
+      req.locals.result = projects;
+    }
+
+    next();
   });
 };
 
 exports.all = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   var Query = Project.find({});
   Query.populate('watchers');
 
-  Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to found projects', next);
+  Query.exec(function (err, projects) {
+    if (err) {
+      req.locals.error = {
+        status: 400,
+        message: 'Can\'t fetch projects'
+      };
+    } else {
+      req.locals.result = projects;
+    }
 
-    res.status(200);
-    return res.json(tasks);
+    next();
   });
-
-  //from elasticsearch
-  //var query = {};
-  //if (!(_.isEmpty(req.query))) {
-  //	query = elasticsearch.advancedSearch(req.query);
-  //}
-  //
-  //mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
-  //	if (err)
-  //		res.status(500).send('Failed to found project');
-  //	else
-  //		res.send(response.hits.hits.map(function(item) {return item._source}))
-  //});
 };
 
 exports.create = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   var project = {
     creator: req.user._id
   };
   project = _.extend(project, req.body);
 
   new Project(project).save({user: req.user, discussion: req.body.discussion}, function (err, response) {
-    utils.checkAndHandleError(err, 'Failed to create project', next);
+    if (err) {
+      req.locals.error = {
+        status: 400,
+        message: 'Can\'t find project'
+      };
+    } else {
+      req.locals.result = response;
+    }
 
     new Update({
       creator: req.user,
@@ -63,18 +80,26 @@ exports.create = function (req, res, next) {
       issueId: response._id,
       issue: 'project'
     }).save({
-        user: req.user,
-        discussion: req.body.discussion
-      });
+      user: req.user,
+      discussion: req.body.discussion
+    });
 
-    req.params.id = response._id;
-    exports.read(req, res, next);
+    next();
   });
 };
 
 exports.update = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   if (!req.params.id) {
-    return res.send(404, 'Cannot update project without id');
+    req.locals.error = {
+      status: 400,
+      message: 'Can\'t find project'
+    };
+
+    next();
   }
 
   Project.findById(req.params.id).exec(function (err, project) {
@@ -85,8 +110,6 @@ exports.update = function (req, res, next) {
     var shouldCreateUpdate = project.description !== req.body.description;
     project = _.extend(project, req.body);
     project.save({user: req.user, discussion: req.body.discussion}, function (err, project) {
-      utils.checkAndHandleError(err, 'Failed to update project', next);
-
       if (shouldCreateUpdate) {
         new Update({
           creator: req.user,
@@ -100,15 +123,23 @@ exports.update = function (req, res, next) {
           });
       }
 
-      req.params.id = project._id;
-      exports.read(req, res, next);
-      //res.status(200);
-      //return res.json(project);
+      if (err) {
+        req.locals.error = {
+          status: 400,
+          message: 'Can\'t find project'
+        };
+      } else {
+        req.locals.result = project;
+      }
     });
   });
 };
 
 exports.destroy = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   if (!req.params.id) {
     return res.send(404, 'Cannot destroy project without id');
   }
@@ -122,21 +153,17 @@ exports.destroy = function (req, res, next) {
     }, function (err, success) {
       utils.checkAndHandleError(err, 'Failed to destroy project', next);
 
-      //remove tasks from this project
-      var query = {
-        project: req.params.id,
-        discussions: {$size: 0}
-      };
-      tasksCntrl.removeTaskByProject(req, query, next)
-        .then(function(){
-          res.status(200);
-          return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
-        });
+      res.status(200);
+      return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
     });
   });
 };
 
 exports.getByEntity = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   var entities = {users: 'creator', _id: '_id'},
     entityQuery = {};
 
@@ -152,26 +179,13 @@ exports.getByEntity = function (req, res, next) {
     res.status(200);
     return res.json(projects);
   });
-
-  //var entities = {users: 'creator', _id: '_id'},
-  //	entity = entities[req.params.entity],
-  //	query = {
-  //		query: {
-  //			filtered: {
-  //				filter : {
-  //					terms: {}
-  //				}
-  //			}
-  //		}
-  //};
-  //if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
-  //query.query.filtered.filter.terms[entity] =  req.params.id;
-  //mean.elasticsearch.search({index:'project','body': query, size:3000}, function(err,response) {
-  //	res.send(response.hits.hits.map(function(item) {return item._source}))
-  //});
 };
 
 exports.getByDiscussion = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   if (req.params.entity !== 'discussions') return next();
 
   var Query = Task.find({
@@ -196,6 +210,10 @@ exports.getByDiscussion = function (req, res, next) {
 };
 
 exports.readHistory = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
     var Query = ProjectArchive.find({
       'c._id': new ObjectId(req.params.id)
@@ -210,4 +228,52 @@ exports.readHistory = function (req, res, next) {
   } else {
     utils.checkAndHandleError(true, 'Failed to read history for project ' + req.params.id, next);
   }
+};
+
+exports.starProject = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  User.findById(req.user._id, function (err, user) {
+    utils.checkAndHandleError(err, 'Failed to load user', next);
+    var query;
+    if (!user.profile || !user.profile.starredProjects) {
+      query = {'profile.starredProjects': [req.params.id]};
+    }
+    else {
+      if (user.profile.starredProjects.indexOf(req.params.id) > -1)
+        query = {$pull: {'profile.starredProjects': req.params.id}};
+      else
+        query = {$push: {'profile.starredProjects': req.params.id}};
+    }
+    user.update(query, function (err, updated) {
+      utils.checkAndHandleError(err, 'Cannot update the starred projects', next);
+      res.json(updated);
+    });
+  })
+};
+
+exports.getStarredProjects = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  User.findById(req.user._id, function (err, user) {
+    utils.checkAndHandleError(err, 'Failed to load user', next);
+    if (!user.profile || !user.profile.starredProjects || user.profile.starredProjects.length === 0) {
+      res.json([]);
+    } else {
+      Project.find({
+        '_id': {
+          $in: user.profile.starredProjects
+        }
+      }, function (err, projects) {
+        utils.checkAndHandleError(err, 'Failed to read projects', next);
+
+        res.status(200);
+        return res.json(projects);
+      });
+    }
+  })
 };
