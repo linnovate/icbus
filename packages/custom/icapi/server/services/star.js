@@ -15,8 +15,8 @@ var capitalize = function(str) {
 var entityNameMap = {
   'tasks': TaskModel,
   'projects': ProjectModel,
-  'discussion': DiscussionModel,
-  'update': UpdateModel
+  'discussions': DiscussionModel,
+  'updates': UpdateModel
 };
 
 module.exports = function(entityName, options) {
