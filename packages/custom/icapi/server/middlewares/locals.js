@@ -1,6 +1,8 @@
 'use strict';
 
 module.exports = function(req, res, next) {
-  req.locals = {};
+  req.locals = {
+    data: {}
+  };
   next();
-}
+};

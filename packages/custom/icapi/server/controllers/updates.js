@@ -5,7 +5,7 @@ var utils = require('./utils');
 var mongoose = require('mongoose'),
   ObjectId = require('mongoose').Types.ObjectId;
 
-var UpdateService = require('../services/updates.js');
+var updateService = require('../services/updates.js');
 
 require('../models/update');
 var Update = mongoose.model('Update'),
@@ -124,11 +124,7 @@ exports.create = function (req, res, next) {
   req.body.updated = new Date();
   req.body.creator = req.user._id;
 
-  var update = req.body;
-  update.user = req.user;
-  update.discussion = req.body.discussion;
-
-  UpdateService.create(update, function (err, update) {
+  new Update(req.body).save({ user: req.user, discussion: req.discussion }, function (err, update) {
     utils.checkAndHandleError(err, 'Failed to save update', next);
 
     res.status(200);
@@ -161,6 +157,32 @@ exports.update = function (req, res, next) {
     });
   });
 
+};
+
+exports.created = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  var entityName = req.params.entity || req.locals.data.entityName;
+  var entityService = updateService(entityName, { user: req.user });
+
+  entityService.created(req.locals.result._id).then(function() {
+    next();
+  });
+};
+
+exports.updated = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  var entityName = req.params.entity || req.locals.data.entityName;
+  var entityService = updateService(entityName, { user: req.user });
+
+  entityService.updated(req.locals.result._id).then(function() {
+    next();
+  });
 };
 
 exports.readHistory = function (req, res, next) {

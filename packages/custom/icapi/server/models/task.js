@@ -58,6 +58,16 @@ var TaskSchema = new Schema({
   }]
 });
 
+var starVirtual = TaskSchema.virtual('star');
+starVirtual.get(function() {
+  return this._star;
+});
+starVirtual.set(function(value) {
+  this._star = value;
+});
+TaskSchema.set('toJSON', { virtuals: true });
+TaskSchema.set('toObject', { virtuals: true });
+
 /**
  * Statics
  */

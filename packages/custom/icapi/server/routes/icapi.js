@@ -1,139 +1,146 @@
 'use strict';
 
-var projectController = require('../controllers/project'),
-  taskController = require('../controllers/task'),
-  commentController = require('../controllers/comments'),
-  discussionController = require('../controllers/discussion'),
-  profileController = require('../controllers/profile'),
-  usersController = require('../controllers/users'),
-  elasticsearchController = require('../controllers/elasticsearch'),
-  attachmentsController = require('../controllers/attachments'),
-  updatesController = require('../controllers/updates'),
-  utils = require('../controllers/utils.js');
+var project = require('../controllers/project');
+var task = require('../controllers/task');
+var comment = require('../controllers/comments');
+var discussion = require('../controllers/discussion');
+var profile = require('../controllers/profile');
+var users = require('../controllers/users');
+var updates = require('../controllers/updates');
+
+var attachments = require('../controllers/attachments');
+var star = require('../controllers/star');
+var elasticsearch = require('../controllers/elasticsearch');
 
 var authorization = require('../middlewares/auth.js');
 var locals = require('../middlewares/locals.js');
+var entity = require('../middlewares/entity.js');
 var response = require('../middlewares/response.js');
 var error = require('../middlewares/error.js');
-
-//var permissionController = require('../controllers/permission');
 
 module.exports = function (Icapi, app, auth) {
   app.route('/api/*').all(locals);
   app.route('/api/*').all(authorization);
 
   //star & get starred list
-  app.route('/api/:entity/:id/star')
-    .patch(profileController.starEntity);
-  app.route('/api/:entity/starred')
-    .get(profileController.getStarredEntity);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/star')
+    .patch(star.starEntity);
+  app.route('/api/:entity(tasks|discussions|projects)/starred')
+    .get(star.getStarred);
 
+  app.route('/api/projects/*').all(entity('projects'));
   app.route('/api/projects')
-    //.all(auth.requiresLogin, permissionController.echo)
-    .post(projectController.create)
-    .get(projectController.all);
-  app.route('/api/projects/:id')
-    .get(projectController.read)
-    .put(projectController.update)
-    .delete(projectController.destroy);
-  app.route('/api/history/projects/:id')
-    .get(projectController.readHistory);
-  app.route('/api/:entity/:id/projects')
-    .get(projectController.getByDiscussion, projectController.getByEntity);
+    //.all(auth.requiresLogin, permission.echo)
+    .post(project.create)
+    .get(project.all);
+  app.route('/api/projects/:id([0-9a-fA-F]{24})')
+    .get(project.read)
+    .put(project.update)
+    .delete(project.destroy);
+  app.route('/api/history/projects/:id([0-9a-fA-F]{24})')
+    .get(project.readHistory);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/projects')
+    .get(project.getByDiscussion, project.getByEntity);
 
+  app.route('/api/tasks*').all(entity('tasks'));
   app.route('/api/tasks')
-    .post(taskController.create)
-    .get(taskController.all);
+    .post(task.create, updates.created)
+    .get(task.all, star.isStarred);
   app.route('/api/tasks/tags')
-    .get(taskController.tagsList);
+    .get(task.tagsList);
   app.route('/api/tasks/zombie')
-    .get(taskController.getZombieTasks);
-  app.route('/api/tasks/:id')
-    .get(taskController.read)
-    .put(taskController.update)
-    .delete(taskController.destroy);
+    .get(task.getZombieTasks, star.isStarred);
+  app.route('/api/tasks/:id([0-9a-fA-F]{24})')
+    .get(task.read, star.isStarred)
+    .put(task.read, task.update, star.isStarred, updates.updated)
+    .delete(task.destroy);
 
-  app.route('/api/:entity/:id/tasks')
-    .get(taskController.getByDiscussion, taskController.getByEntity);
-  app.route('/api/history/tasks/:id')
-    .get(taskController.readHistory);
+  app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks')
+    .get(task.getByDiscussion, task.getByEntity);
+  app.route('/api/history/tasks/:id([0-9a-fA-F]{24})')
+    .get(task.readHistory);
 
+  app.route('/api/comments/*').all(entity('comments'));
   app.route('/api/comments')
-    .post(commentController.create)
-    .get(commentController.all);
-  app.route('/api/comments/:id')
-    .get(commentController.read)
-    .put(commentController.update)
-    .delete(commentController.destroy);
-  app.route('/api/history/comments/:id')
-    .get(commentController.readHistory);
+    .post(comment.create)
+    .get(comment.all);
+  app.route('/api/comments/:id([0-9a-fA-F]{24})')
+    .get(comment.read)
+    .put(comment.update)
+    .delete(comment.destroy);
+  app.route('/api/history/comments/:id([0-9a-fA-F]{24})')
+    .get(comment.readHistory);
 
   app.route('/api/avatar')
-    .post(profileController.profile, profileController.uploadAvatar, profileController.update);
+    .post(profile.profile, profile.uploadAvatar, profile.update);
 
+  app.route('/api/users/*').all(entity('users'));
   app.route('/api/users')
-    .post(usersController.create)
-    .get(usersController.all);
-  app.route('/api/users/:id')
-    .get(usersController.read)
-    .put(usersController.update)
-    .delete(usersController.destroy);
-  app.route('/api/:entity/:id/users')
-    .get(usersController.getByEntity);
+    .post(users.create)
+    .get(users.all);
+  app.route('/api/users/:id([0-9a-fA-F]{24})')
+    .get(users.read)
+    .put(users.update)
+    .delete(users.destroy);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/users')
+    .get(users.getByEntity);
 
+  app.route('/api/attachments/*').all(entity('attachments'));
   app.route('/api/attachments')
-    .post(attachmentsController.upload, attachmentsController.create)
-    .get(attachmentsController.query);
-  app.route('/api/attachments/:id')
-    .get(attachmentsController.read)
-    .post(attachmentsController.update, attachmentsController.upload);
-  app.route('/api/history/attachments/:id')
-    .get(attachmentsController.readHistory);
-  app.route('/api/:entity/:id/attachments')
-    .get(attachmentsController.getByEntity);
+    .post(attachments.upload, attachments.create)
+    .get(attachments.query);
+  app.route('/api/attachments/:id([0-9a-fA-F]{24})')
+    .get(attachments.read)
+    .post(attachments.update, attachments.upload);
+  app.route('/api/history/attachments/:id([0-9a-fA-F]{24})')
+    .get(attachments.readHistory);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/attachments')
+    .get(attachments.getByEntity);
   app.route('/api/attachments/upload')
-    .post(attachmentsController.upload);
+    .post(attachments.upload);
   app.route('/api/search')
-    .get(elasticsearchController.search);
+    .get(elasticsearch.search);
 
+  app.route('/api/discussions/*').all(entity('discussions'));
   app.route('/api/discussions')
-    .post(discussionController.create)
-    .get(discussionController.all);
-  app.route('/api/history/discussions/:id')
-    .get(discussionController.readHistory);
-  app.route('/api/discussions/:id')
-    .get(discussionController.read)
-    .put(discussionController.update)
-    .delete(discussionController.destroy);
-  app.route('/api/discussions/:id/schedule')
-    .post(discussionController.schedule);
-  app.route('/api/discussions/:id/summary')
-    .post(discussionController.summary);
-  app.route('/api/:entity/:id/discussions')
-    .get(discussionController.getByProject); //, discussionController.getByEntity);
+    .post(discussion.create)
+    .get(discussion.all);
+  app.route('/api/history/discussions/:id([0-9a-fA-F]{24})')
+    .get(discussion.readHistory);
+  app.route('/api/discussions/:id([0-9a-fA-F]{24})')
+    .get(discussion.read)
+    .put(discussion.update)
+    .delete(discussion.destroy);
+  app.route('/api/discussions/:id([0-9a-fA-F]{24})/schedule')
+    .post(discussion.schedule);
+  app.route('/api/discussions/:id([0-9a-fA-F]{24})/summary')
+    .post(discussion.summary);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/discussions')
+    .get(discussion.getByProject); //, discussion.getByEntity);
 
+  app.route('/api/updates/*').all(entity('updates'));
   app.route('/api/updates')
-    .post(updatesController.create)
-    .get(updatesController.all);
-  app.route('/api/updates/:id')
-    .get(updatesController.read)
-    .put(updatesController.update);
-  //     // .delete(updatesController.destroy);
-  app.route('/api/:entity/:id/updates')
-    .get(updatesController.getByEntity);
-  app.route('/api/history/updates/:id')
-    .get(updatesController.readHistory);
+    .post(updates.create)
+    .get(updates.all);
+  app.route('/api/updates/:id([0-9a-fA-F]{24})')
+    .get(updates.read)
+    .put(updates.update);
+  //     // .delete(updates.destroy);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/updates')
+    .get(updates.getByEntity);
+  app.route('/api/history/updates/:id([0-9a-fA-F]{24})')
+    .get(updates.readHistory);
 
   //temporary -because of swagger bug with 'tasks' word
 
   app.route('/api/task/tags')
-    .get(taskController.tagsList);
+    .get(task.tagsList);
   app.route('/api/task/zombie')
-    .get(taskController.getZombieTasks);
-  app.route('/api/task/:id')
-    .get(taskController.read)
-    .put(taskController.update)
-    .delete(taskController.destroy);
+    .get(task.getZombieTasks);
+  app.route('/api/task/:id([0-9a-fA-F]{24})')
+    .get(task.read)
+    .put(task.update)
+    .delete(task.destroy);
 
   app.route('/api/*').all(response);
   app.route('/api/*').all(error);

@@ -97,4 +97,4 @@ UpdateSchema.pre('remove', function (next) {
 
 UpdateSchema.plugin(archive, 'update');
 
-mongoose.model('Update', UpdateSchema);
+module.exports = mongoose.model('Update', UpdateSchema);

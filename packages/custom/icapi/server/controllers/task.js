@@ -2,212 +2,29 @@
 
 var utils = require('./utils');
 
-var mongoose = require('mongoose'),
-  ObjectId = require('mongoose').Types.ObjectId;
+var mongoose = require('mongoose');
+
+var options = {
+  includes: 'assign watchers project',
+  entities: ['project', 'discussion', 'user'],
+  defaults: {
+    project: undefined,
+    assign: undefined,
+    watchers: []
+  }
+};
+
+var crud = require('../controllers/crud.js');
+var task = crud('tasks', options);
 
 require('../models/task');
 var Task = mongoose.model('Task'),
   TaskArchive = mongoose.model('task_archive'),
-  mean = require('meanio'),
-  _ = require('lodash'),
-  Update = mongoose.model('Update'),
-  Q = require('q');
+  mean = require('meanio');
 
-exports.read = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  Task.findById(req.params.id).populate('assign').populate('watchers').populate('project').exec(function (err, task) {
-    if (err) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t find task'
-      };
-    } else {
-      req.locals.result = task;
-    }
-
-    next();
-  });
-};
-
-exports.all = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  var Query = Task.find({});
-  Query.populate('assign').populate('watchers').populate('project');
-  Query.exec(function (err, tasks) {
-    if (err) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t fetch tasks'
-      };
-    } else {
-      req.locals.result = tasks;
-    }
-
-    next();
-  });
-};
-
-
-exports.create = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  var task = {
-    creator: req.user,
-    tags: []
-  };
-
-  if (req.body.discussion) {
-    task.discussions = [req.body.discussion];
-    task.tags.push('Agenda');
-  }
-
-  var defaults = {
-    project: undefined,
-    assign: undefined
-  };
-  var newTask = _.defaults(defaults, req.body);
-  task = _.extend(task, newTask);
-
-  new Task(task).save({
-    user: req.user,
-    discussion: req.body.discussion
-  }, function (err, response) {
-    utils.checkAndHandleError(err, 'Failed to create task', next);
-
-    new Update({
-      creator: req.user,
-      created: response.created,
-      type: 'create',
-      issueId: response._id,
-      issue: 'task'
-    }).save({
-      user: req.user,
-      discussion: req.body.discussion
-    });
-
-    if (err) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t create task'
-      };
-    } else {
-      req.locals.result = response;
-    }
-
-    next();
-  });
-};
-
-exports.update = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  if (!req.params.id) {
-    return res.send(404, 'Cannot update task without id');
-  }
-
-  Task.findById(req.params.id).exec(function (err, task) {
-    if (err || !task) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t find task to update'
-      };
-
-      next();
-    }
-
-    delete req.body.__v;
-    if (!req.body.assign && !task.assign) delete req.body.assign;
-    if (!req.body.project && !task.project) delete req.body.project;
-
-    var defaults = {
-      project: undefined,
-      assign: undefined,
-      watchers: [],
-      discussions: []
-    };
-
-    var newTask = _.defaults(req.body, defaults);
-
-    if (req.body.discussion) {
-      newTask.discussions = _.union(newTask.discussions, [req.body.discussion]);
-    }
-
-    task = _.extend(task, newTask);
-    task.updated = new Date();
-
-    var shouldCreateUpdate = task.description !== req.body.description;
-
-    task.save({user: req.user, discussion: req.body.discussion}, function (err, result) {
-      if (shouldCreateUpdate) {
-        new Update({
-          creator: req.user,
-          created: new Date(),
-          type: 'update',
-          issueId: result._id,
-          issue: 'task'
-        }).save({
-          user: req.user,
-          discussion: req.body.discussion
-        });
-      }
-
-      if (err) {
-        req.locals.error = {
-          status: 400,
-          message: 'Can\'t create task'
-        };
-      } else {
-        req.locals.result = result;
-      }
-
-      next();
-    });
-  });
-};
-
-exports.destroy = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  if (!req.params.id) {
-    return res.send(404, 'Cannot destroy task without id');
-  }
-
-  Task.findById(req.params.id, function (err, task) {
-    if (err || !task) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t find task'
-      };
-
-      next();
-    }
-
-    task.remove({user: req.user, discussion: req.body.discussion}, function (err, success) {
-      if (err) {
-        req.locals.error = {
-          status: 400,
-          message: 'Can\'t delete task'
-        };
-      } else {
-        req.locals.result = success;
-      }
-
-      next();
-    });
-  });
-};
+Object.keys(task).forEach(function(methodName) {
+  exports[methodName] = task[methodName];
+});
 
 exports.tagsList = function (req, res, next) {
   if (req.locals.error) {
@@ -245,7 +62,7 @@ exports.getByEntity = function (req, res, next) {
   entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
 
   var Query = Task.find(entityQuery);
-  Query.populate('assign').populate('watchers').populate('project');
+  Query.populate(options.includes);
 
   Query.exec(function (err, tasks) {
     if (err) {
@@ -280,35 +97,13 @@ exports.getByDiscussion = function (req, res, next) {
   });
 };
 
-exports.readHistory = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
-    var Query = TaskArchive.find({
-      'c._id': new ObjectId(req.params.id)
-    });
-    Query.populate('u');
-    Query.populate('d');
-    Query.exec(function (err, tasks) {
-      utils.checkAndHandleError(err, 'Failed to read history for task ' + req.params.id, next);
-
-      res.status(200);
-      return res.json(tasks);
-    });
-  } else {
-    utils.checkAndHandleError(true, 'Failed to read history for task ' + req.params.id, next);
-  }
-};
-
 exports.getZombieTasks = function (req, res, next) {
   if (req.locals.error) {
     return next();
   }
 
   var Query = Task.find({project: {$eq: null}, discussions: {$size: 0}});
-  Query.populate('assign').populate('watchers').populate('project');
+  Query.populate(options.includes);
 
   Query.exec(function (err, tasks) {
     if (err) {
@@ -323,47 +118,3 @@ exports.getZombieTasks = function (req, res, next) {
     next();
   });
 };
-
-exports.removeTaskByProject = function (req, query ,next) {
-  var deferred = Q.defer();
-
-  Task.find(query, function (err, tasks) {
-    getTasksByProject(req, tasks, next)
-      .then(function(){
-        deferred.resolve();
-      });
-  });
-
-  return deferred.promise;
-};
-
-function getTasksByProject(req, tasks, next) {
-  var promises = [];
-
-  tasks.forEach(function(task){
-    var deferred = Q.defer();
-
-    removeTask(req, task, next)
-      .then(function(){
-        deferred.resolve();
-      });
-
-    promises.push(deferred.promise);
-  });
-
-  return Q.all(promises);
-}
-
-function removeTask( req, task, next) {
-  var deferred = Q.defer();
-
-  task.remove({
-    user: req.user, discussion: req.body.discussion
-  }, function (err, data) {
-    utils.checkAndHandleError(err, 'Cannot remove tasks from project: ' + req.params.id, next);
-
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
