@@ -76,11 +76,11 @@ module.exports = function (Icapi, app, auth) {
 
   app.route('/api/users*').all(entity('users'));
   app.route('/api/users')
-    .post(users.create)
+    .post(users.filterProperties, users.create)
     .get(users.all);
   app.route('/api/users/:id([0-9a-fA-F]{24})')
     .get(users.read)
-    .put(users.update)
+    .put(users.filterProperties, users.update)
     .delete(users.destroy);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/users')
     .get(users.getByEntity);

@@ -3,90 +3,32 @@
 /**
  * Module dependencies.
  */
-var mongoose = require('mongoose'),
-  User = mongoose.model('User'),
-  _ = require('lodash'),
-  utils = require('./utils');
+var User = require('../models/user.js'),
+  _ = require('lodash');
 
-/**
- * Find all users
- */
-exports.all = function (req, res, next) {
-  var query = {};
-
-  var Query = User.find(query);
-  Query.limit(200 || req.query.limit);
-  Query.exec(function (err, users) {
-
-    utils.checkAndHandleError(err, 'Failed to load users', next);
-
-    res.status(200);
-    return res.json(users);
-  });
-};
-
-exports.read = function (req, res, next) {
-  User.findById(req.params.id, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-    res.status(200);
-    return res.json(user);
-  });
-};
-
-exports.create = function (req, res, next) {
-  var user = {};
-  user = _.extend(user, req.body);
-  new User(user).save(function (err, task) {
-    if (err) {
-      utils.checkAndHandleError(err, 'Failed to create user', next);
-    } else {
-      res.status(200);
-      return res.json(task);
-    }
-  });
-};
-
-exports.update = function (req, res, next) {
-  if (!req.params.id) {
-    return res.send(404, 'Cannot update user without id');
+var options = {
+  includes: 'assign watchers project',
+  defaults: {
+    project: undefined,
+    assign: undefined,
+    watchers: []
   }
-  User.findById(req.params.id, function (err, user) {
-    if (err) {
-      utils.checkAndHandleError(err, 'Failed to find user:' + req.params.id, next);
-    } else {
-      if (!user) {
-        utils.checkAndHandleError(true, 'Cannot find user with id: ' + req.params.id, next);
-      } else {
-        var newData = _.pick(req.body, ['name', 'username', 'password', 'email', 'profile']);
-        _.extend(user, newData);
-
-        user.save(function (err, user) {
-          utils.checkAndHandleError(err, 'Failed to update user', next);
-          res.status(200);
-          return res.json(user);
-        });
-      }
-    }
-  });
 };
 
-exports.destroy = function (req, res, next) {
-  if (!req.params.id) {
-    return res.send(404, 'Cannot remove user without id');
+var crud = require('../controllers/crud.js');
+var user = crud('users', options);
+
+Object.keys(user).forEach(function(methodName) {
+  exports[methodName] = user[methodName];
+});
+
+exports.filterProperties = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
   }
-  User.findById(req.params.id, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to find user: ' + req.params.id, next);
-    if (!user) {
-      utils.checkAndHandleError(true, 'Cannot find user with id: ' + req.params.id, next);
-    } else {
-      user.remove({user: req.user, discussion: req.body.discussion}, function (err, success) {
-        utils.checkAndHandleError(err, 'Failed to delete user', next);
-        res.status(200);
-        return res.send({message: 'User deleted'});
-      });
-    }
-  });
-};
+  req.body = _.pick(req.body, ['name', 'username', 'password', 'email', 'profile']);
+  next();
+}
 
 exports.getByEntity = function (req, res, next) { //It is a temporary function. need to change this function to use elasticsearch!!!!
   res.status(200);
