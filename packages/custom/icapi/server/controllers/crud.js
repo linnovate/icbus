@@ -68,6 +68,10 @@ module.exports = function(entityName, options) {
       return next();
     }
 
+    if (req.locals.result.description !== req.body.desciption) {
+      req.locals.data.shouldCreateUpdate = true;
+    }
+
     entityService
       .update(req.locals.result, req.body, { user: req.user, discussion: req.discussion })
       .then(success(req, next), error(req, next));

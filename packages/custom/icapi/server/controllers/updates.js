@@ -173,7 +173,7 @@ exports.created = function(req, res, next) {
 };
 
 exports.updated = function(req, res, next) {
-  if (req.locals.error) {
+  if (req.locals.error || !req.locals.data.shouldCreateUpdate) {
     return next();
   }
 
