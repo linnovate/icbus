@@ -5,10 +5,6 @@
  */
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
-  Project = mongoose.model('Project'),
-  Task = mongoose.model('Task'),
-  Discussion = mongoose.model('Discussion'),
-  schemes = {projects: Project, tasks: Task, discussions: Discussion},
   _ = require('lodash'),
   Busboy = require('busboy'),
   fs = require('fs'),
@@ -70,61 +66,3 @@ exports.uploadAvatar = function (req, res, next) {
   });
   return req.pipe(busboy);
 };
-
-//star entity
-exports.starEntity = function (req, res, next) {
-  User.findOne({
-    _id: req.user._id
-  }, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-    var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
-
-    var query;
-    if (!user.profile ||
-        !user.profile[starredEntities] ||
-        user.profile[starredEntities].indexOf(req.params.id) === -1) {
-      query = {$push: {}};
-      query.$push['profile.' + starredEntities] = req.params.id;
-    }
-    else {
-      query = {$pull: {}};
-      query.$pull['profile.' + starredEntities] = req.params.id;
-    }
-
-    user.update(query, function (err, updated) {
-
-      utils.checkAndHandleError(err, 'Cannot update the starred ' + req.params.entity, next);
-      res.json(updated);
-    });
-  })
-};
-
-//get starred entity list
-exports.getStarredEntity = function (req, res, next) {
-  User.findOne({
-    _id: req.user._id
-  }, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-
-    var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
-
-    if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].length === 0) {
-      res.json([]);
-    } else {
-      schemes[req.params.entity].find({
-        '_id': {
-          $in: user.profile[starredEntities]
-        }
-      }, function (err, list) {
-        utils.checkAndHandleError(err, 'Failed to read ' + req.params.entity, next);
-
-        res.status(200);
-        return res.json(list);
-      });
-    }
-  })
-};
-
-String.prototype.capitalizeFirstLetter = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1);
-}

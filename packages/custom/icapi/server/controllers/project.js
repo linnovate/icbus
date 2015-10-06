@@ -24,7 +24,7 @@ exports.read = function (req, res, next) {
         message: 'Can\'t find project'
       };
     } else {
-      req.locals.result = projects;
+      req.locals.result = project;
     }
 
     next();
