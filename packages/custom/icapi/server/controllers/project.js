@@ -5,8 +5,6 @@ require('../models/project');
 var options = {
   includes: 'watchers',
   defaults: {
-    project: undefined,
-    assign: undefined,
     watchers: []
   }
 };
@@ -16,17 +14,13 @@ var project = crud('projects', options);
 
 var utils = require('./utils'),
   mongoose = require('mongoose'),
-  ObjectId = require('mongoose').Types.ObjectId,
   Project = mongoose.model('Project'),
   Task = mongoose.model('Task'),
-  User = mongoose.model('User'),
-  ProjectArchive = mongoose.model('project_archive'),
   _ = require('lodash');
 
 Object.keys(project).forEach(function(methodName) {
   exports[methodName] = project[methodName];
 });
-
 
 exports.getByEntity = function (req, res, next) {
   if (req.locals.error) {

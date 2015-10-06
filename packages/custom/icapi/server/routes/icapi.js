@@ -103,20 +103,20 @@ module.exports = function (Icapi, app, auth) {
 
   app.route('/api/discussions*').all(entity('discussions'));
   app.route('/api/discussions')
-    .post(discussion.create)
-    .get(discussion.all);
+    .post(discussion.create, updates.created)
+    .get(discussion.all, star.isStarred);
   app.route('/api/history/discussions/:id([0-9a-fA-F]{24})')
     .get(discussion.readHistory);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})')
-    .get(discussion.read)
-    .put(discussion.update)
+    .get(discussion.read, star.isStarred)
+    .put(discussion.read, discussion.update, star.isStarred, updates.updated)
     .delete(discussion.destroy);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/schedule')
     .post(discussion.schedule);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/summary')
     .post(discussion.summary);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/discussions')
-    .get(discussion.getByProject); //, discussion.getByEntity);
+    .get(discussion.getByProject, star.isStarred); //, discussion.getByEntity);
 
   app.route('/api/updates*').all(entity('updates'));
   app.route('/api/updates')
