@@ -17,6 +17,8 @@ var DiscussionArchiveModel = mongoose.model('discussion_archive');
 var UpdateModel = require('../models/update.js');
 var UpdateArchiveModel = mongoose.model('update_archive');
 
+var UserModel = require('../models/user.js');
+
 var entityNameMap = {
   'tasks': {
     mainModel: TaskModel,
@@ -33,6 +35,9 @@ var entityNameMap = {
   'updates': {
     mainModel: UpdateModel,
     archiveModel: UpdateArchiveModel
+  },
+  'users': {
+    mainModel: UserModel
   }
 };
 
@@ -93,12 +98,17 @@ module.exports = function(entityName, options) {
     return Query.exec();
   }
 
-  return {
+  var methods = {
     all: all,
     create: create,
     read: read,
     update: update,
     destroy: destroy,
-    readHistory: readHistory
   };
+
+  if (ArchiveModel) {
+    methods.readHistory = readHistory;
+  }
+
+  return methods;
 }
