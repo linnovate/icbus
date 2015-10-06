@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash');
+var q = require('q');
 
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
@@ -49,20 +50,24 @@ module.exports = function(entityName, options) {
   }
 
   function read(id) {
+    var deferred = q.defer();
+
     var query = Model.find({ _id: id });
-    query.then(function(results) {
-      if (!results.length) {
-        throw new Error('Entity not found');
-      }
-
-      return results[0];
-    });
-
     query.populate(options.includes);
 
-    query.exec();
+    query.exec(function(err, results) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        if (!results.length) {
+          deferred.reject('Entity not found');
+        } else {
+          deferred.resolve(results[0]);
+        }
+      }
+    });
 
-    return query;
+    return deferred.promise;
   }
 
   function create(entity, user) {
