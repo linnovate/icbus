@@ -1,7 +1,6 @@
 'use strict';
 
 var _ = require('lodash');
-var q = require('q');
 
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
@@ -27,11 +26,11 @@ var entityNameMap = {
     mainModel: ProjectModel,
     archiveModel: ProjectArchiveModel
   },
-  'discussion': {
+  'discussions': {
     mainModel: DiscussionModel,
     archiveModel: DiscussionArchiveModel
   },
-  'update': {
+  'updates': {
     mainModel: UpdateModel,
     archiveModel: UpdateArchiveModel
   }
@@ -50,24 +49,16 @@ module.exports = function(entityName, options) {
   }
 
   function read(id) {
-    var deferred = q.defer();
-
     var query = Model.find({ _id: id });
     query.populate(options.includes);
 
-    query.exec(function(err, results) {
-      if (err) {
-        deferred.reject(err);
-      } else {
-        if (!results.length) {
-          deferred.reject('Entity not found');
-        } else {
-          deferred.resolve(results[0]);
-        }
+    return query.then(function(results) {
+      if (!results.length) {
+        throw new Error('Entity not found');
       }
-    });
 
-    return deferred.promise;
+      return results[0];
+    });
   }
 
   function create(entity, user) {

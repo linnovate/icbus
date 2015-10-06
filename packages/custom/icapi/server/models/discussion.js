@@ -85,4 +85,4 @@ DiscussionSchema.pre('remove', function (next) {
 
 DiscussionSchema.plugin(archive, 'discussion');
 
-mongoose.model('Discussion', DiscussionSchema);
+module.exports = mongoose.model('Discussion', DiscussionSchema);
