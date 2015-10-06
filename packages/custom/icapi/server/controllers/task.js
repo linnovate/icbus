@@ -6,7 +6,6 @@ var mongoose = require('mongoose');
 
 var options = {
   includes: 'assign watchers project',
-  entities: ['project', 'discussion', 'user'],
   defaults: {
     project: undefined,
     assign: undefined,

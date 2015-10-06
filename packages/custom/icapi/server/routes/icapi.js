@@ -28,14 +28,14 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/:entity(tasks|discussions|projects)/starred')
     .get(star.getStarred);
 
-  app.route('/api/projects/*').all(entity('projects'));
+  app.route('/api/projects*').all(entity('projects'));
   app.route('/api/projects')
     //.all(auth.requiresLogin, permission.echo)
-    .post(project.create)
-    .get(project.all);
+    .post(project.create, updates.created)
+    .get(project.all, star.isStarred);
   app.route('/api/projects/:id([0-9a-fA-F]{24})')
-    .get(project.read)
-    .put(project.update)
+    .get(project.read, star.isStarred)
+    .put(project.read, project.update, star.isStarred)
     .delete(project.destroy);
   app.route('/api/history/projects/:id([0-9a-fA-F]{24})')
     .get(project.readHistory);
@@ -74,7 +74,7 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/avatar')
     .post(profile.profile, profile.uploadAvatar, profile.update);
 
-  app.route('/api/users/*').all(entity('users'));
+  app.route('/api/users*').all(entity('users'));
   app.route('/api/users')
     .post(users.create)
     .get(users.all);
@@ -85,7 +85,7 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/users')
     .get(users.getByEntity);
 
-  app.route('/api/attachments/*').all(entity('attachments'));
+  app.route('/api/attachments*').all(entity('attachments'));
   app.route('/api/attachments')
     .post(attachments.upload, attachments.create)
     .get(attachments.query);
@@ -101,7 +101,7 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/search')
     .get(elasticsearch.search);
 
-  app.route('/api/discussions/*').all(entity('discussions'));
+  app.route('/api/discussions*').all(entity('discussions'));
   app.route('/api/discussions')
     .post(discussion.create)
     .get(discussion.all);
@@ -118,7 +118,7 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/discussions')
     .get(discussion.getByProject); //, discussion.getByEntity);
 
-  app.route('/api/updates/*').all(entity('updates'));
+  app.route('/api/updates*').all(entity('updates'));
   app.route('/api/updates')
     .post(updates.create)
     .get(updates.all);

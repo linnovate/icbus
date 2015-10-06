@@ -50,8 +50,7 @@ module.exports = function(entityName, options) {
 
     entityService
       .read(req.params.id)
-      .then(success(req, next))
-      .catch(error(req, next));
+      .then(success(req, next), error(req, next));
   }
 
   function create(req, res, next) {

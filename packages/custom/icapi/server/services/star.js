@@ -28,7 +28,7 @@ module.exports = function(entityName, options) {
       var query = {};
       var profileProperty = 'profile.' + starredEntities;
       if (!user.profile || !user.profile[starredEntities]) {
-        query.profileProperty = [id];
+        query[profileProperty] = [id];
       } else {
         if (user.profile[starredEntities].indexOf(id) > -1) {
           query = { $pull: {}};
