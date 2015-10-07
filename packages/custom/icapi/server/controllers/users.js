@@ -4,6 +4,8 @@
  * Module dependencies.
  */
 var User = require('../models/user.js'),
+    mongoose = require('../models/user.js'),
+    utils = require('./utils.js'),
   _ = require('lodash');
 
 var options = {
