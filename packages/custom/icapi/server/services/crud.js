@@ -67,6 +67,9 @@ module.exports = function(entityName, options) {
   }
 
   function create(entity, user) {
+    entity.created = new Date();
+    entity.updated = new Date();
+
     return new Model(entity).save(user).then(function(e) {
       return Model.populate(e, options.includes);
     });
@@ -75,6 +78,8 @@ module.exports = function(entityName, options) {
   function update(oldE, newE, user) {
     var entityWithDefaults = _.defaults(newE, options.defaults);
     oldE = _.extend(oldE, entityWithDefaults);
+
+    oldE.updated = new Date();
 
     return oldE.save(user).then(function(data) {
       return Model.populate(data, options.includes);
