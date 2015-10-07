@@ -123,11 +123,11 @@ module.exports = function (Icapi, app, auth) {
     .post(updates.create)
     .get(updates.all);
   app.route('/api/updates/:id([0-9a-fA-F]{24})')
-    .get(updates.read)
+    .get(updates.read, updates.getAttachmentsForUpdate)
     .put(updates.update);
   //     // .delete(updates.destroy);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/updates')
-    .get(updates.getByEntity);
+    .get(updates.getByEntity, updates.getAttachmentsForUpdate);
   app.route('/api/history/updates/:id([0-9a-fA-F]{24})')
     .get(updates.readHistory);
 

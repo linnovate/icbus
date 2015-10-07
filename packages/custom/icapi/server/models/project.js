@@ -58,6 +58,16 @@ var ProjectSchema = new Schema({
   }
 });
 
+var starVirtual = ProjectSchema.virtual('star');
+starVirtual.get(function() {
+  return this._star;
+});
+starVirtual.set(function(value) {
+  this._star = value;
+});
+ProjectSchema.set('toJSON', { virtuals: true });
+ProjectSchema.set('toObject', { virtuals: true });
+
 /**
  * Validations
  */
