@@ -115,4 +115,4 @@ AttachmentSchema.pre('remove', function (next) {
 
 AttachmentSchema.plugin(archive, 'attachment');
 
-mongoose.model('Attachment', AttachmentSchema);
+module.exports = mongoose.model('Attachment', AttachmentSchema);

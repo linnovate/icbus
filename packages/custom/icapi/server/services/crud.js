@@ -41,9 +41,20 @@ var entityNameMap = {
   }
 };
 
+var defaults = {
+  defaults: {},
+  includes: ''
+};
+
 module.exports = function(entityName, options) {
   var Model = entityNameMap[entityName].mainModel;
   var ArchiveModel = entityNameMap[entityName].archiveModel;
+
+  if (_.isEmpty(options)) {
+    options = {};
+  }
+
+  options = _.defaults(options, defaults);
 
   function all() {
     var query = Model.find({});
