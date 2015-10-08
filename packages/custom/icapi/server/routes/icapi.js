@@ -121,7 +121,7 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/updates*').all(entity('updates'));
   app.route('/api/updates')
     .post(updates.create)
-    .get(updates.all);
+    .get(updates.all, updates.getAttachmentsForUpdate);
   app.route('/api/updates/:id([0-9a-fA-F]{24})')
     .get(updates.read, updates.getAttachmentsForUpdate)
     .put(updates.update);
