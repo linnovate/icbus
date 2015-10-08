@@ -19,8 +19,8 @@ module.exports = function(entityName, options) {
 
       req.locals.result = data;
       next();
-    }
-  }
+    };
+  };
 
   var error = function(req, next) {
     return function(err) {
@@ -30,8 +30,8 @@ module.exports = function(entityName, options) {
       };
 
       next();
-    }
-  }
+    };
+  };
 
   function all(req, res, next) {
     if (req.locals.error) {
@@ -58,8 +58,9 @@ module.exports = function(entityName, options) {
       return next();
     }
 
+    var entity = req.locals.data.body || req.body;
     entityService
-      .create(req.body, { user: req.user, discussion: req.discussion })
+      .create(entity, { user: req.user, discussion: req.discussion })
       .then(success(req, next), error(req, next));
   }
 
@@ -72,8 +73,9 @@ module.exports = function(entityName, options) {
       req.locals.data.shouldCreateUpdate = true;
     }
 
+    var entity = req.locals.data.body || req.body;
     entityService
-      .update(req.locals.result, req.body, { user: req.user, discussion: req.discussion })
+      .update(req.locals.result, entity, { user: req.user, discussion: req.discussion })
       .then(success(req, next), error(req, next));
   }
 

@@ -4,7 +4,6 @@ var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
   archive = require('./archive.js');
 
-
 var AttachmentSchema = new Schema({
   created: {
     type: Date
@@ -78,14 +77,14 @@ AttachmentSchema.statics.task = function (id, cb) {
   var Task = mongoose.model('Task');
   Task.findById(id).populate('project').exec(function (err, task) {
     cb(err, {room: task.project.room, title: task.title});
-  })
+  });
 };
 AttachmentSchema.statics.project = function (id, cb) {
   require('./project');
   var Project = mongoose.model('Project');
   Project.findById(id, function (err, project) {
     cb(err, {room: project.room, title: project.title});
-  })
+  });
 };
 AttachmentSchema.statics.update = function (id, cb) {
   cb(null, {});
@@ -100,7 +99,7 @@ AttachmentSchema.post('save', function (req, next) {
   var attachment = this;
   AttachmentSchema.statics[attachment.issue](attachment.issueId, function (err, result) {
     if (err) {
-      return err
+      return err;
     }
     elasticsearch.save(attachment, 'attachment', result.room, result.title);
     next();

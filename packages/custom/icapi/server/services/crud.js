@@ -19,6 +19,9 @@ var UpdateArchiveModel = mongoose.model('update_archive');
 
 var UserModel = require('../models/user.js');
 
+var AttachementModel = require('../models/attachment.js');
+var AttachementArchiveModel = mongoose.model('attachment_archive');
+
 var entityNameMap = {
   'tasks': {
     mainModel: TaskModel,
@@ -38,7 +41,12 @@ var entityNameMap = {
   },
   'users': {
     mainModel: UserModel
+  },
+  'attachments': {
+    mainModel: AttachementModel,
+    archiveModel: AttachementArchiveModel
   }
+
 };
 
 var defaults = {
@@ -80,6 +88,7 @@ module.exports = function(entityName, options) {
   function create(entity, user) {
     entity.created = new Date();
     entity.updated = new Date();
+    entity.creator = user.user._id;
 
     return new Model(entity).save(user).then(function(e) {
       return Model.populate(e, options.includes);
@@ -91,6 +100,7 @@ module.exports = function(entityName, options) {
     oldE = _.extend(oldE, entityWithDefaults);
 
     oldE.updated = new Date();
+    oldE.updater = user.user._id;
 
     return oldE.save(user).then(function(data) {
       return Model.populate(data, options.includes);
@@ -119,7 +129,7 @@ module.exports = function(entityName, options) {
     create: create,
     read: read,
     update: update,
-    destroy: destroy,
+    destroy: destroy
   };
 
   if (ArchiveModel) {
@@ -127,4 +137,4 @@ module.exports = function(entityName, options) {
   }
 
   return methods;
-}
+};

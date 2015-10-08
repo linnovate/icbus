@@ -18,7 +18,7 @@ var entity = require('../middlewares/entity.js');
 var response = require('../middlewares/response.js');
 var error = require('../middlewares/error.js');
 
-module.exports = function (Icapi, app, auth) {
+module.exports = function (Icapi, app) {
   app.route('/api/*').all(locals);
   app.route('/api/*').all(authorization);
 
@@ -88,16 +88,15 @@ module.exports = function (Icapi, app, auth) {
   app.route('/api/attachments*').all(entity('attachments'));
   app.route('/api/attachments')
     .post(attachments.upload, attachments.create)
-    .get(attachments.query);
+    .get(attachments.all);
   app.route('/api/attachments/:id([0-9a-fA-F]{24})')
     .get(attachments.read)
-    .post(attachments.update, attachments.upload);
+    .post(attachments.read, attachments.upload, attachments.update);
   app.route('/api/history/attachments/:id([0-9a-fA-F]{24})')
     .get(attachments.readHistory);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/attachments')
     .get(attachments.getByEntity);
-  app.route('/api/attachments/upload')
-    .post(attachments.upload);
+
   app.route('/api/search')
     .get(elasticsearch.search);
 
