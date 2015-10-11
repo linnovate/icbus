@@ -9,7 +9,8 @@ var utils = require('./utils'),
   Task = mongoose.model('Task'),
   _ = require('lodash'),
   mailManager = require('./mailManager'),
-  Update = mongoose.model('Update');
+  Update = mongoose.model('Update'),
+  tasksCntrl = require('./task');
 
 exports.read = function (req, res, next) {
   Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
@@ -143,6 +144,17 @@ exports.destroy = function (req, res, next) {
       user: req.user
     }, function (err, success) {
       utils.checkAndHandleError(err, 'Failed to destroy discussion', next);
+
+      //remove tasks from this project
+      var query = {
+        project: null,
+        discussions: [req.params.id]
+      };
+      tasksCntrl.removeTaskByProject(req, query, next)
+        .then(function(){
+          res.status(200);
+          return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
+        });
 
       res.status(200);
       return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});

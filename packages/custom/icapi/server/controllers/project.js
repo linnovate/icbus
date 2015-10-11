@@ -10,7 +10,8 @@ var utils = require('./utils'),
   User = mongoose.model('User'),
   ProjectArchive = mongoose.model('project_archive'),
   _ = require('lodash'),
-  Update = mongoose.model('Update');
+  Update = mongoose.model('Update'),
+  tasksCntrl = require('./task');
 
 exports.read = function (req, res, next) {
   Project.findById(req.params.id).populate('watchers').exec(function (err, project) {
@@ -121,8 +122,16 @@ exports.destroy = function (req, res, next) {
     }, function (err, success) {
       utils.checkAndHandleError(err, 'Failed to destroy project', next);
 
-      res.status(200);
-      return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
+      //remove tasks from this project
+      var query = {
+        project: req.params.id,
+        discussions: {$size: 0}
+      };
+      tasksCntrl.removeTaskByProject(req, query, next)
+        .then(function(){
+          res.status(200);
+          return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
+        });
     });
   });
 };
@@ -201,44 +210,4 @@ exports.readHistory = function (req, res, next) {
   } else {
     utils.checkAndHandleError(true, 'Failed to read history for project ' + req.params.id, next);
   }
-};
-
-exports.starProject = function (req, res, next) {
-  User.findById(req.user._id, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-    var query;
-    if (!user.profile || !user.profile.starredProjects) {
-      query = {'profile.starredProjects': [req.params.id]};
-    }
-    else {
-      if (user.profile.starredProjects.indexOf(req.params.id) > -1)
-        query = {$pull: {'profile.starredProjects': req.params.id}};
-      else
-        query = {$push: {'profile.starredProjects': req.params.id}};
-    }
-    user.update(query, function (err, updated) {
-      utils.checkAndHandleError(err, 'Cannot update the starred projects', next);
-      res.json(updated);
-    });
-  })
-};
-
-exports.getStarredProjects = function (req, res, next) {
-  User.findById(req.user._id, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-    if (!user.profile || !user.profile.starredProjects || user.profile.starredProjects.length === 0) {
-      res.json([]);
-    } else {
-      Project.find({
-        '_id': {
-          $in: user.profile.starredProjects
-        }
-      }, function (err, projects) {
-        utils.checkAndHandleError(err, 'Failed to read projects', next);
-
-        res.status(200);
-        return res.json(projects);
-      });
-    }
-  })
 };

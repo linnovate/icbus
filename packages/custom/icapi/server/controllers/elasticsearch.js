@@ -34,8 +34,8 @@ exports.delete = function (doc, docType, room, next) {
       return error;
 
     // utils.checkAndHandleError(error, res);
-    if (room)
-      notifications.sendFromApi({entityType: docType, title: doc.title, room: room, method: 'deleted'});
+    //if (room)
+    //  notifications.sendFromApi({entityType: docType, title: doc.title, room: room, method: 'deleted'});
     return next();
   });
 };
