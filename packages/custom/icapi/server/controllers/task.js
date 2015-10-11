@@ -10,7 +10,8 @@ var Task = mongoose.model('Task'),
   TaskArchive = mongoose.model('task_archive'),
   mean = require('meanio'),
   _ = require('lodash'),
-  Update = mongoose.model('Update');
+  Update = mongoose.model('Update'),
+  Q = require('q');
 
 exports.read = function (req, res, next) {
   Task.findById(req.params.id).populate('assign').populate('watchers').populate('project').exec(function (err, task) {
@@ -250,3 +251,47 @@ exports.getZombieTasks = function (req, res, next) {
   });
 
 };
+
+exports.removeTaskByProject = function (req, query ,next) {
+  var deferred = Q.defer();
+
+  Task.find(query, function (err, tasks) {
+    getTasksByProject(req, tasks, next)
+      .then(function(){
+        deferred.resolve();
+      });
+  });
+
+  return deferred.promise;
+};
+
+function getTasksByProject(req, tasks, next) {
+  var promises = [];
+
+  tasks.forEach(function(task){
+    var deferred = Q.defer();
+
+    removeTask(req, task, next)
+      .then(function(){
+        deferred.resolve();
+      });
+
+    promises.push(deferred.promise);
+  });
+
+  return Q.all(promises);
+}
+
+function removeTask( req, task, next) {
+  var deferred = Q.defer();
+
+  task.remove({
+    user: req.user, discussion: req.body.discussion
+  }, function (err, data) {
+    utils.checkAndHandleError(err, 'Cannot remove tasks from project: ' + req.params.id, next);
+
+    deferred.resolve();
+  });
+
+  return deferred.promise;
+}

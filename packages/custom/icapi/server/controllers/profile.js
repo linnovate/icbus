@@ -5,10 +5,7 @@
  */
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
-  Project = mongoose.model('Project'),
-  Task = mongoose.model('Task'),
-  Discussion = mongoose.model('Discussion'),
-  schemes = {projects: Project, tasks: Task, discussions: Discussion},
+  schemes = {projects: 'Project', tasks: 'Task', discussions: 'Discussion'},
   _ = require('lodash'),
   Busboy = require('busboy'),
   fs = require('fs'),
@@ -71,7 +68,9 @@ exports.uploadAvatar = function (req, res, next) {
   return req.pipe(busboy);
 };
 
-//star entity
+/**
+ * Star entity
+ */
 exports.starEntity = function (req, res, next) {
   User.findOne({
     _id: req.user._id
@@ -99,8 +98,12 @@ exports.starEntity = function (req, res, next) {
   })
 };
 
-//get starred entity list
+/**
+ * Get starred entity list
+ */
 exports.getStarredEntity = function (req, res, next) {
+  var Schema = mongoose.model(schemes[req.params.entity]);
+
   User.findOne({
     _id: req.user._id
   }, function (err, user) {
@@ -109,9 +112,9 @@ exports.getStarredEntity = function (req, res, next) {
     var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
 
     if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].length === 0) {
-      res.json([]);
+      return res.json([]);
     } else {
-      schemes[req.params.entity].find({
+      Schema.find({
         '_id': {
           $in: user.profile[starredEntities]
         }
@@ -125,6 +128,21 @@ exports.getStarredEntity = function (req, res, next) {
   })
 };
 
+/**
+ * Remove star entity
+ */
+exports.removeStarEntity = function (id, entity, next) {
+
+  var query = {};
+  query['profile.starred' + entity] = id.toString();
+
+  User.update(query ,{ $pull: query },{upsert:true, multi:false}, function (err, starredEntity){
+    utils.checkAndHandleError(err, 'Failed to remove star' + entity + ' : ' + id, next);
+
+    return next();
+  });
+};
+
 String.prototype.capitalizeFirstLetter = function () {
   return this.charAt(0).toUpperCase() + this.slice(1);
-}
+};
