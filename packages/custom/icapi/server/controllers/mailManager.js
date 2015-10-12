@@ -58,7 +58,7 @@ exports.sendEx = function (type, data) {
 
     //add discussion owner
     data.discussion.watchers.push(data.discussion.assign);
-    
+
     data.discussion.watchers.forEach(function (watcher) {
       var mailOptions = {
         to: watcher.email,
