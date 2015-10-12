@@ -9,6 +9,7 @@
   <h2>{{ discussion.title }}, {{ discussion.due | date('F jS, Y') }}</h2>
   <img class="image"/>
 
+  <p>Owner: {{ discussion.assign.name }}</p>
   <p>Attendees: {{ attendees }}</p>
 
   <div style="background-color:#fff;border:1px solid #dbdbdb;border-radius:3px;display:block;margin:6px 60px;padding:10px 12px">
