@@ -39,7 +39,7 @@ module.exports = function(entityName, options) {
     }
 
     entityService
-      .all()
+      .all(req.locals.data.pagination)
       .then(success(req, next), error(req, next));
   }
 
@@ -107,4 +107,4 @@ module.exports = function(entityName, options) {
     destroy: destroy,
     readHistory: readHistory
   };
-}
+};

@@ -16,6 +16,7 @@ var authorization = require('../middlewares/auth.js');
 var locals = require('../middlewares/locals.js');
 var entity = require('../middlewares/entity.js');
 var response = require('../middlewares/response.js');
+var pagination = require('../middlewares/pagination.js');
 var error = require('../middlewares/error.js');
 
 module.exports = function (Icapi, app) {
@@ -45,7 +46,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/tasks*').all(entity('tasks'));
   app.route('/api/tasks')
     .post(task.create, updates.created)
-    .get(task.all, star.isStarred);
+    .get(pagination.parseParams, task.all, star.isStarred, pagination.formResponse);
   app.route('/api/tasks/tags')
     .get(task.tagsList);
   app.route('/api/tasks/zombie')

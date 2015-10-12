@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash');
+var q = require('q');
 
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Types.ObjectId;
@@ -64,12 +65,68 @@ module.exports = function(entityName, options) {
 
   options = _.defaults(options, defaults);
 
-  function all() {
-    var query = Model.find({});
+  function all(pagination) {
+    var deffered = q.defer();
 
-    query.populate(options.includes);
+    var query;
+    var countQuery = Model.find({}).count();
+    var mergedPromise;
 
-    return query.exec();
+    if (pagination && pagination.type) {
+      if (pagination.type === 'page') {
+        query = Model.find({}).skip(pagination.start).limit(pagination.limit);
+        mergedPromise = q.all([query, countQuery]).then(function(results) {
+          pagination.count = results[1];
+          return results[0];
+        });
+
+        deffered.resolve(mergedPromise);
+      } else {
+        var promises;
+        if (!pagination.skip) {
+          var prevPageQuery = Model.find({ _id: { $gte: pagination.id } })
+            .skip(pagination.skip * pagination.limit)
+            .limit(pagination.limit);
+
+          var nextPageQuery = Model.find({ _id: { $lt: pagination.id } })
+            .skip(pagination.skip * pagination.limit)
+            .limit(pagination.limit);
+
+          promises = [prevPageQuery, nextPageQuery, countQuery];
+        } else {
+          var predicate = { _id: { $gte: pagination.id }};
+
+          if (pagination.skip > 0) {
+            predicate = { _id: { $lt: pagination.id }};
+          }
+
+          var pageQuery = Model.find(predicate)
+            .skip(pagination.skip * pagination.limit)
+            .limit(pagination.limit);
+
+          promises = [pageQuery, countQuery];
+        }
+
+        mergedPromise = q.all(promises).then(function(results) {
+          pagination.count = results[2];
+          return results[0].concat(results[1]);
+        });
+
+        deffered.resolve(mergedPromise);
+      }
+    } else {
+      query = Model.find({});
+      deffered.resolve(query);
+    }
+
+    deffered.promise.then(function(query) {
+      query.populate(options.includes);
+      query.hint({ _id: 1 });
+
+      return query.exec();
+    });
+
+    return deffered.promise;
   }
 
   function read(id) {
