@@ -43,8 +43,7 @@ exports.send = function (type, data) {
       var mailOptions = {
         to: watcher.email,
         from: config.emailFrom,
-        //HACK
-        subject: 'subject',
+        subject: data.discussion.title,
         html: results.html,
         text: results.text,
         forceEmbeddedImages: true

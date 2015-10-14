@@ -176,7 +176,6 @@ module.exports = function(entityName, options) {
     });
 
     Query.populate('u');
-    Query.populate('d');
 
     return Query.exec();
   }

@@ -1,7 +1,7 @@
 'use strict';
 
 var options = {
-  includes: 'watchers',
+  includes: 'watchers assign creator',
   defaults: {
     watchers: [],
     assign: undefined
@@ -13,8 +13,6 @@ var discussion = crud('discussions', options);
 
 var utils = require('./utils'),
   mongoose = require('mongoose'),
-  Discussion = require('../models/discussion'),
-  TaskArchive = mongoose.model('task_archive'),
   Task = mongoose.model('Task'),
   _ = require('lodash'),
   mailService = require('../services/mail');
@@ -24,142 +22,100 @@ Object.keys(discussion).forEach(function(methodName) {
 });
 
 exports.schedule = function (req, res, next) {
-  Discussion.findOne({
-    _id: req.params.id
-  }).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
-    utils.checkAndHandleError(err, 'Failed to find discussion ' + req.params.id, next);
-    utils.checkAndHandleError(!discussion.due, 'Due field cannot be empty', next);
-    utils.checkAndHandleError(!discussion.assign, 'Assignee cannot be empty', next);
+  if (req.locals.error) {
+    next();
+  }
 
-    var allowedStatuses = ['New', 'Scheduled', 'Cancelled'];
-    if (allowedStatuses.indexOf(discussion.status) === -1) {
-      utils.checkAndHandleError(true, 'Cannot be scheduled for this status', next);
-    }
+  var discussion = req.locals.result;
 
-    var Query = TaskArchive.distinct('c._id', {
-      'd': req.params.id
+  if (!discussion.due) {
+    req.locals.error = { message: 'Due field cannot be empty' };
+    return next();
+  }
+
+  if (!discussion.assign) {
+    req.locals.error = { message: 'Assignee cannot be empty' };
+    return next();
+  }
+
+  var allowedStatuses = ['New', 'Scheduled', 'Cancelled'];
+  if (allowedStatuses.indexOf(discussion.status) === -1) {
+    req.locals.error = { message: 'Cannot be scheduled for this status' };
+    return next();
+  }
+
+  Task.find({ discussions: discussion._id }).then(function(tasks) {
+    var groupedTasks = _.groupBy(tasks, function (task) {
+      return _.contains(task.tags, 'Agenda');
     });
 
-    Query.exec(function (err, tasks) {
-      utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
-
-      var entityQuery = {};
-      entityQuery._id = {$in: tasks};
-      var Query = Task.find(entityQuery);
-
-      Query.populate('project');
-
-      Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
-
-        var groupedTasks = _.groupBy(tasks, function (task) {
-          return _.contains(task.tags, 'Agenda');
-        });
-
-        mailService.send('discussionSchedule', {
-          discussion: discussion,
-          agendaTasks: groupedTasks['true'] || [],
-          additionalTasks: groupedTasks['false'] || []
-        });
-      });
+    mailService.send('discussionSchedule', {
+      discussion: discussion,
+      agendaTasks: groupedTasks['true'] || [],
+      additionalTasks: groupedTasks['false'] || []
+    }).then(function() {
+      req.locals.data.body = discussion;
+      req.locals.data.body.status = 'Scheduled';
+      next();
     });
-
-    discussion.status = 'Scheduled';
-
-    discussion.save({
-      user: req.user
-    }, function (err, discussion) {
-      utils.checkAndHandleError(err, 'Failed to update discussion', next);
-
-      res.status(200);
-      return res.json(discussion);
-    });
-
   });
 };
 
 exports.summary = function (req, res, next) {
-  Discussion.findOne({
-    _id: req.params.id
-  }).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
-    utils.checkAndHandleError(err, 'Failed to find discussion ' + req.params.id, next);
-    var allowedStatuses = ['Scheduled'];
-    if (allowedStatuses.indexOf(discussion.status) === -1) {
-      utils.checkAndHandleError(true, 'Cannot send summary for this status', next);
-    }
+  if (req.locals.error) {
+    next();
+  }
 
-    var Query = TaskArchive.distinct('c._id', {
-      'd': req.params.id
-    });
+  var discussion = req.locals.result;
 
-    Query.exec(function (err, tasks) {
-      utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
+  var allowedStatuses = ['Scheduled'];
+  if (allowedStatuses.indexOf(discussion.status) === -1) {
+    utils.checkAndHandleError(true, 'Cannot send summary for this status', next);
+    req.locals.error = { message: 'Cannot send summary for this status' };
+    return next();
+  }
 
-      var entityQuery = {};
-      entityQuery._id = {$in: tasks};
-      var Query = Task.find(entityQuery);
-
-      Query.populate('project');
-      Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
-
-        var projects = _.chain(tasks).pluck('project').compact().value();
-        _.each(projects, function (project) {
-          project.tasks = _.select(tasks, function (task) {
-            return task.project === project;
-          });
-        });
-
-        var additionalTasks = _.select(tasks, function (task) {
-          return !task.project;
-        });
-
-        mailService.send('discussionSummary', {
-          discussion: discussion,
-          projects: projects,
-          additionalTasks: additionalTasks
+  Task.find({ discussions: discussion._id }).populate('discussions')
+    .then(function(tasks) {
+      var projects = _.chain(tasks).pluck('project').compact().value();
+      _.each(projects, function (project) {
+        project.tasks = _.select(tasks, function (task) {
+          return task.project === project;
         });
       });
-    });
 
-    discussion.status = 'Done';
-    discussion.save({
-      user: req.user
-    }, function (err, discussion) {
-      utils.checkAndHandleError(err, 'Failed to update discussion', next);
-
-      var Query = TaskArchive.distinct('c._id', {
-        'd': discussion._id
+      var additionalTasks = _.select(tasks, function (task) {
+        return !task.project;
       });
-      Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + discussion._id, next);
 
-        var entityQuery = {};
-        entityQuery._id = {$in: tasks};
-
-        var Query = Task.find(entityQuery);
-
-        Query.exec(function (err, tasks) {
-          utils.checkAndHandleError(err, 'Failed to read tasks by discussion ' + discussion._id, next);
-
-          _.map(tasks, function (task) {
-            if (task.discussions.length === 1) {
-              var tagIndex = task.tags.indexOf('Agenda');
-
-              if (tagIndex !== -1) {
-                task.tags.splice(tagIndex, 1);
-                task.save({user: req.user});
-              }
-            }
+      mailService.send('discussionSummary', {
+        discussion: discussion,
+        projects: projects,
+        additionalTasks: additionalTasks
+      }).then(function() {
+        var taskIds = _.reduce(tasks, function (memo, task) {
+          var containsAgenda = !_.any(task.discussions, function(d) {
+            return d.id !== discussion.id && (d.status === 'New' || d.status === 'Scheduled');
           });
 
-          res.status(200);
-          return res.json(discussion);
-        });
-      });
+          var shouldRemoveTag = task.tags.indexOf('Agenda') !== -1 && containsAgenda;
 
+          if (shouldRemoveTag) {
+            memo.push(task._id);
+          }
+
+          return memo;
+        }, []);
+
+        Task.update({ _id: { $in: taskIds } },
+          { $pull: { tags: 'Agenda' } },
+          { multi: true }).exec();
+
+        req.locals.data.body = discussion;
+        req.locals.data.body.status = 'Done';
+        next();
+      });
     });
-  });
 };
 
 exports.getByProject = function (req, res, next) {
@@ -172,7 +128,6 @@ exports.getByProject = function (req, res, next) {
   Query.populate('discussions');
 
   Query.exec(function (err, discussions) {
-    console.log(err, 'err')
     utils.checkAndHandleError(err, 'Unable to get discussions', next);
 
     //remove duplicates

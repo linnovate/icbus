@@ -89,10 +89,7 @@ exports.upload = function (req, res, next) {
 
   busboy.on('finish', function () {
     if (!hasFile) {
-      req.locals.error = {
-        status: 400,
-        message: 'No file was attached'
-      };
+      req.locals.error = { message: 'No file was attached' };
     }
 
     next();

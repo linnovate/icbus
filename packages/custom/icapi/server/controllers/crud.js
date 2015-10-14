@@ -24,10 +24,7 @@ module.exports = function(entityName, options) {
 
   var error = function(req, next) {
     return function(err) {
-      req.locals.error = {
-        status: 400,
-        message: err.toString()
-      };
+      req.locals.error = { message: err.toString() };
 
       next();
     };
@@ -60,7 +57,7 @@ module.exports = function(entityName, options) {
 
     var entity = req.locals.data.body || req.body;
     entityService
-      .create(entity, { user: req.user, discussion: req.discussion })
+      .create(entity, { user: req.user })
       .then(success(req, next), error(req, next));
   }
 
@@ -75,7 +72,7 @@ module.exports = function(entityName, options) {
 
     var entity = req.locals.data.body || req.body;
     entityService
-      .update(req.locals.result, entity, { user: req.user, discussion: req.discussion })
+      .update(req.locals.result, entity, { user: req.user })
       .then(success(req, next), error(req, next));
   }
 

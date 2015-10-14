@@ -1,14 +1,13 @@
 'use strict';
 
-var utils = require('./utils');
-
-var mongoose = require('mongoose');
+var _ = require('lodash');
 
 var options = {
   includes: 'assign watchers project',
   defaults: {
     project: undefined,
     assign: undefined,
+    discussions: [],
     watchers: []
   }
 };
@@ -16,14 +15,45 @@ var options = {
 var crud = require('../controllers/crud.js');
 var task = crud('tasks', options);
 
-require('../models/task');
-var Task = mongoose.model('Task'),
-  TaskArchive = mongoose.model('task_archive'),
+var Task = require('../models/task'),
   mean = require('meanio');
 
 Object.keys(task).forEach(function(methodName) {
-  exports[methodName] = task[methodName];
+  if (methodName !== 'create' || methodName !== 'update') {
+    exports[methodName] = task[methodName];
+  }
 });
+
+exports.create = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  if (req.body.discussion) {
+    req.body.discussions = [req.body.discussion];
+    req.body.tags = ['Agenda'];
+  }
+
+  task.create(req, res, next);
+};
+
+exports.update = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  if (req.body.discussion) {
+    var alreadyAdded = _(req.locals.result.discussions).any(function(d) {
+      return d.toString() === req.body.discussion;
+    });
+
+    if (!alreadyAdded) {
+      req.body.discusssions.push(req.body.discussion);
+    }
+  }
+
+  task.update(req, res, next);
+};
 
 exports.tagsList = function (req, res, next) {
   if (req.locals.error) {
@@ -38,16 +68,13 @@ exports.tagsList = function (req, res, next) {
   };
 
   mean.elasticsearch.search({index: 'task', 'body': query, size: 3000}, function (err, response) {
-      if (err) {
-        req.locals.error = {
-          status: 400,
-          message: 'Can\'t get tags'
-        };
-      } else {
-        req.locals.result = response.facets ? response.facets.tags.terms : [];
-      }
+    if (err) {
+      req.locals.error = { message: 'Can\'t get tags' };
+    } else {
+      req.locals.result = response.facets ? response.facets.tags.terms : [];
+    }
 
-      next();
+    next();
   });
 };
 
@@ -56,7 +83,7 @@ exports.getByEntity = function (req, res, next) {
     return next();
   }
 
-  var entities = {projects: 'project', users: 'assign', tags: 'tags', _id: '_id'},
+  var entities = {projects: 'project', users: 'assign', discussions: 'discussions', tags: 'tags'},
     entityQuery = {};
   entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
 
@@ -65,33 +92,11 @@ exports.getByEntity = function (req, res, next) {
 
   Query.exec(function (err, tasks) {
     if (err) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t get tags'
-      };
+      req.locals.error = { message: 'Can\'t get tags' };
     } else {
       req.locals.result = tasks;
     }
 
-    next();
-  });
-};
-
-exports.getByDiscussion = function (req, res, next) {
-  if (req.locals.error) {
-    return next();
-  }
-
-  if (req.params.entity !== 'discussions') return next();
-
-  var Query = TaskArchive.distinct('c._id', {
-    'd': req.params.id
-  });
-  Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
-
-    req.params.id = tasks;
-    req.params.entity = '_id';
     next();
   });
 };
@@ -106,10 +111,7 @@ exports.getZombieTasks = function (req, res, next) {
 
   Query.exec(function (err, tasks) {
     if (err) {
-      req.locals.error = {
-        status: 400,
-        message: 'Can\'t get zombie tasks'
-      };
+      req.locals.error = { message: 'Can\'t get zombie tasks' };
     } else {
       req.locals.result = tasks;
     }

@@ -57,7 +57,7 @@ module.exports = function (Icapi, app) {
     .delete(task.destroy);
 
   app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks')
-    .get(task.getByDiscussion, task.getByEntity);
+    .get(task.getByEntity);
   app.route('/api/history/tasks/:id([0-9a-fA-F]{24})')
     .get(task.readHistory);
 
@@ -112,9 +112,9 @@ module.exports = function (Icapi, app) {
     .put(discussion.read, discussion.update, star.isStarred, updates.updated)
     .delete(discussion.destroy);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/schedule')
-    .post(discussion.schedule);
+    .post(discussion.read, discussion.schedule, discussion.update, updates.updated);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/summary')
-    .post(discussion.summary);
+    .post(discussion.read, discussion.summary, discussion.update, updates.updated);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/discussions')
     .get(discussion.getByProject, star.isStarred); //, discussion.getByEntity);
 
