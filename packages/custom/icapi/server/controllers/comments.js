@@ -106,7 +106,6 @@ exports.readHistory = function (req, res, next) {
       'c._id': new ObjectId(req.params.id)
     });
     Query.populate('u');
-    Query.populate('d');
     Query.exec(function (err, comments) {
       utils.checkAndHandleError(err, 'Failed to read history for comment ' + req.params.id, next);
 

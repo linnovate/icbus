@@ -1,4 +1,5 @@
 'use strict';
+
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 
@@ -8,9 +9,9 @@ am.archiveModels = {};
 
 am.archiveCollectionName = function (collectionName) {
   return collectionName + '_archive';
-}
+};
 
-am.ArchiveModel = function (collectionName, name) {
+am.ArchiveModel = function (collectionName) {
 
   if (!(collectionName in am.archiveModels)) {
     var schema = new Schema({
@@ -29,10 +30,6 @@ am.ArchiveModel = function (collectionName, name) {
       u: {//user
         type: Schema.ObjectId,
         ref: 'User'
-      },
-      d: {//discussion
-        type: Schema.ObjectId,
-        ref: 'Discussion'
       }
     }, {
       id: true,
@@ -74,7 +71,6 @@ module.exports = function archivePlugin(schema, collectionName) {
     archiveDoc.o = this.isNew ? 'i' : 'u';
     archiveDoc.c = c;
     archiveDoc.u = req.user;
-    archiveDoc.d = req.discussion;
 
     var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);
@@ -91,7 +87,6 @@ module.exports = function archivePlugin(schema, collectionName) {
     archiveDoc.o = 'r';
     archiveDoc.c = c;
     archiveDoc.u = req.user;
-    archiveDoc.d = req.discussion;
 
     var archive = new am.ArchiveModel(am.archiveCollectionName(collectionName))(archiveDoc);
     archive.save(next);
