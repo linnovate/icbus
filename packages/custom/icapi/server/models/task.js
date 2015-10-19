@@ -82,7 +82,7 @@ TaskSchema.statics.project = function (id, cb) {
   var Project = mongoose.model('Project');
   Project.findById(id, function (err, project) {
     cb(err, project || {});
-  })
+  });
 };
 /**
  * Post middleware
@@ -94,7 +94,7 @@ TaskSchema.post('save', function (req, next) {
   var task = this;
   TaskSchema.statics.project(this.project, function (err, project) {
     if (err) {
-      return err
+      return err;
     }
 
     elasticsearch.save(task, 'task', project.room);
@@ -106,7 +106,7 @@ TaskSchema.pre('remove', function (next) {
   var task = this;
   TaskSchema.statics.project(this.project, function (err, project) {
     if (err) {
-      return err
+      return err;
     }
     elasticsearch.delete(task, 'task', project.room, next);
     profile.removeStarEntity(task._id, 'Tasks', next);
