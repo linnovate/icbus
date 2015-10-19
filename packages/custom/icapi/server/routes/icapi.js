@@ -37,7 +37,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/projects/:id([0-9a-fA-F]{24})')
     .get(project.read, star.isStarred)
     .put(project.read, project.update, star.isStarred)
-    .delete(star.unstarEntity, project.destroy);
+    .delete(star.unstarEntity, project.read, project.destroy);
   app.route('/api/history/projects/:id([0-9a-fA-F]{24})')
     .get(project.readHistory);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/projects')
@@ -54,7 +54,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/tasks/:id([0-9a-fA-F]{24})')
     .get(task.read, star.isStarred)
     .put(task.read, task.update, star.isStarred, updates.updated)
-    .delete(star.unstarEntity, task.destroy);
+    .delete(star.unstarEntity, task.read, task.destroy);
 
   app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks')
     .get(task.getByEntity);
@@ -82,7 +82,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/users/:id([0-9a-fA-F]{24})')
     .get(users.read)
     .put(users.filterProperties, users.update)
-    .delete(users.destroy);
+    .delete(users.read, users.destroy);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/users')
     .get(users.getByEntity);
 
