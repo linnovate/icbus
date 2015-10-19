@@ -25,7 +25,7 @@ module.exports = function (Icapi, app) {
 
   //star & get starred list
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/star')
-    .patch(star.starEntity);
+    .patch(star.toggleStar);
   app.route('/api/:entity(tasks|discussions|projects)/starred')
     .get(star.getStarred);
 
@@ -37,7 +37,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/projects/:id([0-9a-fA-F]{24})')
     .get(project.read, star.isStarred)
     .put(project.read, project.update, star.isStarred)
-    .delete(project.destroy);
+    .delete(star.unstarEntity, project.destroy);
   app.route('/api/history/projects/:id([0-9a-fA-F]{24})')
     .get(project.readHistory);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/projects')
@@ -54,7 +54,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/tasks/:id([0-9a-fA-F]{24})')
     .get(task.read, star.isStarred)
     .put(task.read, task.update, star.isStarred, updates.updated)
-    .delete(task.destroy);
+    .delete(star.unstarEntity, task.destroy);
 
   app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks')
     .get(task.getByEntity);
@@ -110,7 +110,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/discussions/:id([0-9a-fA-F]{24})')
     .get(discussion.read, star.isStarred)
     .put(discussion.read, discussion.update, star.isStarred, updates.updated)
-    .delete(discussion.destroy);
+    .delete(star.unstarEntity, discussion.read, discussion.destroy);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/schedule')
     .post(discussion.read, discussion.schedule, discussion.update, updates.updated);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/summary')

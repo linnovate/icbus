@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 var _ = require('lodash');
 
@@ -20,29 +20,39 @@ var entityNameMap = {
 };
 
 module.exports = function(entityName, options) {
-  function starEntity(id) {
+  function starEntity(id, value) {
     var starredEntities = 'starred' + capitalize(entityName);
 
     var starred = false;
     return UserModel.findById(options.user._id).then(function(user) {
-      var query = {};
+      var query;
+
       var profileProperty = 'profile.' + starredEntities;
-      if (!user.profile || !user.profile[starredEntities]) {
+      var hasNoProfile = !user.profile || !user.profile[starredEntities];
+
+      if (hasNoProfile && (value === 'toggle' || value === 'star')) {
+        query = {};
         query[profileProperty] = [id];
-      } else {
-        if (user.profile[starredEntities].indexOf(id) > -1) {
-          query = { $pull: {}};
+      } else if (!hasNoProfile) {
+        var starFound = user.profile[starredEntities].indexOf(id) > -1;
+        if (starFound && (value === 'toggle' || value === 'unstar')) {
+          query = { $pull: {} };
           query.$pull[profileProperty] = id;
-        } else {
-          query = {$push: {}};
+        } else if (!starFound && (value === 'toggle' || value === 'star')) {
+          query = { $push: {} };
           query.$push[profileProperty] = id;
+
           starred = true;
         }
       }
 
-      return user.update(query).then(function() {
+      if (!query) {
         return starred;
-      });
+      } else {
+        return user.update(query).then(function() {
+          return starred;
+        });
+      }
     });
   }
 
@@ -104,4 +114,4 @@ module.exports = function(entityName, options) {
     getStarred: getStarred,
     isStarred: isStarred
   };
-}
+};
