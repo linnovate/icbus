@@ -29,6 +29,7 @@ exports.create = function(req, res, next) {
     return next();
   }
 
+  req.body.discussions = [];
   if (req.body.discussion) {
     req.body.discussions = [req.body.discussion];
     req.body.tags = ['Agenda'];
