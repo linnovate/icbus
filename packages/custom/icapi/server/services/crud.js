@@ -75,6 +75,10 @@ module.exports = function(entityName, options) {
     if (pagination && pagination.type) {
       if (pagination.type === 'page') {
         query = Model.find({}).skip(pagination.start).limit(pagination.limit);
+
+        query.populate(options.includes);
+        query.hint({ _id: 1 });
+
         mergedPromise = q.all([query, countQuery]).then(function(results) {
           pagination.count = results[1];
           return results[0];
@@ -116,15 +120,11 @@ module.exports = function(entityName, options) {
       }
     } else {
       query = Model.find({});
-      deffered.resolve(query);
-    }
-
-    deffered.promise.then(function(query) {
       query.populate(options.includes);
       query.hint({ _id: 1 });
 
-      return query.exec();
-    });
+      deffered.resolve(query);
+    }
 
     return deffered.promise;
   }
