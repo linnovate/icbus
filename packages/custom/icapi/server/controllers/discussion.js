@@ -9,17 +9,66 @@ var options = {
 };
 
 var crud = require('../controllers/crud.js');
-var discussion = crud('discussions', options);
+var discussionController = crud('discussions', options);
 
 var utils = require('./utils'),
   mongoose = require('mongoose'),
-  Task = mongoose.model('Task'),
+  Task = require('../models/task.js'),
+  TaskArchive = mongoose.model('task_archive'),
+  User = require('../models/user.js'),
   _ = require('lodash'),
-  mailService = require('../services/mail');
+  mailService = require('../services/mail'),
+  elasticsearch = require('./elasticsearch.js');
 
-Object.keys(discussion).forEach(function(methodName) {
-  exports[methodName] = discussion[methodName];
+Object.keys(discussionController).forEach(function(methodName) {
+  if (methodName !== 'destroy') {
+    exports[methodName] = discussionController[methodName];
+  }
 });
+
+exports.destroy = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
+  var discussion = req.locals.result;
+
+  Task.find({ discussions: req.params.id }).then(function(tasks) {
+    //FIXME: do it with mongo aggregate
+    var groupedTasks = _.groupBy(tasks, function(task) {
+      return task.project || task.discussions.length > 1
+        ? 'release'
+        : 'remove';
+    });
+
+    groupedTasks.remove = groupedTasks.remove || [];
+    groupedTasks.release = groupedTasks.release || [];
+
+    Task.update({ _id: { $in: groupedTasks.release }},
+        { $pull: { discussions: discussion._id } }).exec();
+
+    Task.remove({ _id: { $in: groupedTasks.remove }}).then(function() {
+
+      //FIXME: needs to be optimized to one query
+      groupedTasks.remove.forEach(function(task) {
+        elasticsearch.delete(task, 'task', null, next);
+      });
+
+      var removeTaskIds = _(groupedTasks.remove)
+        .pluck('_id')
+        .map(function(i) { return i.toString(); })
+        .value();
+
+      User.update({ 'profile.starredTasks': { $in: removeTaskIds } },
+          { $pull: { 'profile.starredTasks': { $in: removeTaskIds } } }).exec();
+    });
+
+    User.update({ 'profile.starredDiscussions': discussion._id },
+        { 'profile.starredDiscussions': { $pull: discussion._id } }).exec();
+
+    discussionController.destroy(req, res, next);
+  });
+};
 
 exports.schedule = function (req, res, next) {
   if (req.locals.error) {
