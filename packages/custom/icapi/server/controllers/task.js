@@ -49,7 +49,8 @@ exports.update = function(req, res, next) {
     });
 
     if (!alreadyAdded) {
-      req.body.discusssions.push(req.body.discussion);
+      req.body.discussions = req.locals.result.discussions;
+      req.body.discussions.push(req.body.discussion);
     }
   }
 
