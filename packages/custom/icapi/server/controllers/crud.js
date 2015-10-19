@@ -82,7 +82,7 @@ module.exports = function(entityName, options) {
     }
 
     entityService
-      .destroy(req.params.id)
+      .destroy(req.locals.result, { user: req.user })
       .then(success(req, next), error(req, next));
   }
 

@@ -164,10 +164,8 @@ module.exports = function(entityName, options) {
     });
   }
 
-  function destroy(id) {
-    return Model.findOneAndRemove({
-      _id: id
-    }).exec();
+  function destroy(entity, user) {
+    return entity.remove(user);
   }
 
   function readHistory(id) {
