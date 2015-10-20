@@ -79,4 +79,4 @@ CommentSchema.pre('remove', function (next) {
 
 CommentSchema.plugin(archive, 'comment');
 
-mongoose.model('Comment', CommentSchema);
+module.exports = mongoose.model('Comment', CommentSchema);

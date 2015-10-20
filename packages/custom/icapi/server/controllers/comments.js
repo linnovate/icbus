@@ -2,19 +2,17 @@
 
 var utils = require('./utils');
 
-
 var mongoose = require('mongoose'),
   ObjectId = require('mongoose').Types.ObjectId;
 
-require('../models/comment');
-var Comment = mongoose.model('Comment'),
+var CommentModel = require('../models/comment'),
   CommentArchive = mongoose.model('comment_archive'),
   mean = require('meanio'),
   _ = require('lodash'),
   elasticsearch = require('./elasticsearch');
 
 exports.read = function (req, res, next) {
-  Comment.findById(req.params.id).populate('assign').exec(function (err, comments) {
+  CommentModel.findById(req.params.id).populate('assign').exec(function (err, comments) {
     utils.checkAndHandleError(err, 'Failed to read comment', next);
     res.status(200);
     return res.json(comments);
@@ -45,7 +43,7 @@ exports.create = function (req, res, next) {
     creator: req.user._id
   };
   comment = _.extend(comment, req.body);
-  new Comment(comment).save({
+  new CommentModel(comment).save({
     user: req.user,
     discussion: req.body.discussion
   }, function (err, comment) {
@@ -60,7 +58,7 @@ exports.update = function (req, res, next) {
   if (!req.params.id) {
     return res.send(404, 'Cannot update comment without id');
   }
-  Comment.findById(req.params.id, function (err, comment) {
+  CommentModel.findById(req.params.id, function (err, comment) {
     if (err) utils.checkAndHandleError(err, 'Failed to find comment: ' + req.params.id, next);
     else {
       if (!comment) utils.checkAndHandleError(true, 'Cannot find comment with id: ' + req.params.id, next);
@@ -85,7 +83,7 @@ exports.destroy = function (req, res, next) {
   if (!req.params.id) {
     return res.send(404, 'Cannot destroy comment without id');
   }
-  Comment.findById(req.params.id, function (err, comment) {
+  CommentModel.findById(req.params.id, function (err, comment) {
     if (err) utils.checkAndHandleError(err, 'Failed to find comment: ' + req.params.id, next);
     else {
       if (!comment) utils.checkAndHandleError(true, 'Cannot find comment with id: ' + req.params.id, next);
@@ -108,7 +106,6 @@ exports.readHistory = function (req, res, next) {
       'c._id': new ObjectId(req.params.id)
     });
     Query.populate('u');
-    Query.populate('d');
     Query.exec(function (err, comments) {
       utils.checkAndHandleError(err, 'Failed to read history for comment ' + req.params.id, next);
 

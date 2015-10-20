@@ -1,321 +1,170 @@
 'use strict';
-require('../models/discussion')
+
+var options = {
+  includes: 'watchers assign creator',
+  defaults: {
+    watchers: [],
+    assign: undefined
+  }
+};
+
+var crud = require('../controllers/crud.js');
+var discussionController = crud('discussions', options);
+
 var utils = require('./utils'),
   mongoose = require('mongoose'),
-  ObjectId = require('mongoose').Types.ObjectId,
-  Discussion = mongoose.model('Discussion'),
-  DiscussionArchive = mongoose.model('discussion_archive'),
+  Task = require('../models/task.js'),
   TaskArchive = mongoose.model('task_archive'),
-  Task = mongoose.model('Task'),
+  User = require('../models/user.js'),
   _ = require('lodash'),
-  mailManager = require('./mailManager'),
-  Update = mongoose.model('Update'),
-  tasksCntrl = require('./task');
+  mailService = require('../services/mail'),
+  elasticsearch = require('./elasticsearch.js');
 
-exports.read = function (req, res, next) {
-  Discussion.findById(req.params.id).populate('assign').populate('watchers').exec(function (err, discussion) {
-    utils.checkAndHandleError(err ? err : !discussion, 'Failed to read discussion with id: ' + req.params.id, next);
+Object.keys(discussionController).forEach(function(methodName) {
+  if (methodName !== 'destroy') {
+    exports[methodName] = discussionController[methodName];
+  }
+});
 
-    res.status(200);
-    return res.json(discussion);
-  });
-};
+exports.destroy = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
 
-exports.all = function (req, res, next) {
-  var Query = Discussion.find({});
-  Query.populate('assign').populate('watchers');
+  var discussion = req.locals.result;
 
-  Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to found discussion', next);
+  Task.find({ discussions: req.params.id }).then(function(tasks) {
+    //FIXME: do it with mongo aggregate
+    var groupedTasks = _.groupBy(tasks, function(task) {
+      return task.project || task.discussions.length > 1
+        ? 'release'
+        : 'remove';
+    });
 
-    res.status(200);
-    return res.json(tasks);
-  });
+    groupedTasks.remove = groupedTasks.remove || [];
+    groupedTasks.release = groupedTasks.release || [];
 
-  //var query = {};
-  //if (!(_.isEmpty(req.query))) {
-  //	query = elasticsearch.advancedSearch(req.query);
-  //}
-  //
-  //mean.elasticsearch.search({
-  //	index: 'discussion',
-  //	'body': query,
-  //	size: 3000
-  //}, function(err, response) {
-  //	if (err)
-  //		res.status(500).send('Failed to found discussion');
-  //	else
-  //		res.send(response.hits.hits.map(function(item) {
-  //			return item._source
-  //		}))
-  //});
-};
+    Task.update({ _id: { $in: groupedTasks.release }},
+        { $pull: { discussions: discussion._id } }).exec();
 
-exports.create = function (req, res, next) {
-  var discussion = {
-    creator: req.user._id,
-    created: new Date()
-  };
+    Task.remove({ _id: { $in: groupedTasks.remove }}).then(function() {
 
-  var defaults = {
-    assign: undefined
-  };
-  var newDiscussion = _.defaults(defaults, req.body);
-  discussion = _.extend(discussion, newDiscussion);
-
-  new Discussion(discussion).save({
-    user: req.user
-  }, function (err, response) {
-    utils.checkAndHandleError(err, 'Failed to create discussion', next);
-
-    new Update({
-      creator: req.user,
-      created: response.created,
-      type: 'create',
-      issueId: response._id,
-      issue: 'discussion'
-    }).save({
-        user: req.user,
-        discussion: req.body.discussion
+      //FIXME: needs to be optimized to one query
+      groupedTasks.remove.forEach(function(task) {
+        elasticsearch.delete(task, 'task', null, next);
       });
 
-    req.params.id = response._id;
-    exports.read(req, res, next);
-    //res.json(response);
+      var removeTaskIds = _(groupedTasks.remove)
+        .pluck('_id')
+        .map(function(i) { return i.toString(); })
+        .value();
+
+      User.update({ 'profile.starredTasks': { $in: removeTaskIds } },
+          { $pull: { 'profile.starredTasks': { $in: removeTaskIds } } }).exec();
+    });
+
+    User.update({ 'profile.starredDiscussions': discussion._id },
+        { 'profile.starredDiscussions': { $pull: discussion._id } }).exec();
+
+    discussionController.destroy(req, res, next);
   });
-};
-
-exports.update = function (req, res, next) {
-  if (!req.params.id) {
-    return res.send(404, 'Cannot update discussion without id');
-  }
-
-  Discussion.findById(req.params.id).exec(function (err, discussion) {
-    utils.checkAndHandleError(err, 'Failed to find discussion: ' + req.params.id);
-
-    var shouldCreateUpdate = discussion.description !== req.body.description;
-    if (!req.body.assign && !discussion.assign) delete req.body.assign;
-
-    var defaults = {
-      assign: undefined
-    };
-    var newDiscussion = _.defaults(defaults, req.body);
-    discussion = _.extend(discussion, newDiscussion);
-    discussion.updated = new Date();
-
-    discussion.save({
-      user: req.user
-    }, function (err, discussion) {
-      utils.checkAndHandleError(err, 'Failed to update discussion', next);
-
-      if (shouldCreateUpdate) {
-        new Update({
-          creator: req.user,
-          created: new Date(),
-          type: 'update',
-          issueId: discussion._id,
-          issue: 'discussion'
-        }).save({
-            user: req.user,
-            discussion: req.body.discussion
-          }, function (err, update) {
-          });
-      }
-
-      //res.status(200);
-      //return res.json(discussion);
-      req.params.id = discussion._id;
-      exports.read(req, res, next);
-    });
-
-  });
-};
-
-exports.destroy = function (req, res, next) {
-  if (!req.params.id) {
-    return res.send(404, 'Cannot delete discussion without an id');
-  }
-
-  Discussion.findById(req.params.id, function (err, discussion) {
-    utils.checkAndHandleError(
-      err || !discussion, 'Cannot find discussion with id: ' + req.params.id, next);
-
-    discussion.remove({
-      user: req.user
-    }, function (err, success) {
-      utils.checkAndHandleError(err, 'Failed to destroy discussion', next);
-
-      //remove tasks from this project
-      var query = {
-        project: null,
-        discussions: [req.params.id]
-      };
-      tasksCntrl.removeTaskByProject(req, query, next)
-        .then(function(){
-          res.status(200);
-          return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
-        });
-
-      res.status(200);
-      return res.send({message: (success ? 'Discussion deleted' : 'Failed to delete discussion')});
-    });
-  });
-};
-
-exports.readHistory = function (req, res, next) {
-  if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
-    var Query = DiscussionArchive.find({
-      'c._id': new ObjectId(req.params.id)
-    });
-    Query.populate('u');
-    Query.exec(function (err, discussions) {
-      utils.checkAndHandleError(err, 'Failed to read history for discussion ' + req.params.id, next);
-
-      res.status(200);
-      return res.json(discussions);
-    });
-  } else {
-    utils.checkAndHandleError(true, 'Failed to read history for discussion ' + req.params.id, next);
-  }
 };
 
 exports.schedule = function (req, res, next) {
-  Discussion.findOne({
-    _id: req.params.id
-  }).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
-    utils.checkAndHandleError(err, 'Failed to find discussion ' + req.params.id, next);
-    utils.checkAndHandleError(!discussion.due, 'Due field cannot be empty', next);
-    utils.checkAndHandleError(!discussion.assign, 'Assignee cannot be empty', next);
+  if (req.locals.error) {
+    next();
+  }
 
-    var allowedStatuses = ['New', 'Scheduled', 'Cancelled'];
-    if (allowedStatuses.indexOf(discussion.status) === -1) {
-      utils.checkAndHandleError(true, 'Cannot be scheduled for this status', next);
-    }
+  var discussion = req.locals.result;
 
-    var Query = TaskArchive.distinct('c._id', {
-      'd': req.params.id
+  if (!discussion.due) {
+    req.locals.error = { message: 'Due field cannot be empty' };
+    return next();
+  }
+
+  if (!discussion.assign) {
+    req.locals.error = { message: 'Assignee cannot be empty' };
+    return next();
+  }
+
+  var allowedStatuses = ['New', 'Scheduled', 'Cancelled'];
+  if (allowedStatuses.indexOf(discussion.status) === -1) {
+    req.locals.error = { message: 'Cannot be scheduled for this status' };
+    return next();
+  }
+
+  Task.find({ discussions: discussion._id }).then(function(tasks) {
+    var groupedTasks = _.groupBy(tasks, function (task) {
+      return _.contains(task.tags, 'Agenda');
     });
 
-    Query.exec(function (err, tasks) {
-      utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
-
-      var entityQuery = {};
-      entityQuery._id = {$in: tasks};
-      var Query = Task.find(entityQuery);
-
-      Query.populate('project');
-
-      Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
-
-        var groupedTasks = _.groupBy(tasks, function (task) {
-          return _.contains(task.tags, 'Agenda');
-        });
-
-        mailManager.sendEx('discussionSchedule', {
-          discussion: discussion,
-          agendaTasks: groupedTasks['true'] || [],
-          additionalTasks: groupedTasks['false'] || []
-        });
-      });
+    mailService.send('discussionSchedule', {
+      discussion: discussion,
+      agendaTasks: groupedTasks['true'] || [],
+      additionalTasks: groupedTasks['false'] || []
+    }).then(function() {
+      req.locals.data.body = discussion;
+      req.locals.data.body.status = 'Scheduled';
+      next();
     });
-
-    discussion.status = 'Scheduled';
-
-    discussion.save({
-      user: req.user
-    }, function (err, discussion) {
-      utils.checkAndHandleError(err, 'Failed to update discussion', next);
-
-      res.status(200);
-      return res.json(discussion);
-    });
-
   });
 };
 
 exports.summary = function (req, res, next) {
-  Discussion.findOne({
-    _id: req.params.id
-  }).populate('assign').populate('watchers').populate('creator').exec(function (err, discussion) {
-    utils.checkAndHandleError(err, 'Failed to find discussion ' + req.params.id, next);
-    var allowedStatuses = ['Scheduled'];
-    if (allowedStatuses.indexOf(discussion.status) === -1) {
-      utils.checkAndHandleError(true, 'Cannot send summary for this status', next);
-    }
+  if (req.locals.error) {
+    next();
+  }
 
-    var Query = TaskArchive.distinct('c._id', {
-      'd': req.params.id
-    });
+  var discussion = req.locals.result;
 
-    Query.exec(function (err, tasks) {
-      utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
+  var allowedStatuses = ['Scheduled'];
+  if (allowedStatuses.indexOf(discussion.status) === -1) {
+    utils.checkAndHandleError(true, 'Cannot send summary for this status', next);
+    req.locals.error = { message: 'Cannot send summary for this status' };
+    return next();
+  }
 
-      var entityQuery = {};
-      entityQuery._id = {$in: tasks};
-      var Query = Task.find(entityQuery);
-
-      Query.populate('project');
-      Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
-
-        var projects = _.chain(tasks).pluck('project').compact().value();
-        _.each(projects, function (project) {
-          project.tasks = _.select(tasks, function (task) {
-            return task.project === project;
-          });
-        });
-
-        var additionalTasks = _.select(tasks, function (task) {
-          return !task.project;
-        });
-
-        mailManager.sendEx('discussionSummary', {
-          discussion: discussion,
-          projects: projects,
-          additionalTasks: additionalTasks
+  Task.find({ discussions: discussion._id }).populate('discussions')
+    .then(function(tasks) {
+      var projects = _.chain(tasks).pluck('project').compact().value();
+      _.each(projects, function (project) {
+        project.tasks = _.select(tasks, function (task) {
+          return task.project === project;
         });
       });
-    });
 
-    discussion.status = 'Done';
-    discussion.save({
-      user: req.user
-    }, function (err, discussion) {
-      utils.checkAndHandleError(err, 'Failed to update discussion', next);
-
-      var Query = TaskArchive.distinct('c._id', {
-        'd': discussion._id
+      var additionalTasks = _.select(tasks, function (task) {
+        return !task.project;
       });
-      Query.exec(function (err, tasks) {
-        utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + discussion._id, next);
 
-        var entityQuery = {};
-        entityQuery._id = {$in: tasks};
-
-        var Query = Task.find(entityQuery);
-
-        Query.exec(function (err, tasks) {
-          utils.checkAndHandleError(err, 'Failed to read tasks by discussion ' + discussion._id, next);
-
-          _.map(tasks, function (task) {
-            if (task.discussions.length === 1) {
-              var tagIndex = task.tags.indexOf('Agenda');
-
-              if (tagIndex !== -1) {
-                task.tags.splice(tagIndex, 1);
-                task.save({user: req.user});
-              }
-            }
+      mailService.send('discussionSummary', {
+        discussion: discussion,
+        projects: projects,
+        additionalTasks: additionalTasks
+      }).then(function() {
+        var taskIds = _.reduce(tasks, function (memo, task) {
+          var containsAgenda = !_.any(task.discussions, function(d) {
+            return d.id !== discussion.id && (d.status === 'New' || d.status === 'Scheduled');
           });
 
-          res.status(200);
-          return res.json(discussion);
-        });
-      });
+          var shouldRemoveTag = task.tags.indexOf('Agenda') !== -1 && containsAgenda;
 
+          if (shouldRemoveTag) {
+            memo.push(task._id);
+          }
+
+          return memo;
+        }, []);
+
+        Task.update({ _id: { $in: taskIds } },
+          { $pull: { tags: 'Agenda' } },
+          { multi: true }).exec();
+
+        req.locals.data.body = discussion;
+        req.locals.data.body.status = 'Done';
+        next();
+      });
     });
-  });
 };
 
 exports.getByProject = function (req, res, next) {
@@ -328,7 +177,6 @@ exports.getByProject = function (req, res, next) {
   Query.populate('discussions');
 
   Query.exec(function (err, discussions) {
-    console.log(err, 'err')
     utils.checkAndHandleError(err, 'Unable to get discussions', next);
 
     //remove duplicates

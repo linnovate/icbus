@@ -10,13 +10,6 @@ exports.checkAndHandleError = function (err, defaultMessage, next) {
 };
 
 exports.errorHandler = function (err, req, res, next) {
-  console.log(inspect(err.message));
-  console.log(inspect(err.stack));
-
-  if (res.headersSent) {
-    next(err);
-  }
-
-  res.status(500);
-  res.send(err.message);
+  console.log(err);
+  next(err);
 };

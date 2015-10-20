@@ -5,7 +5,6 @@
  */
 var mongoose = require('mongoose'),
   User = mongoose.model('User'),
-  schemes = {projects: 'Project', tasks: 'Task', discussions: 'Discussion'},
   _ = require('lodash'),
   Busboy = require('busboy'),
   fs = require('fs'),
@@ -66,83 +65,4 @@ exports.uploadAvatar = function (req, res, next) {
       utils.checkAndHandleError('Didn\'t find any avatar to upload', 'Didn\'t find any avatar to upload', next);
   });
   return req.pipe(busboy);
-};
-
-/**
- * Star entity
- */
-exports.starEntity = function (req, res, next) {
-  User.findOne({
-    _id: req.user._id
-  }, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-    var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
-
-    var query;
-    if (!user.profile ||
-        !user.profile[starredEntities] ||
-        user.profile[starredEntities].indexOf(req.params.id) === -1) {
-      query = {$push: {}};
-      query.$push['profile.' + starredEntities] = req.params.id;
-    }
-    else {
-      query = {$pull: {}};
-      query.$pull['profile.' + starredEntities] = req.params.id;
-    }
-
-    user.update(query, function (err, updated) {
-
-      utils.checkAndHandleError(err, 'Cannot update the starred ' + req.params.entity, next);
-      res.json(updated);
-    });
-  })
-};
-
-/**
- * Get starred entity list
- */
-exports.getStarredEntity = function (req, res, next) {
-  var Schema = mongoose.model(schemes[req.params.entity]);
-
-  User.findOne({
-    _id: req.user._id
-  }, function (err, user) {
-    utils.checkAndHandleError(err, 'Failed to load user', next);
-
-    var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
-
-    if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].length === 0) {
-      return res.json([]);
-    } else {
-      Schema.find({
-        '_id': {
-          $in: user.profile[starredEntities]
-        }
-      }, function (err, list) {
-        utils.checkAndHandleError(err, 'Failed to read ' + req.params.entity, next);
-
-        res.status(200);
-        return res.json(list);
-      });
-    }
-  })
-};
-
-/**
- * Remove star entity
- */
-exports.removeStarEntity = function (id, entity, next) {
-
-  var query = {};
-  query['profile.starred' + entity] = id.toString();
-
-  User.update(query ,{ $pull: query },{upsert:true, multi:false}, function (err, starredEntity){
-    utils.checkAndHandleError(err, 'Failed to remove star' + entity + ' : ' + id, next);
-
-    return next();
-  });
-};
-
-String.prototype.capitalizeFirstLetter = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1);
 };

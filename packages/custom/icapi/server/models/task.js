@@ -4,7 +4,6 @@ var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
   archive = require('./archive.js');
 
-
 var TaskSchema = new Schema({
   created: {
     type: Date,
@@ -59,6 +58,16 @@ var TaskSchema = new Schema({
   }]
 });
 
+var starVirtual = TaskSchema.virtual('star');
+starVirtual.get(function() {
+  return this._star;
+});
+starVirtual.set(function(value) {
+  this._star = value;
+});
+TaskSchema.set('toJSON', { virtuals: true });
+TaskSchema.set('toObject', { virtuals: true });
+
 /**
  * Statics
  */
@@ -73,7 +82,7 @@ TaskSchema.statics.project = function (id, cb) {
   var Project = mongoose.model('Project');
   Project.findById(id, function (err, project) {
     cb(err, project || {});
-  })
+  });
 };
 /**
  * Post middleware
@@ -85,7 +94,7 @@ TaskSchema.post('save', function (req, next) {
   var task = this;
   TaskSchema.statics.project(this.project, function (err, project) {
     if (err) {
-      return err
+      return err;
     }
 
     elasticsearch.save(task, 'task', project.room);
@@ -97,7 +106,7 @@ TaskSchema.pre('remove', function (next) {
   var task = this;
   TaskSchema.statics.project(this.project, function (err, project) {
     if (err) {
-      return err
+      return err;
     }
     elasticsearch.delete(task, 'task', project.room, next);
     profile.removeStarEntity(task._id, 'Tasks', next);
@@ -107,4 +116,4 @@ TaskSchema.pre('remove', function (next) {
 
 TaskSchema.plugin(archive, 'task');
 
-mongoose.model('Task', TaskSchema);
+module.exports = mongoose.model('Task', TaskSchema);
