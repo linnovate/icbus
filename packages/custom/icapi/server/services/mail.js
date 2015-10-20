@@ -34,6 +34,8 @@ exports.send = function (type, data) {
   data.date = new Date();
 
   //HACK
+
+  data.discussion.watchers.push(data.discussion.assign);
   data.attendees = data.discussion.watchers.map(function (w) {
     return w.name;
   }).join(', ');
