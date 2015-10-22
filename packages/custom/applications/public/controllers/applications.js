@@ -15,7 +15,6 @@ function AppCtrl(Applications, $location, $stateParams) {
       });
 
       this.app.name = '';
-      this.app.token = '';
       this.app.iconPath = '';
     } else {
       this.submitted = true;

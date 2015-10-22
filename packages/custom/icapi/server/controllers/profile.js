@@ -76,7 +76,7 @@ exports.starEntity = function (req, res, next) {
     _id: req.user._id
   }, function (err, user) {
     utils.checkAndHandleError(err, 'Failed to load user', next);
-    var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
+    var starredEntities = 'starred' + _.capitalize(req.params.entity);
 
     var query;
     if (!user.profile ||
@@ -109,7 +109,7 @@ exports.getStarredEntity = function (req, res, next) {
   }, function (err, user) {
     utils.checkAndHandleError(err, 'Failed to load user', next);
 
-    var starredEntities = 'starred' + req.params.entity.capitalizeFirstLetter();
+    var starredEntities = 'starred' + _.capitalize(req.params.entity);
 
     if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].length === 0) {
       return res.json([]);
@@ -141,8 +141,4 @@ exports.removeStarEntity = function (id, entity, next) {
 
     return next();
   });
-};
-
-String.prototype.capitalizeFirstLetter = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1);
 };

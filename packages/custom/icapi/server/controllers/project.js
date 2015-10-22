@@ -130,7 +130,7 @@ exports.destroy = function (req, res, next) {
       tasksCntrl.removeTaskByProject(req, query, next)
         .then(function(){
           res.status(200);
-          return res.send({message: (success ? 'Project deleted' : 'Failed to delete project')});
+          return res.send({message: (success ? 'Project deleted' : 'Failed to delete project'), room: project.room});
         });
     });
   });

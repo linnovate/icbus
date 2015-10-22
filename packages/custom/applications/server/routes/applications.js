@@ -1,15 +1,13 @@
 'use strict';
 
  var applications = require('../controllers/applications');
- var rooms = require('../../../hi/server/controllers/rooms');
+ var users = require('../../../hi/server/controllers/users');
 
  module.exports = function(Applications, app, auth) {
 
  app.route('/api/applications')
  .get(applications.all)
- .post(auth.requiresLogin,function(req, res){
-      applications.create(req, res, rooms.create)
-     } );
+ .post(auth.requiresLogin, users.createUserHi, applications.create);
  app.route('/api/applications/:applicationId')
  .get(auth.isMongoId, applications.show)
  .put(auth.isMongoId, auth.requiresLogin, applications.update)

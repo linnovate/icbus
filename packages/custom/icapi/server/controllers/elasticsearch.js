@@ -1,7 +1,6 @@
 'use strict';
 
-var mean = require('meanio');
-var notifications = require('../../../hi/server/controllers/notifications'),
+var mean = require('meanio'),
   utils = require('./utils');
 
 exports.save = function (doc, docType, room, title) {

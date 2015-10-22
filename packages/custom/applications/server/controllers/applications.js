@@ -6,7 +6,10 @@
 var mongoose = require('mongoose'),
     Application = mongoose.model('Application'),
     _ = require('lodash'),
-    async = require('async');
+    crypto = require('crypto'),
+    algorithm = 'aes-256-cbc',
+    password = 'd6F3Efeq';
+
 /**
  * Find application by id
  */
@@ -22,8 +25,10 @@ exports.application = function(req, res, next, id) {
 /**
  * Create an application
  */
-exports.create = function(req, res, next) {
+exports.create = function(req, res) {
     var application = new Application(req.body);
+
+    application.token = encrypt(req.body.name + Date.now());
 
     application.save(function(err) {
         if (err) {
@@ -31,8 +36,8 @@ exports.create = function(req, res, next) {
                 error: 'Cannot save the application'
             });
         }
-        req.application = application;
-        next(req, res);
+
+        res.json(application);
     });
 };
 
@@ -93,3 +98,17 @@ exports.all = function(req, res) {
 
     });
 };
+
+var encrypt = function(text) {
+    var cipher = crypto.createCipher(algorithm, password)
+    var crypted = cipher.update(text,'utf8','hex')
+    crypted += cipher.final('hex');
+    return crypted;
+};
+
+//function decrypt(text){
+//    var decipher = crypto.createDecipher('aes-256-cbc','d6F3Efeq')
+//    var dec = decipher.update(text,'hex','utf8')
+//    dec += decipher.final('utf8');
+//    return dec;
+//}
