@@ -1,297 +1,123 @@
 'use strict';
 
-var utils = require('./utils');
+var _ = require('lodash');
 
-var mongoose = require('mongoose'),
-  ObjectId = require('mongoose').Types.ObjectId;
-
-require('../models/task');
-var Task = mongoose.model('Task'),
-  TaskArchive = mongoose.model('task_archive'),
-  mean = require('meanio'),
-  _ = require('lodash'),
-  Update = mongoose.model('Update'),
-  Q = require('q');
-
-exports.read = function (req, res, next) {
-  Task.findById(req.params.id).populate('assign').populate('watchers').populate('project').exec(function (err, task) {
-    utils.checkAndHandleError(err ? err : !task, 'Failed to read task with id: ' + req.params.id, next);
-
-    res.status(200);
-    return res.json(task);
-  });
-};
-
-exports.all = function (req, res, next) {
-  var Query = Task.find({});
-  Query.populate('assign').populate('watchers').populate('project');
-  Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to found tasks', next);
-    res.status(200);
-
-    return res.json(tasks);
-  });
-
-  //var query = {};
-  //if (!(_.isEmpty(req.query))) {
-  //	query = elasticsearch.advancedSearch(req.query);
-  //}
-  //mean.elasticsearch.search({index:'task','body': query, size: 3000}, function(err,response) {
-  //	if (err)
-  //		res.status(500).send('Failed to found tasks');
-  //	else {
-  //       res.send(response.hits.hits.map(function(item) {return item._source}));
-  //   }
-  //
-  //});
-};
-
-
-exports.create = function (req, res, next) {
-  var task = {
-    creator: req.user,
-    tags: []
-  };
-  if (req.body.discussion) {
-    task.discussions = [req.body.discussion];
-    task.tags.push('Agenda');
-  }
-
-  var defaults = {
+var options = {
+  includes: 'assign watchers project',
+  defaults: {
     project: undefined,
-    assign: undefined
-  };
-  var newTask = _.defaults(defaults, req.body);
-  task = _.extend(task, newTask);
-
-  new Task(task).save({
-    user: req.user,
-    discussion: req.body.discussion
-  }, function (err, response) {
-    utils.checkAndHandleError(err, 'Failed to create task', next);
-
-    new Update({
-      creator: req.user,
-      created: response.created,
-      type: 'create',
-      issueId: response._id,
-      issue: 'task'
-    }).save({
-        user: req.user,
-        discussion: req.body.discussion
-      });
-
-    req.params.id = response._id;
-    exports.read(req, res, next);
-  });
+    assign: undefined,
+    discussions: [],
+    watchers: []
+  }
 };
 
-exports.update = function (req, res, next) {
-  if (!req.params.id) {
-    return res.send(404, 'Cannot update task without id');
+var crud = require('../controllers/crud.js');
+var task = crud('tasks', options);
+
+var Task = require('../models/task'),
+  mean = require('meanio');
+
+Object.keys(task).forEach(function(methodName) {
+  if (methodName !== 'create' || methodName !== 'update') {
+    exports[methodName] = task[methodName];
+  }
+});
+
+exports.create = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
   }
 
-  Task.findById(req.params.id).exec(function (err, task) {
-    utils.checkAndHandleError(err, 'Failed to find task: ' + req.params.id, next);
-    utils.checkAndHandleError(!task, 'Cannot find task with id: ' + req.params.id, next);
+  req.body.discussions = [];
+  if (req.body.discussion) {
+    req.body.discussions = [req.body.discussion];
+    req.body.tags = ['Agenda'];
+  }
 
-    delete req.body.__v;
-    if (!req.body.assign && !task.assign) delete req.body.assign;
-    if (!req.body.project && !task.project) delete req.body.project;
+  task.create(req, res, next);
+};
 
-    var defaults = {
-      project: undefined,
-      assign: undefined,
-      watchers: [],
-      discussions: []
-    };
+exports.update = function(req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
 
-    var newTask = _.defaults(req.body, defaults);
+  if (req.body.discussion) {
+    var alreadyAdded = _(req.locals.result.discussions).any(function(d) {
+      return d.toString() === req.body.discussion;
+    });
 
-    if (req.body.discussion) {
-      newTask.discussions = _.union(newTask.discussions, [req.body.discussion]);
+    if (!alreadyAdded) {
+      req.body.discussions = req.locals.result.discussions;
+      req.body.discussions.push(req.body.discussion);
     }
-
-    task = _.extend(task, newTask);
-    task.updated = new Date();
-
-    var shouldCreateUpdate = task.description !== req.body.description;
-
-    task.save({user: req.user, discussion: req.body.discussion}, function (err, result) {
-      utils.checkAndHandleError(err, 'Failed to save task', next);
-
-      if (shouldCreateUpdate) {
-        new Update({
-          creator: req.user,
-          created: new Date(),
-          type: 'update',
-          issueId: result._id,
-          issue: 'task'
-        }).save({
-            user: req.user,
-            discussion: req.body.discussion
-          });
-      }
-
-      req.params.id = task._id;
-      exports.read(req, res, next);
-      //res.status(200);
-      //return res.json(task);
-    });
-  });
-};
-
-exports.destroy = function (req, res, next) {
-  if (!req.params.id) {
-    return res.send(404, 'Cannot destroy task without id');
   }
 
-  Task.findById(req.params.id, function (err, task) {
-    utils.checkAndHandleError(err, 'Cannot find task with id: ' + req.params.id, next);
-    utils.checkAndHandleError(!task, 'Cannot find task with id: ' + req.params.id, next);
-
-    task.remove({user: req.user, discussion: req.body.discussion}, function (err, success) {
-      utils.checkAndHandleError(err, 'Failed to destroy task', next);
-      res.status(200);
-      return res.send({message: (success ? 'Task deleted' : 'Failed to delete task')});
-    });
-  });
+  task.update(req, res, next);
 };
 
-exports.tagsList = function (req, res) {
+exports.tagsList = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
+
   var query = {
     'query': {'query_string': {'query': '*'}},
     'facets': {
       'tags': {'terms': {'field': 'tags'}}
     }
   };
+
   mean.elasticsearch.search({index: 'task', 'body': query, size: 3000}, function (err, response) {
-    res.send(response.facets ? response.facets.tags.terms : []);
-  });
-};
+    if (err) {
+      req.locals.error = { message: 'Can\'t get tags' };
+    } else {
+      req.locals.result = response.facets ? response.facets.tags.terms : [];
+    }
 
-exports.getByEntity = function (req, res, next) {
-  var entities = {projects: 'project', users: 'assign', tags: 'tags', _id: '_id'},
-    entityQuery = {};
-  entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
-
-  var Query = Task.find(entityQuery);
-  Query.populate('assign').populate('watchers').populate('project');
-
-  Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to read tasks by' + req.params.entity + ' ' + req.params.id, next);
-
-    res.status(200);
-    return res.json(tasks);
-  });
-
-  //var entity = entities[req.params.entity],
-  //	query = {
-  //		query: {
-  //			filtered: {
-  //				filter : {
-  //					terms: {}
-  //				}
-  //			}
-  //		}
-  //};
-  //if (!(req.params.id instanceof Array)) req.params.id = [req.params.id];
-  //query.query.filtered.filter.terms[entity] =  req.params.id;
-  //mean.elasticsearch.search({index:'task','body': query, size:3000}, function(err,response) {
-  //	if(err) {
-  //		res.status(500).send([]);
-  //	}
-  //	else res.send(response.hits.hits.map(function(item) {return item._source}))
-  //});
-};
-
-exports.getByDiscussion = function (req, res, next) {
-  if (req.params.entity !== 'discussions') return next();
-
-  var Query = TaskArchive.distinct('c._id', {
-    'd': req.params.id
-  });
-  Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to read tasks for discussion ' + req.params.id, next);
-
-    req.params.id = tasks;
-    req.params.entity = '_id';
     next();
   });
 };
 
-exports.readHistory = function (req, res, next) {
-  if (req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
-    var Query = TaskArchive.find({
-      'c._id': new ObjectId(req.params.id)
-    });
-    Query.populate('u');
-    Query.populate('d');
-    Query.exec(function (err, tasks) {
-      utils.checkAndHandleError(err, 'Failed to read history for task ' + req.params.id, next);
-
-      res.status(200);
-      return res.json(tasks);
-    });
-  } else {
-    utils.checkAndHandleError(true, 'Failed to read history for task ' + req.params.id, next);
+exports.getByEntity = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
   }
+
+  var entities = {projects: 'project', users: 'assign', discussions: 'discussions', tags: 'tags'},
+    entityQuery = {};
+  entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
+
+  var Query = Task.find(entityQuery);
+  Query.populate(options.includes);
+
+  Query.exec(function (err, tasks) {
+    if (err) {
+      req.locals.error = { message: 'Can\'t get tags' };
+    } else {
+      req.locals.result = tasks;
+    }
+
+    next();
+  });
 };
 
 exports.getZombieTasks = function (req, res, next) {
+  if (req.locals.error) {
+    return next();
+  }
 
   var Query = Task.find({project: {$eq: null}, discussions: {$size: 0}});
-  Query.populate('assign').populate('watchers').populate('project');
+  Query.populate(options.includes);
 
   Query.exec(function (err, tasks) {
-    utils.checkAndHandleError(err, 'Failed to read tasks.', next);
+    if (err) {
+      req.locals.error = { message: 'Can\'t get zombie tasks' };
+    } else {
+      req.locals.result = tasks;
+    }
 
-    res.status(200);
-    return res.json(tasks);
+    next();
   });
-
 };
-
-exports.removeTaskByProject = function (req, query ,next) {
-  var deferred = Q.defer();
-
-  Task.find(query, function (err, tasks) {
-    getTasksByProject(req, tasks, next)
-      .then(function(){
-        deferred.resolve();
-      });
-  });
-
-  return deferred.promise;
-};
-
-function getTasksByProject(req, tasks, next) {
-  var promises = [];
-
-  tasks.forEach(function(task){
-    var deferred = Q.defer();
-
-    removeTask(req, task, next)
-      .then(function(){
-        deferred.resolve();
-      });
-
-    promises.push(deferred.promise);
-  });
-
-  return Q.all(promises);
-}
-
-function removeTask( req, task, next) {
-  var deferred = Q.defer();
-
-  task.remove({
-    user: req.user, discussion: req.body.discussion
-  }, function (err, data) {
-    utils.checkAndHandleError(err, 'Cannot remove tasks from project: ' + req.params.id, next);
-
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}

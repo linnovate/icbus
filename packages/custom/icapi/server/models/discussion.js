@@ -60,6 +60,16 @@ var DiscussionSchema = new Schema({
   }]
 });
 
+var starVirtual = DiscussionSchema.virtual('star');
+starVirtual.get(function() {
+  return this._star;
+});
+starVirtual.set(function(value) {
+  this._star = value;
+});
+DiscussionSchema.set('toJSON', { virtuals: true });
+DiscussionSchema.set('toObject', { virtuals: true });
+
 /**
  * Statics
  */
@@ -85,4 +95,4 @@ DiscussionSchema.pre('remove', function (next) {
 
 DiscussionSchema.plugin(archive, 'discussion');
 
-mongoose.model('Discussion', DiscussionSchema);
+module.exports = mongoose.model('Discussion', DiscussionSchema);

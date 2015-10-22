@@ -32,6 +32,16 @@ var UpdateSchema = new Schema({
   }
 });
 
+var attachmentsVirtual = UpdateSchema.virtual('attachments');
+attachmentsVirtual.get(function() {
+  return this._attachments;
+});
+attachmentsVirtual.set(function(value) {
+  this._attachments = value;
+});
+UpdateSchema.set('toJSON', { virtuals: true });
+UpdateSchema.set('toObject', { virtuals: true });
+
 /**
  * Validations
  */
@@ -97,4 +107,4 @@ UpdateSchema.pre('remove', function (next) {
 
 UpdateSchema.plugin(archive, 'update');
 
-mongoose.model('Update', UpdateSchema);
+module.exports = mongoose.model('Update', UpdateSchema);

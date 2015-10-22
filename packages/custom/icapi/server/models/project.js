@@ -42,7 +42,7 @@ var ProjectSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['New', 'Archived', 'Cancelled', 'In Progress', 'Completed'],
+    enum: ['New', 'Archived', 'Cancelled', 'In progress', 'Completed'],
     default: 'New'
   },
   description: {
@@ -57,6 +57,16 @@ var ProjectSchema = new Schema({
     type: String
   }
 });
+
+var starVirtual = ProjectSchema.virtual('star');
+starVirtual.get(function() {
+  return this._star;
+});
+starVirtual.set(function(value) {
+  this._star = value;
+});
+ProjectSchema.set('toJSON', { virtuals: true });
+ProjectSchema.set('toObject', { virtuals: true });
 
 /**
  * Validations
@@ -93,4 +103,4 @@ ProjectSchema.pre('remove', function (next) {
 
 ProjectSchema.plugin(archive, 'project');
 
-mongoose.model('Project', ProjectSchema);
+module.exports = mongoose.model('Project', ProjectSchema);
