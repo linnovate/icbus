@@ -81,15 +81,13 @@ DiscussionSchema.statics.load = function (id, cb) {
 /**
  * Post middleware
  */
-var elasticsearch = require('../controllers/elasticsearch'),
-  profile = require('../controllers/profile');
+var elasticsearch = require('../controllers/elasticsearch');
 
 DiscussionSchema.post('save', function () {
   elasticsearch.save(this, 'discussion');
 });
 DiscussionSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'discussion', null, next);
-  profile.removeStarEntity(this._id, 'Discussions', next);
   next();
 });
 

@@ -87,8 +87,7 @@ TaskSchema.statics.project = function (id, cb) {
 /**
  * Post middleware
  */
-var elasticsearch = require('../controllers/elasticsearch'),
-  profile = require('../controllers/profile');
+var elasticsearch = require('../controllers/elasticsearch');
 
 TaskSchema.post('save', function (req, next) {
   var task = this;
@@ -109,7 +108,6 @@ TaskSchema.pre('remove', function (next) {
       return err;
     }
     elasticsearch.delete(task, 'task', project.room, next);
-    profile.removeStarEntity(task._id, 'Tasks', next);
   });
   next();
 });

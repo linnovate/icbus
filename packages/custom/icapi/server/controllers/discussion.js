@@ -63,9 +63,6 @@ exports.destroy = function(req, res, next) {
           { $pull: { 'profile.starredTasks': { $in: removeTaskIds } } }).exec();
     });
 
-    User.update({ 'profile.starredDiscussions': discussion._id },
-        { 'profile.starredDiscussions': { $pull: discussion._id } }).exec();
-
     discussionController.destroy(req, res, next);
   });
 };
