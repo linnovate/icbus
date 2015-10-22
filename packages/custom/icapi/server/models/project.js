@@ -87,8 +87,7 @@ ProjectSchema.statics.load = function (id, cb) {
 /**
  * Post middleware
  */
-var elasticsearch = require('../controllers/elasticsearch'),
-    profile = require('../controllers/profile');
+var elasticsearch = require('../controllers/elasticsearch');
 
 ProjectSchema.post('save', function (req, next) {
   elasticsearch.save(this, 'project', this.room);
@@ -97,7 +96,6 @@ ProjectSchema.post('save', function (req, next) {
 
 ProjectSchema.pre('remove', function (next) {
   elasticsearch.delete(this, 'project', this.room, next);
-  profile.removeStarEntity(this._id, 'Projects', next);
   next();
 });
 
