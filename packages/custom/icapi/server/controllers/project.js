@@ -62,10 +62,8 @@ exports.destroy = function(req, res, next) {
           { $pull: { 'profile.starredTasks': { $in: removeTaskIds } } }).exec();
     });
 
-    User.update({ 'profile.starredProjects': project._id },
-        { 'profile.starredProjects': { $pull: project._id } }).exec();
-
     projectController.destroy(req, res, next);
+
   });
 };
 

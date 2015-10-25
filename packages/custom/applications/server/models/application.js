@@ -18,6 +18,7 @@ var ApplicationSchema = new Schema({
     name: {
         type: String,
         required: true,
+        unique: true,
         trim: true
     },
     iconPath: {
@@ -25,8 +26,7 @@ var ApplicationSchema = new Schema({
     },
     token: {
         type: String,
-        required: true,
-        trim: true
+        required: true
     },
     updated: {
         type: Array

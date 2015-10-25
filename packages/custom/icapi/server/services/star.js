@@ -8,10 +8,6 @@ var ProjectModel = require('../models/project.js');
 var DiscussionModel = require('../models/discussion.js');
 var UpdateModel = require('../models/update.js');
 
-var capitalize = function(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
 var entityNameMap = {
   'tasks': TaskModel,
   'projects': ProjectModel,
@@ -21,7 +17,7 @@ var entityNameMap = {
 
 module.exports = function(entityName, options) {
   function starEntity(id, value) {
-    var starredEntities = 'starred' + capitalize(entityName);
+    var starredEntities = 'starred' + _.capitalize(entityName);
 
     var starred = false;
     return UserModel.findById(options.user._id).then(function(user) {
@@ -64,7 +60,7 @@ module.exports = function(entityName, options) {
     });
 
     return query.then(function(user) {
-      var starredEntities = 'starred' + capitalize(entityName);
+      var starredEntities = 'starred' + _.capitalize(entityName);
 
       if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].length === 0) {
         return [];

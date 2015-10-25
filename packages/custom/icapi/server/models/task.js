@@ -88,6 +88,7 @@ TaskSchema.statics.project = function (id, cb) {
  * Post middleware
  */
 var elasticsearch = require('../controllers/elasticsearch');
+
 TaskSchema.post('save', function (req, next) {
   var task = this;
   TaskSchema.statics.project(this.project, function (err, project) {
