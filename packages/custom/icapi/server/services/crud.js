@@ -74,7 +74,14 @@ module.exports = function(entityName, options) {
 
     if (pagination && pagination.type) {
       if (pagination.type === 'page') {
-        query = Model.find({}).skip(pagination.start).limit(pagination.limit);
+        var sort = {};
+        sort[pagination.sort] = 1;
+        sort.title = 1;
+
+        query = Model.find({})
+          .sort(sort)
+          .skip(pagination.start)
+          .limit(pagination.limit);
 
         query.populate(options.includes);
         query.hint({ _id: 1 });
@@ -82,38 +89,6 @@ module.exports = function(entityName, options) {
         mergedPromise = q.all([query, countQuery]).then(function(results) {
           pagination.count = results[1];
           return results[0];
-        });
-
-        deffered.resolve(mergedPromise);
-      } else {
-        var promises;
-        if (!pagination.skip) {
-          var prevPageQuery = Model.find({ _id: { $gte: pagination.id } })
-            .skip(pagination.skip * pagination.limit)
-            .limit(pagination.limit);
-
-          var nextPageQuery = Model.find({ _id: { $lt: pagination.id } })
-            .skip(pagination.skip * pagination.limit)
-            .limit(pagination.limit);
-
-          promises = [prevPageQuery, nextPageQuery, countQuery];
-        } else {
-          var predicate = { _id: { $gte: pagination.id }};
-
-          if (pagination.skip > 0) {
-            predicate = { _id: { $lt: pagination.id }};
-          }
-
-          var pageQuery = Model.find(predicate)
-            .skip(pagination.skip * pagination.limit)
-            .limit(pagination.limit);
-
-          promises = [pageQuery, countQuery];
-        }
-
-        mergedPromise = q.all(promises).then(function(results) {
-          pagination.count = results[2];
-          return results[0].concat(results[1]);
         });
 
         deffered.resolve(mergedPromise);

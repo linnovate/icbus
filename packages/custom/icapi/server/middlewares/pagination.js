@@ -21,8 +21,7 @@ function parseParams(req, res, next) {
 
   req.locals.data.pagination = {
     type: type,
-    id: req.query.id,
-    skip: req.query.skip ? +req.query.skip : 0,
+    sort: req.query.sort ? req.query.sort : 'created',
     start: req.query.start ? +req.query.start : undefined,
     limit: req.query.limit ? +req.query.limit : undefined
   };
@@ -76,18 +75,6 @@ function formResponse(req, res, next) {
 
         page.next = nextUrl;
       }
-    } else {
-      prevParams = _(pagination).omit('type', 'count').value();
-      prevParams.skip -= 1;
-      prevUrl = baseUrl + '?' + querystring.stringify(prevParams);
-
-      page.prev = prevUrl;
-
-      nextParams = _(pagination).omit('type', 'count').value();
-      nextParams.skip += 1;
-      nextUrl = baseUrl + '?' + querystring.stringify(nextParams);
-
-      page.next = nextUrl;
     }
 
     req.locals.result = page;
