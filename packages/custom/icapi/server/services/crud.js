@@ -74,12 +74,8 @@ module.exports = function(entityName, options) {
 
     if (pagination && pagination.type) {
       if (pagination.type === 'page') {
-        var sort = {};
-        sort[pagination.sort] = 1;
-        sort.title = 1;
-
         query = Model.find({})
-          .sort(sort)
+          .sort(pagination.sort)
           .skip(pagination.start)
           .limit(pagination.limit);
 
