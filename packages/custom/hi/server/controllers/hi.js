@@ -13,9 +13,10 @@ exports.proxy = function(req, res) {
 
     if(options.cmd === '/users')
         options.cmd = '/account/register';
-    else if(req.params.owner) {
-        options.form.owner = req.params.owner;
-        options.cmd = options.cmd.replace(/[^/]*$/, '');
+    else if( options.cmd.indexOf('owner') != -1 ) {
+        options.form.owner = options.cmd.match(/[^/]*$/, '')[0];
+        options.cmd = options.cmd.replace(/owner[/][^/]*$/, '');
+
     }
 
     exports.talkToHi(options, function(data, statusCode) {
@@ -27,9 +28,8 @@ exports.proxy = function(req, res) {
 
 exports.talkToHi = function(options, callback) {
 
-    var cmd_api = (options.param) ? options.cmd + '/' + options.param : options.cmd;
     var objReq = {
-        uri: letschatConfig.uri + cmd_api,
+        uri: letschatConfig.uri + options.cmd,
         method: options.method,
         headers: {}
     };
