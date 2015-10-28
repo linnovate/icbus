@@ -92,6 +92,13 @@ exports.getByEntity = function (req, res, next) {
   var Query = Task.find(entityQuery);
   Query.populate(options.includes);
 
+  var pagination = req.locals.data.pagination;
+  if (pagination && pagination.type && pagination.type === 'page') {
+    Query.sort(pagination.sort)
+      .skip(pagination.start)
+      .limit(pagination.limit);
+  }
+
   Query.exec(function (err, tasks) {
     if (err) {
       req.locals.error = { message: 'Can\'t get tags' };

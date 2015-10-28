@@ -57,7 +57,7 @@ module.exports = function (Icapi, app) {
     .delete(star.unstarEntity, task.read, task.destroy);
 
   app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks')
-    .get(task.getByEntity);
+    .get(pagination.parseParams, task.getByEntity, pagination.formResponse);
   app.route('/api/history/tasks/:id([0-9a-fA-F]{24})')
     .get(task.readHistory);
 
