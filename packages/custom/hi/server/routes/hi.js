@@ -5,7 +5,6 @@ var hi = require('../controllers/hi'),
 
 module.exports = function(Hi, app, auth) {
 
-    //app.get('/api/search', elasticsearch.search);
-    app.route('/api/hi/*').all(applicationProvider.checkApp, hi.proxy);
+    app.route('/hi/*').all(applicationProvider.checkApp, hi.proxy);
 
 };
