@@ -5,6 +5,6 @@ var hi = require('../controllers/hi'),
 
 module.exports = function(Hi, app, auth) {
 
-    app.route('/hi/*').all(applicationProvider.checkApp, hi.proxy);
+    app.route('/api/hi/*').all(applicationProvider.checkApp, hi.proxy);
 
 };
