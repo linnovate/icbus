@@ -20,8 +20,8 @@ var pagination = require('../middlewares/pagination.js');
 var error = require('../middlewares/error.js');
 
 module.exports = function (Icapi, app) {
-  app.route('/api/*!hi').all(locals);
-  app.route('/api/*!hi').all(authorization);
+  app.route(/^((?!\/hi\/).)*$/).all(locals);
+  app.route(/^((?!\/hi\/).)*$/).all(authorization);
 
   //star & get starred list
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/star')
@@ -142,8 +142,8 @@ module.exports = function (Icapi, app) {
     .put(task.update)
     .delete(task.destroy);
 
-  app.route('/api/*!hi').all(response);
-  app.route('/api/*!hi').all(error);
+  app.route(/^((?!\/hi\/).)*$/).all(response);
+  app.route(/^((?!\/hi\/).)*$/).all(error);
 
   //app.use(utils.errorHandler);
 };
