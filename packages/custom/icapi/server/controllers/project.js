@@ -31,8 +31,6 @@ exports.destroy = function(req, res, next) {
     return next();
   }
 
-  var project = req.locals.result;
-
   Task.find({ project: req.params.id }).then(function(tasks) {
     //FIXME: do it with mongo aggregate
     var groupedTasks = _.groupBy(tasks, function(task) {
@@ -79,7 +77,14 @@ exports.getByEntity = function (req, res, next) {
 
   var Query = Project.find(entityQuery);
 
-  Query.populate('watchers');
+  Query.populate(options.includes);
+
+  var pagination = req.locals.data.pagination;
+  if (pagination && pagination.type && pagination.type === 'page') {
+    Query.sort(pagination.sort)
+      .skip(pagination.start)
+      .limit(pagination.limit);
+  }
 
   Query.exec(function (err, projects) {
     utils.checkAndHandleError(err, 'Failed to read projects by' + req.params.entity + ' ' + req.params.id, next);

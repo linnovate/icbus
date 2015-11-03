@@ -77,6 +77,11 @@ function formResponse(req, res, next) {
       }
     }
 
+    page.sort = baseUrl + '?' + querystring.stringify({
+      start: 0,
+      limit: pagination.limit
+    });
+
     req.locals.result = page;
   }
 
