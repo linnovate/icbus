@@ -173,6 +173,13 @@ exports.getByProject = function (req, res, next) {
   var Query = Task.find(entityQuery, {discussions: 1, _id: 0});
   Query.populate('discussions');
 
+  var pagination = req.locals.data.pagination;
+  if (pagination && pagination.type && pagination.type === 'page') {
+    Query.sort(pagination.sort)
+      .skip(pagination.start)
+      .limit(pagination.limit);
+  }
+
   Query.exec(function (err, discussions) {
     utils.checkAndHandleError(err, 'Unable to get discussions', next);
 
