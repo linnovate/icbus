@@ -38,7 +38,7 @@ var DiscussionSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['New', 'Scheduled', 'Done', 'Cancelled', 'Archived'],
+    enum: ['new', 'scheduled', 'done', 'canceled', 'archived'],
     default: 'New'
   },
   //should we maybe have finer grain control on this

@@ -20,6 +20,8 @@ var pagination = require('../middlewares/pagination.js');
 var error = require('../middlewares/error.js');
 
 module.exports = function (Icapi, app) {
+
+  // /^((?!\/hi\/).)*$/ all routes without '/api/hi/*'
   app.route(/^((?!\/hi\/).)*$/).all(locals);
   app.route(/^((?!\/hi\/).)*$/).all(authorization);
 
