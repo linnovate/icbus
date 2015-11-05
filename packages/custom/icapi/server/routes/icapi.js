@@ -27,7 +27,7 @@ module.exports = function (Icapi, app) {
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/star')
     .patch(star.toggleStar);
   app.route('/api/:entity(tasks|discussions|projects)/starred')
-    .get(star.getStarred);
+    .get(pagination.parseParams, star.getStarred, pagination.formResponse);
 
   app.route('/api/projects*').all(entity('projects'));
   app.route('/api/projects')

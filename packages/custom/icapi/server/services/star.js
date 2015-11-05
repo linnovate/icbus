@@ -8,11 +8,29 @@ var ProjectModel = require('../models/project.js');
 var DiscussionModel = require('../models/discussion.js');
 var UpdateModel = require('../models/update.js');
 
+var taskOptions = require('../controllers/task.js').defaultOptions;
+var discussionOptions = require('../controllers/discussion.js').defaultOptions;
+var projectOptions = require('../controllers/project.js').defaultOptions;
+
 var entityNameMap = {
-  'tasks': TaskModel,
-  'projects': ProjectModel,
-  'discussions': DiscussionModel,
-  'updates': UpdateModel
+  'tasks': {
+    model: TaskModel,
+    options: taskOptions
+  },
+  'projects': {
+    model: ProjectModel,
+    options: projectOptions
+  },
+  'discussions': {
+    model: DiscussionModel,
+    options: discussionOptions
+  },
+  'updates': {
+    model: UpdateModel,
+    options: {
+      includes: []
+    }
+  }
 };
 
 module.exports = function(entityName, options) {
@@ -53,7 +71,8 @@ module.exports = function(entityName, options) {
   }
 
   function getStarred() {
-    var Model = entityNameMap[entityName];
+    var Model = entityNameMap[entityName].model;
+    var modelOptions = entityNameMap[entityName].options;
 
     var query = UserModel.findOne({
       _id: options.user._id
@@ -69,7 +88,7 @@ module.exports = function(entityName, options) {
           '_id': {
             $in: user.profile[starredEntities]
           }
-        });
+        }).populate(modelOptions.includes);
       }
     });
   }

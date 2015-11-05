@@ -8,6 +8,8 @@ var options = {
   }
 };
 
+exports.defaultOptions = options;
+
 var crud = require('../controllers/crud.js');
 var discussionController = crud('discussions', options);
 

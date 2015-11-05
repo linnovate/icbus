@@ -9,6 +9,8 @@ var options = {
   }
 };
 
+exports.defaultOptions = options;
+
 var crud = require('../controllers/crud.js');
 var projectController = crud('projects', options);
 
