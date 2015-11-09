@@ -14,8 +14,7 @@ exports.defaultOptions = options;
 var crud = require('../controllers/crud.js');
 var projectController = crud('projects', options);
 
-var utils = require('./utils'),
-  mongoose = require('mongoose'),
+var mongoose = require('mongoose'),
   Project = mongoose.model('Project'),
   Task = mongoose.model('Task'),
   User = mongoose.model('User'),
@@ -120,7 +119,7 @@ exports.getByDiscussion = function (req, res, next) {
 
   var entityQuery = {
     discussions: req.params.id,
-    project: {$ne: null}
+    project: { $and: [{ $ne: null }, { $exists: 'project' }] }
   };
 
   var starredOnly = false;
