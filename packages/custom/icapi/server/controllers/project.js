@@ -119,7 +119,7 @@ exports.getByDiscussion = function (req, res, next) {
 
   var entityQuery = {
     discussions: req.params.id,
-    project: { $and: [{ $ne: null }, { $exists: 'project' }] }
+    project: { $ne: null, $exists: true }
   };
 
   var starredOnly = false;
