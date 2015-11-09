@@ -70,6 +70,23 @@ module.exports = function(entityName, options) {
     });
   }
 
+  function getStarredIds() {
+    var query = UserModel.findOne({
+      _id: options.user._id
+    });
+
+    return query.then(function(user) {
+      var starredEntities = 'starred' + _.capitalize(entityName);
+
+      if (!user.profile || !user.profile[starredEntities] || user.profile[starredEntities].length === 0) {
+        return [];
+      } else {
+        return user.profile[starredEntities];
+      }
+    });
+  }
+
+
   function getStarred() {
     var Model = entityNameMap[entityName].model;
     var modelOptions = entityNameMap[entityName].options;
@@ -127,6 +144,7 @@ module.exports = function(entityName, options) {
   return {
     starEntity: starEntity,
     getStarred: getStarred,
+    getStarredIds: getStarredIds,
     isStarred: isStarred
   };
 };

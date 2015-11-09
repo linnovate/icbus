@@ -51,6 +51,21 @@ function getStarred(req, res, next) {
   });
 }
 
+function getStarredIds(entity) {
+  return function(req, res, next){
+    if (req.locals.error) {
+      return next();
+    }
+
+    var entityService = starService(entity, { user: req.user });
+
+    entityService.getStarredIds().then(function(starred) {
+      req.locals.data.ids = starred;
+      next();
+    });
+  };
+}
+
 function isStarred(req, res, next) {
   if (req.locals.error) {
     return next();
@@ -69,5 +84,6 @@ module.exports = {
   unstarEntity: unstarEntity,
   toggleStar: toggleStar,
   getStarred: getStarred,
+  getStarredIds: getStarredIds,
   isStarred: isStarred
 };

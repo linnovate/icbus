@@ -91,6 +91,13 @@ exports.getByEntity = function (req, res, next) {
     entityQuery = {};
   entityQuery[entities[req.params.entity]] = (req.params.id instanceof Array) ? {$in: req.params.id} : req.params.id;
 
+  var starredOnly = false;
+  var ids = req.locals.data.ids;
+  if (ids && ids.length) {
+    entityQuery._id = { $in: ids };
+    starredOnly = true;
+  }
+
   var Query = Task.find(entityQuery);
   Query.populate(options.includes);
 
@@ -105,8 +112,14 @@ exports.getByEntity = function (req, res, next) {
     if (err) {
       req.locals.error = { message: 'Can\'t get tags' };
     } else {
-      req.locals.result = tasks;
+      if (starredOnly) {
+        tasks.forEach(function(task) {
+          task.star = true;
+        });
+      }
     }
+
+    req.locals.result = tasks;
 
     next();
   });

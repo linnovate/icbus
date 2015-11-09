@@ -42,6 +42,8 @@ module.exports = function (Icapi, app) {
     .get(project.readHistory);
   app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/projects')
     .get(pagination.parseParams, project.getByDiscussion, project.getByEntity, pagination.formResponse);
+  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/projects/starred')
+    .get(pagination.parseParams, star.getStarredIds('projects'), project.getByDiscussion, project.getByEntity, pagination.formResponse);
 
   app.route('/api/tasks*').all(entity('tasks'));
   app.route('/api/tasks')
@@ -58,6 +60,8 @@ module.exports = function (Icapi, app) {
 
   app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks')
     .get(pagination.parseParams, task.getByEntity, pagination.formResponse);
+  app.route('/api/:entity(discussions|projects|users)/:id([0-9a-fA-F]{24})/tasks/starred')
+    .get(pagination.parseParams, star.getStarredIds('tasks'), task.getByEntity, pagination.formResponse);
   app.route('/api/history/tasks/:id([0-9a-fA-F]{24})')
     .get(task.readHistory);
 
@@ -115,8 +119,10 @@ module.exports = function (Icapi, app) {
     .post(discussion.read, discussion.schedule, discussion.update, updates.updated);
   app.route('/api/discussions/:id([0-9a-fA-F]{24})/summary')
     .post(discussion.read, discussion.summary, discussion.update, updates.updated);
-  app.route('/api/:entity(tasks|discussions|projects)/:id([0-9a-fA-F]{24})/discussions')
+  app.route('/api/:entity(projects)/:id([0-9a-fA-F]{24})/discussions')
     .get(pagination.parseParams, discussion.getByProject, star.isStarred, pagination.formResponse); //, discussion.getByEntity);
+  app.route('/api/:entity(projects)/:id([0-9a-fA-F]{24})/discussions/starred')
+    .get(pagination.parseParams, star.getStarredIds('discussions'), discussion.getByProject, pagination.formResponse); //, discussion.getByEntity);
 
   app.route('/api/updates*').all(entity('updates'));
   app.route('/api/updates')

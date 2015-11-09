@@ -77,6 +77,12 @@ exports.getByEntity = function (req, res, next) {
 
   entityQuery[entities[req.params.entity]] = req.params.id;
 
+  var starredOnly = false;
+  var ids = req.locals.data.ids;
+  if (ids && ids.length) {
+    entityQuery._id = { $in: ids };
+    starredOnly = true;
+  }
   var Query = Project.find(entityQuery);
 
   Query.populate(options.includes);
@@ -89,10 +95,19 @@ exports.getByEntity = function (req, res, next) {
   }
 
   Query.exec(function (err, projects) {
-    utils.checkAndHandleError(err, 'Failed to read projects by' + req.params.entity + ' ' + req.params.id, next);
+    if (err) {
+      req.locals.error = { message: 'Can\'t get projects' };
+    } else {
+      if (starredOnly) {
+        projects.forEach(function(project) {
+          project.star = true;
+        });
+      }
 
-    res.status(200);
-    return res.json(projects);
+      req.locals.result = projects;
+    }
+
+    next();
   });
 };
 
@@ -103,23 +118,39 @@ exports.getByDiscussion = function (req, res, next) {
 
   if (req.params.entity !== 'discussions') return next();
 
-  var Query = Task.find({
+  var entityQuery = {
     discussions: req.params.id,
     project: {$ne: null}
-  }, {project: 1, _id: 0});
+  };
+
+  var starredOnly = false;
+  var ids = req.locals.data.ids;
+  if (ids && ids.length) {
+    entityQuery._id = { $in: ids };
+    starredOnly = true;
+  }
+
+  var Query = Task.find(entityQuery, {project: 1, _id: 0});
   Query.populate('project');
 
   Query.exec(function (err, projects) {
-    utils.checkAndHandleError(err, res, 'Unable to get projects');
+    if (err) {
+      req.locals.error = { message: 'Can\'t get projects' };
+    } else {
+      projects = _.uniq(projects, 'project._id');
+      projects = _.map(projects, function (item) {
+        return item.project;
+      });
 
-    // remove duplicates
-    projects = _.uniq(projects, 'project._id');
-    projects = _.map(projects, function (item) {
-      return item.project;
-    });
+      if (starredOnly) {
+        projects.forEach(function(project) {
+          project.star = true;
+        });
+      }
 
+      req.locals.result = projects;
 
-    res.status(200);
-    return res.json(projects);
+      next();
+    }
   });
 };
