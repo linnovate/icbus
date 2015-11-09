@@ -8,6 +8,8 @@ var options = {
   }
 };
 
+exports.defaultOptions = options;
+
 var crud = require('../controllers/crud.js');
 var discussionController = crud('discussions', options);
 
@@ -168,6 +170,13 @@ exports.getByProject = function (req, res, next) {
   var entities = {projects: 'project'},
     entityQuery = {discussions: {$not: {$size: 0}}};
 
+  var starredOnly = false;
+  var ids = req.locals.data.ids;
+  if (ids && ids.length) {
+    entityQuery._id = { $in: ids };
+    starredOnly = true;
+  }
+
   entityQuery[entities[req.params.entity]] = req.params.id;
 
   var Query = Task.find(entityQuery, {discussions: 1, _id: 0});
@@ -181,16 +190,25 @@ exports.getByProject = function (req, res, next) {
   }
 
   Query.exec(function (err, discussions) {
-    utils.checkAndHandleError(err, 'Unable to get discussions', next);
+    if (err) {
+      req.locals.error = { message: 'Can\'t get projects' };
+    } else {
+      //remove duplicates
+      discussions = _.reduce(discussions, function (flattened, other) {
+        return flattened.concat(other.discussions);
+      }, []);
 
-    //remove duplicates
-    discussions = _.reduce(discussions, function (flattened, other) {
-      return flattened.concat(other.discussions);
-    }, []);
+      discussions = _.uniq(discussions, '_id');
 
-    discussions = _.uniq(discussions, '_id');
+      if (starredOnly) {
+        discussions.forEach(function(discussion) {
+          discussion.star = true;
+        });
+      }
 
-    res.status(200);
-    return res.json(discussions);
+      req.locals.result = discussions;
+
+      next();
+    }
   });
 };
