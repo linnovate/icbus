@@ -65,7 +65,7 @@ var UserSchema = new Schema({
   },
   roles: {
     type: Array,
-    default: ['authenticated']
+    default: ['authenticated', 'anonymous']
   },
   hashed_password: {
     type: String,

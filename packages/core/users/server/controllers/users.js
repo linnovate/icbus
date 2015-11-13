@@ -10,6 +10,7 @@ var mongoose = require('mongoose'),
   crypto = require('crypto'),
   nodemailer = require('nodemailer'),
   templates = require('../template'),
+  _ = require('lodash'),
   jwt = require('jsonwebtoken'); //https://npmjs.org/package/node-jsonwebtoken
 
 /**
@@ -59,7 +60,10 @@ module.exports = function(MeanUser) {
           // We are sending the payload inside the token
           var token = jwt.sign(escaped, config.secret, { expiresInMinutes: 60*5 });
           res.cookie('token', token);
-          res.redirect('/');
+          var destination = config.strategies.landingPage;
+          if(!req.cookies.redirect)
+            res.cookie('redirect', destination);
+          res.redirect(destination);
         },
 
         /**
@@ -77,8 +81,11 @@ module.exports = function(MeanUser) {
          */
         signout: function(req, res) {
 
-            MeanUser.events.publish('logout', {
-                description: req.user.name + ' logout.'
+            MeanUser.events.publish({
+                action: 'logged_out',
+                user: {
+                    name: req.user.name
+                }
             });
 
             req.logout();
@@ -150,13 +157,21 @@ module.exports = function(MeanUser) {
                 req.logIn(user, function(err) {
                     if (err) { return next(err); }
 
-                    MeanUser.events.publish('register', {
-                        description: user.name + ' register to the system.'
+                    MeanUser.events.publish({
+                        action: 'created',
+                        user: {
+                            name: req.user.name,
+                            username: user.username,
+                            email: user.email
+                        }
                     });
 
                     // We are sending the payload inside the token
                     var token = jwt.sign(escaped, config.secret, { expiresInMinutes: 60*5 });
-                    res.json({ token: token });
+                    res.json({ 
+                      token: token,
+                      redirect: config.strategies.landingPage
+                    });
                 });
                 res.status(200);
             });
@@ -165,7 +180,34 @@ module.exports = function(MeanUser) {
          * Send User
          */
         me: function(req, res) {
-            res.json(req.user || null);
+            if (!req.user || !req.user.hasOwnProperty('_id')) return res.send(null);
+
+            User.findOne({
+                _id: req.user._id
+            }).exec(function(err, user) {
+
+                if (err || !user) return res.send(null);
+
+
+                var dbUser = user.toJSON();
+                var id = req.user._id;
+
+                delete dbUser._id;
+                delete req.user._id;
+
+                var eq = _.isEqual(dbUser, req.user);
+                if (eq) {
+                    req.user._id = id;
+                    return res.json(req.user);
+                }
+
+                var payload = user;
+                var escaped = JSON.stringify(payload);
+                escaped = encodeURI(escaped);
+                var token = jwt.sign(escaped, config.secret, { expiresInMinutes: 60*5 });
+                res.json({ token: token });
+               
+            });
         },
 
         /**
@@ -214,8 +256,11 @@ module.exports = function(MeanUser) {
                 user.resetPasswordExpires = undefined;
                 user.save(function(err) {
 
-                    MeanUser.events.publish('resetpassword', {
-                        description: user.name + ' reset his password.'
+                    MeanUser.events.publish({
+                        action: 'reset_password',
+                        user: {
+                            name: user.name
+                        }
                     });
 
                     req.logIn(user, function(err) {
@@ -279,10 +324,13 @@ module.exports = function(MeanUser) {
                     response.message = 'User does not exist';
                     response.status = 'danger';
 
-                    MeanUser.events.publish('forgotpassword', {
-                        description: user.name + ' forgot his password.'
-                    });
                 }
+                MeanUser.events.publish({
+                    action: 'forgot_password',
+                    user: {
+                        name: req.body.text
+                    }
+                });
                 res.json(response);
             });
         }

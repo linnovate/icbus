@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/linnovate/mean.svg?branch=master)](https://travis-ci.org/linnovate/mean)
+[![Build Status](https://travis-ci.org/linnovate/mean.svg)](https://travis-ci.org/linnovate/mean)
 [![Dependencies Status](https://david-dm.org/linnovate/mean.svg)](https://david-dm.org/linnovate/mean)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/linnovate/mean?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 h
@@ -11,7 +11,7 @@ MEAN is a framework for an easy starting point with [MongoDB](http://www.mongodb
 * *Node.js* - <a href="http://nodejs.org/download/">Download</a> and Install Node.js, nodeschool has free <a href=" http://nodeschool.io/#workshoppers">node tutorials</a> to get you started.
 * *MongoDB* - <a href="http://www.mongodb.org/downloads">Download</a> and Install mongodb - <a href="http://docs.mongodb.org/manual">Checkout their manual</a> if you're just starting.
 
-If you're using ubuntu this is the preffered repository to use...
+If you're using ubuntu, this is the preferred repository to use...
 
 ```bash
 $ curl -sL https://deb.nodesource.com/setup | sudo bash -
@@ -54,7 +54,7 @@ $ cd <myApp> && npm install
 
 ### Invoke node with a task manager
 Mean supports the gulp task runner for various services which are applied on the code.
-To start you application run - 
+To start your application run - 
 ```bash
 $ gulp
 ```
@@ -66,6 +66,17 @@ $ node server
 Then, open a browser and go to:
 ```bash
 http://localhost:3000
+```
+
+### Running on a different port
+If you have a rails, node, or other mean project already running, you may need to use a different port. You can set the port and start your new mean project with one command:
+```bash
+$ export PORT=3001 && gulp
+```
+
+Then, open a browser and change the port number before you visit:
+```bash
+  http://localhost:3001
 ```
 
 ### Troubleshooting
@@ -109,7 +120,7 @@ $ bower cache clean
 Some of Mean.io dependencies uses [node-gyp](https://github.com/TooTallNate/node-gyp) with supported Python version 2.7.x. So if you see an error related to node-gyp rebuild follow next steps:
 
 1. install [Python 2.7.x](https://www.python.org/downloads/)
-2. install [Microsoft Visual Studio C++ 2012 Express](http://www.microsoft.com/ru-ru/download/details.aspx?id=34673)
+2. install [Microsoft Visual Studio C++ 2012 Express](http://www.microsoft.com/en-us/download/details.aspx?id=34673)
 3. Run NPM update
 
 ```bash
@@ -168,9 +179,9 @@ $ mean help [command]
   <p>For example, the <i>admin</i> role is required to edit tokens.</p>
 
 ```bash
-$ mean user <email>
-$ mean user <email> --addRole <role>;
-$ mean user <email> --removeRole <role>;
+  $ mean user <email>
+  $ mean user <email> --addRole <role>;
+  $ mean user <email> --removeRole <role>;
 ```
 
 ### Packages
@@ -218,7 +229,7 @@ Everything in mean.io is a package and when extending mean with custom functiona
 
 The mean.io package system allows developers to create modular code that provides useful tools that other mean developers can use. The packages, when published, are plug-and-play and are used in a way very similar to traditional npm packages.
 
-The mean.io package system integrates all the packages into the mean project as if the code was part of mean itself and provides the developers with all the necceesary tools required to integrate their package into the host project.
+The mean.io package system integrates all the packages into the mean project as if the code was part of mean itself and provides the developers with all the necessary tools required to integrate their package into the host project.
 
 There are two types of packages:
 
@@ -236,20 +247,20 @@ The "system" package creates the basic pages as well as defines the layout of th
 #### Users
 The "users" package creates the database model of the user, provides validation as well as various login and registration features.
 #### Access
-The "access" package managers permissions and middleware. It controls the various authentication methods and is dependent on the users package
+The "access" package manages permissions and middleware. It controls the various authentication methods and is dependent on the users package
 #### Theme
 The "theme" package adds some basic CSS and other assets such as images and backgrounds
 #### Articles
 The "articles" package is typically used as an example starting point for managing content that might be used in a blog or cms. The full CRUD is implemented on the server and client.
-### Files structure
+### File structure
 The file structure is similar to that of the mean project itself
 
 `Fundamental` Files at the `root` of the package
 
 **Server**
 
-Packages are registered in the **app.js** 
-Defines package name, version and `mean=true` in the **package.json**   
+Packages are registered in the **app.js**
+Defines package name, version and `mean=true` in the **package.json**
 
 All of the Server side code resides in the `/server` directory.
 
@@ -285,7 +296,6 @@ When registering you are required to declare all your dependencies in order for 
 // Example of registering the MyPackage
 MyPackage.register(function(app, auth, database) {
   // ...
-
 });
 ```
 
@@ -349,7 +359,6 @@ All assets such as images, javascript libraries and CSS stylesheets should be wi
 
 Javascript and CSS from `assets` can be aggregated to the global aggregation files. By default all javascript is automatically wrapped within an anonymous function unless given the option `{global:true}` to not enclose the javascript within a contained scope
 
-
 ```javascript
 
 //Adding jquery to the mean project
@@ -373,11 +382,11 @@ MyPackage.aggregateAsset('js','first.js',{global:true,  weight: -4, group: 'head
 ```
 
 >The line that gets loaded in your head.html calls the header group and injects the js you want to include first-
-> in packages/system/server/views/includes/head.html 
+> in packages/system/server/views/includes/head.html
 > <script type="text/javascript" src="/modules/aggregated.js?group=header"></script>
 
 ###Settings Object
-The settings object is a persistance object that is stored in the packages collection and allows for saving persistant information per package such as configuration options or admin settings for the package.
+The settings object is a persistence object that is stored in the packages collection and allows for saving persistent information per package such as configuration options or admin settings for the package.
 
   Receives two arguments the first being the settings object the second is a callback function
   
@@ -439,7 +448,7 @@ $stateProvider
 
 Packages are able to hook into an existing menu system and add links to various menus integrated within Mean.
 
-Each link specifies its `title`, `template`, `menu` and `role` that is allowed to see the link. If the menu specified does not exist a new menu will be created. The menu object is made accessible within the client by means of a *menu angular service* that queries the menu controller for information about links.
+Each link specifies its `title`, `template`, `menu` and `role` that is allowed to see the link. If the menu specified does not exist, a new menu will be created. The menu object is made accessible within the client by means of a *menu angular service* that queries the menu controller for information about links.
 
 Below is an example how to add a link to the main menu from `app.js`
 
@@ -529,7 +538,7 @@ $ mean publish
 ## MEAN Network
 Mean is a stand-alone instance that you can install locally or host on your server.
 We want to provide value to developers and are assembling a set of services which will be called the mean network.
-We're building all of this as we speak but we allready have some elements in place.
+We're building all of this as we speak but we already have some elements in place.
 
 ### Network User Management
 
@@ -592,7 +601,7 @@ $ npm test
 
 ### Logging
 
-As from mean-0.4.4 control over the logging format has been delgated to the env configuration files.
+As from mean-0.4.4 control over the logging format has been delegated to the env configuration files.
 The formats and implementation are done using the morgan node module and it's [predefined format](https://github.com/expressjs/morgan#predefined-formats)
 Within each configuration file (config/env/development.js) for instance you state the format in the 'logging' object.
 ```
@@ -689,8 +698,7 @@ $ heroku config:set NODE_ENV=production
   * To our awesome <a href="https://github.com/orgs/linnovate/teams/mean">core team</a> with help of our <a href="https://github.com/linnovate/mean/graphs/contributors">contributors</a> which have made this project a success.
   * <a href="https://github.com/vkarpov15">Valeri Karpov</a> for coining the term *mean* and triggering the mean stack movement.
   * <a href="https://github.com/amoshaviv">Amos Haviv</a>  for the creation of the initial version of Mean.io while working for us @linnovate.
-  * <a href="https://github.com/madhums/">Madhusudhan Srinivasa</a> which inspired us with his great work.
+  * <a href="https://github.com/madhums/">Madhusudhan Srinivasa</a> who inspired us with his great work.
 
 ## License
 We believe that mean should be free and easy to integrate within your existing projects so we chose [The MIT License](http://opensource.org/licenses/MIT)
-
