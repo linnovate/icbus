@@ -11,6 +11,8 @@
     "npm": "1.4.x"
   },
   "dependencies": {
+    "busboy": "^0.2.12",
+    "mkdirp": "^0.5.1",
     "nodemailer-smtp-transport": "^1.0.3"
   },
   "license": "MIT"
