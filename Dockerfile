@@ -15,10 +15,10 @@ RUN chown -R node:node /usr/src/app
 USER node
 RUN touch /home/node/.mean
 RUN npm install 
-ENV PORT 3002  
+ENV PORT 3003  
 ENV DB_PORT_27017_TCP_ADDR db
 CMD [ "npm", "start" ]
-EXPOSE 3002
+EXPOSE 3003
 
 
 #How to build:

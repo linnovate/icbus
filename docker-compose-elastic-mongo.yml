@@ -17,10 +17,12 @@ services:
      - "9200"
   api:
     build: .
+    environment:
+      - PORT=3003
     #volumes:
     #  - .:/usr/src/app
     ports:
-      - "3002:3002"
+      - "3003:3003"
     depends_on:
       - db
       - search
