@@ -1,0 +1,26 @@
+#initial build:
+#  docker-compose -f docker-compose-elastic-mongo.yml create 
+#
+#run:
+#  docker-compose -f docker-compose-elastic-mongo.yml start db
+#  docker-compose -f docker-compose-elastic-mongo.yml start search
+#  docker-compose -f docker-compose-elastic-mongo.yml up
+version: '2'
+services:
+  db:
+    image: mongo
+    expose: 
+     - "27017"
+  search:
+    image: elasticsearch
+    expose:
+     - "9200"
+  api:
+    build: .
+    #volumes:
+    #  - .:/usr/src/app
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+      - search
