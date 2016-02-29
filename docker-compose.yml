@@ -1,0 +1,30 @@
+#initial build:
+#  docker-compose create 
+#
+#run:
+#  docker-compose start db
+#  docker-compose start search
+#  docker-compose up
+version: '2'
+services:
+  db:
+    image: mongo
+    expose: 
+     - "27017"
+    ports:
+     - "27017:27017"
+  search:
+    image: elasticsearch
+    expose:
+     - "9200"
+  api:
+    build: .
+    environment:
+      - PORT=3003
+    #volumes:
+    #  - .:/usr/src/app
+    ports:
+      - "3003:3003"
+    depends_on:
+      - db
+      - search
