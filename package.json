@@ -36,7 +36,7 @@
     "jsonwebtoken": "latest",
     "lodash": "latest",
     "meanio": "linnovate/meanio",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.0",
     "mongoose": "latest",
     "morgan": "latest",
     "ms": "latest",
